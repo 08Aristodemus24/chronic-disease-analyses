@@ -40,6 +40,10 @@ autofill iss useful for repeating sequences of  data with patterns, e.g.
 Mon then next Tues, next Wed
 5, 10, then next 15, next 20, next 25, 
 Mon, Wed, then next Fri, next Sun, next, Tues and so on..
+* `=UNIQUE(B2:B5601)` creates a list of all the unique values in a column
+* `=COUNTIF(<range>, "?")` counts the number of occurences of a unique value in a column 
+* now I know that a pivot table is essentially the excel equivalent of a group by in SQL
+* 
 
 ## important shortcuts in excel
 * ctrl + n
@@ -48,6 +52,10 @@ Mon, Wed, then next Fri, next Sun, next, Tues and so on..
 * ctrl + shift + arrow keys (left right down up) will select all the cells in a range of rows or columns that have values
 * set goal tab
 * pivot table
+* You can drag across or down the bottom right corner of cell using the formula to apply the same formula to other columns or rows in the spreadsheet
+* You can also double click the corner to apply the same formula for every row down
+* Type `=` the formula name and once the hint for the formula you want to use pops up press tab so you don't have to type every single letter of the formula
+* `VLOOKUP` is a common formula/function used by DAs to look up values in the vertical orientation or columns. All formulas and rheir categories are grouped in the formulas tab in the app
 
 ## EDA
 * exploratory data analysis can be basically used to find out which features give the most insight to us when we have certain questions i.e. "what is the average price of the top 3 most common cars?", "what is the maximum or minimum population of an age group?"
@@ -357,6 +365,8 @@ mysql> SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
 +-----------+
 19 rows in set (0.01 sec)
 ```
+
+*  
 
 # Questions:
 * how to fill in missing values?
