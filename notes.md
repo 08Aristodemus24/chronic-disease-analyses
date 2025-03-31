@@ -366,7 +366,7 @@ mysql> SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
 19 rows in set (0.01 sec)
 ```
 
-*  
+* if you get a `SELECT list is not in GROUP BY clause and contains nonaggregated column .... incompatible with sql_mode=only_full_group_by` error in the sql console run `SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));` then exit then re enter console
 
 # Questions:
 * how to fill in missing values?

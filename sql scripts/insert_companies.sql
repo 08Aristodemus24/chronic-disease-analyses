@@ -1,6 +1,6 @@
 INSERT INTO `sys`.`companies`
 (`companyid`,
-`industryid`
+`industryid`,
 `parentcompanyid`,
 `name`,
 `annualrevenue`)
@@ -14,4 +14,4 @@ VALUES
 (7, 2, 5, "mini ferraro", 150000),
 (8, 3, 1, "google wallet", 111100),
 (9, 3, NULL, "td bank", 160145),
-(10, 3, 4, "lamborghini", 130000),
+(10, 3, 4, "lamborghini", 130000);
