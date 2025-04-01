@@ -1,3 +1,6 @@
+-- selects all the common states in both population
+-- and chronic disease tables
+
 WITH a AS (
     SELECT DISTINCT(state) FROm us_population
 ),
