@@ -29,7 +29,7 @@ merch_long - Longitude Location of Merchant
 is_fraud - Fraud Flag <--- Target Class
 ```
 
-## important functions in excel 
+## functions in excel 
 * functions in excel are akin to statistical functions in scipy, numpy, pandas etc. operating on arrays, matrices or rows of data usually
 * `=<name of function e.g. SUM>(<cell column letter and row number e.g. A1>: <cell column letter and row number e.g. A10>)` or `=<name of function e.g. RANDARRAY>(<num rows>, <num cols>, <min random num to be generated>, <max random num to be generated>, <boolean value indicating whether to generate only integers e.g. TRUE or FALSE>)`
 * selecting a cell and then inputting `=RANDARRAY(10, 10, -100, 100, FALSE)` will generate a matrix of 10 x 10 dimensions of random float numbers (since integer arg is set to false) between -100 and 100  
@@ -43,7 +43,8 @@ Mon, Wed, then next Fri, next Sun, next, Tues and so on..
 * `=UNIQUE(B2:B5601)` creates a list of all the unique values in a column
 * `=COUNTIF(<range>, "?")` counts the number of occurences of a unique value in a column 
 * now I know that a pivot table is essentially the excel equivalent of a group by in SQL
-* 
+* Type `=` the formula name and once the hint for the formula you want to use pops up press tab so you don't have to type every single letter of the formula
+* `VLOOKUP` is a common formula/function used by DAs to look up values in the vertical orientation or columns. All formulas and rheir categories are grouped in the formulas tab in the app
 
 ## important shortcuts in excel
 * ctrl + n
@@ -54,8 +55,6 @@ Mon, Wed, then next Fri, next Sun, next, Tues and so on..
 * pivot table
 * You can drag across or down the bottom right corner of cell using the formula to apply the same formula to other columns or rows in the spreadsheet
 * You can also double click the corner to apply the same formula for every row down
-* Type `=` the formula name and once the hint for the formula you want to use pops up press tab so you don't have to type every single letter of the formula
-* `VLOOKUP` is a common formula/function used by DAs to look up values in the vertical orientation or columns. All formulas and rheir categories are grouped in the formulas tab in the app
 
 ## EDA
 * exploratory data analysis can be basically used to find out which features give the most insight to us when we have certain questions i.e. "what is the average price of the top 3 most common cars?", "what is the maximum or minimum population of an age group?"
