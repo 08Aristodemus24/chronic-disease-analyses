@@ -1,0 +1,1 @@
+ALTER TABLE us_population RENAME statepopulation;

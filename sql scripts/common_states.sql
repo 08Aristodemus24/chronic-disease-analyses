@@ -2,7 +2,7 @@
 -- and chronic disease tables
 
 WITH a AS (
-    SELECT DISTINCT(state) FROm us_population
+    SELECT DISTINCT(state) FROM statepopulation
 ),
 
 b AS (
