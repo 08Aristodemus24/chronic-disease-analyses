@@ -59,23 +59,25 @@ def model_population_table(df: pd.DataFrame, state: str) -> pd.DataFrame:
 
     def helper(bracket: str | None):
         bracket = bracket.lower()
-        keyword = re.search(r"(under|to|and over)", bracket)
+        keyword = re.search(r"(under|to|and over|\+)", bracket)
         keyword = np.nan if not keyword else keyword[0]
         numbers = re.findall(r"\d+", bracket)
         # print(keyword)
         # print(numbers)
 
-        # e.g. "under 5" becomes "< 5"
+        # e.g. "under 5" becomes "_under_5"
         if keyword == "under":
-            return f"< {numbers[-1]}"
+            return f"_under_{numbers[-1]}"
         
-        # e.g. "5 to 9" becomes "5 <= 9"
+        # e.g. "5 to 9" becomes "_5_to_9"
         elif keyword == "to":
-            return f"{numbers[0]} <= {numbers[-1]}"
+            return f"_{numbers[0]}_to_{numbers[-1]}"
         
-        # e.g. "9 and over" becomes ">= 9"
-        elif keyword == "and over": 
-            return f">= {numbers[-1]}"
+        # e.g. "9 and over" becomes "_9_and_over"
+        elif keyword == "and over" or keyword == "+": 
+            return f"_{numbers[-1]}_and_over"
+        
+        return f"_{numbers[-1]}"
     
     # get start of population values with male sex
     male_start = df[df[0] == "MALE"].index.to_list()[0]
