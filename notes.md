@@ -392,7 +392,7 @@ msdb
 1>
 ```
 
-* other useful flags we can use when entering the CLI of ms sql server is -C (trust the server certificate, -d db_name, -U login_id, -P password e.g. `sqlcmd -S <laptop name or "localhost">\<server name> -U <login id/username> -P <password>`
+* other useful flags we can use when entering the CLI of ms sql server is `-C` trust the server certificate, `-d <db_name>`, `-U <login_id>`, `-P <password>` e.g. `sqlcmd -S <laptop name or "localhost">\<server name> -U <login id/username> -P <password>`
 
 * we can get the database we are currently in by...
 ```
