@@ -367,6 +367,53 @@ mysql> SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS
 
 * if you get a `SELECT list is not in GROUP BY clause and contains nonaggregated column .... incompatible with sql_mode=only_full_group_by` error in the sql console run `SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));` then exit then re enter console
 
+* ms sql server seems to be the industry grade database management system compared to mysql or postgresql. https://www.microsoft.com/en-us/sql-server/sql-server-downloads we can download the express version here. This tool we will need to learn apart from ms powerbi in order to familiarize ourselves with these tools functionality from the inside out to eventually be ready to pass the certification exams like PL-300 for the power bi data analyst certification adn the DP-300 for the ms azure dtabase administrator certification
+
+* once ms sql server is installed we copy the connection string e.g. `Server=localhost\SQLEXPRESS;Database=master;Trusted_Connection=True;`. The installation location is in `C:/Program Files/Microsoft SQL Server/`
+
+* if a `A connection was successfully established with the server, but then an error occurred during the login process. (provider: SSL Provider, error: 0 - The certificate chain was issued by an authority that is not trusted.) (Framework Microsoft SqlClient Data Provider)` error occurs when connecting to a server even in windows authentication chekc the `trust server certificate` option and then hit ok in dialog box
+
+* to use ms sql server in command line we type the command `sqlcmd -S <name of laptop e.g. LAPTOP-3GL266K9\name of instance e.g SQLEXPRESS>`. Note it is imperativee that the device name and the name of the instane/server must have a backward slash in betweeen them and not a forward slash. 
+
+```
+1> select * from sys.databases;
+2> go
+1>
+2> select name from sys.databases;
+3> go
+name
+--------------------------------------------------------------------------------------------------------------------------------
+master
+tempdb
+model
+msdb
+
+(4 rows affected)
+1>
+```
+
+* other useful flags we can use when entering the CLI of ms sql server is -C (trust the server certificate, -d db_name, -U login_id, -P password e.g. `sqlcmd -S <laptop name or "localhost">\<server name> -U <login id/username> -P <password>`
+
+* we can get the database we are currently in by...
+```
+1> select db_name();
+2> go
+
+--------------------------------------------------------------------------------------------------------------------------------
+master
+
+(1 rows affected)
+```
+
+* we can also switch betweeen databases using...
+```
+1> use tempdb;
+2> go
+Changed database context to 'tempdb'.
+```
+
+here once we go into the command line itnerface of ms sql server the way we execute sql queries or statements is done always after typing the `go` keyword. So every statement or query we type goes into the next line when we press the enter key and once in this line we type `go` nd hit enter again to execute the query
+
 # Questions:
 * how to fill in missing values?
 * how to drop undesired values based on a filter?
