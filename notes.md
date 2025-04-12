@@ -412,6 +412,8 @@ master
 Changed database context to 'tempdb'.
 ```
 
+* we can start a windows service via command line if we run first and foremost the command prompt as administrator (to have administrative permissions of course like starting/stopping a service) and then running `net start "<name of windows service (even with spaces and with casing) e.g. SQL Server (SQLEXPRESS)>"`. And if we want to stop it we run 
+
 here once we go into the command line itnerface of ms sql server the way we execute sql queries or statements is done always after typing the `go` keyword. So every statement or query we type goes into the next line when we press the enter key and once in this line we type `go` nd hit enter again to execute the query
 
 # Questions:

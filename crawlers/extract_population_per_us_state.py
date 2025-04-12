@@ -83,6 +83,6 @@ if __name__ == "__main__":
     # | 2001 | Alaska | 642.337 |
     # ```
     final = pd.concat(years, axis=0, ignore_index=True)
-    final.to_csv(f'./data/us_populations_per_state_{start_year}_to_{end_year}.csv')
+    final.to_csv(f'../data/us_populations_per_state_{start_year}_to_{end_year}.csv')
 
 

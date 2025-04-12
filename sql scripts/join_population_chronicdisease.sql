@@ -8,9 +8,9 @@ WITH a AS (
     LEFT JOIN statepopulation
     ON chronicdisease.locationdesc = statepopulation.state AND chronicdisease.yearstart = statepopulation.year
     WHERE state IS NOT NULL
-    ORDER BY population DESC
 )
 
-SELECT * FROM a
+SELECT TOP 50 * 
+FROM a
 WHERE pyear = 2021
-LIMIT 50;
+ORDER BY population DESC;
