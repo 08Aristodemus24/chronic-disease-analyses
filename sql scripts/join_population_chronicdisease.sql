@@ -1,16 +1,11 @@
--- usage: joins the population and chronic disease tables on the
--- state and population year and the location description and 
--- the starting year in these tables respectively
+select * 
+from chronicdisease
+left join populationsperstateage_00_09
+on chronicdisease.YearStart = populationsperstateage_00_09.year and chronicdisease.LocationDesc = populationsperstateage_00_09.state
+where state is not null and StratificationCategory1 = 'Gender';
 
-WITH a AS (
-    SELECT population, state, year AS pyear, yearstart, yearend, locationdesc, locationabbr, datavalue, datavalueunit, datavaluetype, question
-    FROM chronicdisease
-    LEFT JOIN statepopulation
-    ON chronicdisease.locationdesc = statepopulation.state AND chronicdisease.yearstart = statepopulation.year
-    WHERE state IS NOT NULL
-)
+--select distinct(StratificationCategory1)
+--from chronicdisease;
 
-SELECT TOP 50 * 
-FROM a
-WHERE pyear = 2021
-ORDER BY population DESC;
+--select *
+--from chronicdisease;
