@@ -149,40 +149,53 @@ def model_population_table(df: pd.DataFrame, state: str, cols_to_remove: list, y
         start_index = df[df[0] == ".0"].index.to_list()[0]
         end_index = df[df[0] == ".Median Age (years)"].index.to_list()[0]
 
+        # extract necessary rows
         pop_brackets_raw = df.iloc[start_index: end_index]
+        
+        # remove duplicatess
         temp = pop_brackets_raw.drop_duplicates()
+
+        # remove rows with at least 5 nan values
         temp = temp.dropna(thresh=5, axis=0)
+
+        # remove columns 1 to 7 then increment by 3
+        # [1, 2, 3, 4, 5, 6, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34]
         temp = temp.drop(columns=cols_to_remove)
 
-        temp[0] = temp[0].apply(helper)
+        temp.index = temp[0]
+        del temp[0]
 
         # generate and create multi index for columns
         years = sorted(list(range(lo_year, hi_year + 1)) * 2)
         genders = ["male", "female"] * (len(years) // 2)
-        multi_index_list = [("bracket", )] + list(zip(years, genders))
+        multi_index_list = list(zip(years, genders))
         multi_index = pd.MultiIndex.from_tuples(multi_index_list)
+
+        # set multi indexed columns and delete index name of rows
         temp.columns = multi_index
+        temp.index.name = None
 
-        # take transpose of dataframe such that the multi index are now
-        # indeces for the rows
-        temp = temp.T
+        # now we will have to stack each row vertically 
+        # on each other and because we have multi 
+        # indexed columns we will need to stack it twice 
+        # in order to make these column indeces now be 
+        # the row indeces
+        temp = temp.stack(future_stack=True).stack(future_stack=True)
 
-        # drop the multi indices as row indeces to columns
+        # now we can reset the index such that these multi 
+        # index rows now become columns of our new dataframe
         temp = temp.reset_index()
 
-        # get first row containing headers
-        headers = temp.iloc[0]
+        # rename the newly converted columns to bracket, sex, year, and population respectively
+        temp = temp.rename(columns={"level_0": "bracket", "level_1": "sex", "level_2": "year", 0: "population"})
 
-        # get rest of dataframe and reset its index
-        temp = temp.iloc[1:].reset_index(drop=True)
+        # clean bracket column
+        temp["bracket"] = temp["bracket"].apply(lambda x: x.lower().strip("."))
 
-        # set the columns to the new headers
-        temp.columns = headers
+        # extract the age ranges
+        age_ranges = temp["bracket"].apply(helper).to_list()
+        temp["age_start"], temp["age_end"] = list(zip(*age_ranges))
+        
+        temp["state"] = "Alabama"
 
-        # rename bracket and Nan to year and sex respectively
-        pop_brackets_final = temp.rename(columns={np.nan: "sex", "bracket": "year"}) 
-
-        # assign state to final population brackets df
-        pop_brackets_final["state"] = state
-
-        return pop_brackets_final
+        return temp
