@@ -63,22 +63,24 @@ def model_population_table(df: pd.DataFrame, state: str, cols_to_remove: list, y
         keyword = re.search(r"(under|to|and over|\+)", bracket)
         keyword = np.nan if not keyword else keyword[0]
         numbers = re.findall(r"\d+", bracket)
+        numbers = [ast.literal_eval(number) for number in numbers]
         # print(keyword)
         # print(numbers)
 
         # e.g. "under 5" becomes "_under_5"
         if keyword == "under":
-            return f"_under_{numbers[-1]}"
+            return (0, numbers[-1])
         
         # e.g. "5 to 9" becomes "_5_to_9"
         elif keyword == "to":
-            return f"_{numbers[0]}_to_{numbers[-1]}"
+            return (numbers[0], numbers[-1])
         
         # e.g. "9 and over" becomes "_9_and_over"
         elif keyword == "and over" or keyword == "+": 
-            return f"_{numbers[-1]}_and_over"
+            return (numbers[-1], float('inf'))
         
-        return f"_{numbers[-1]}"
+        # if it is a single number just return that number
+        return (np.nan, numbers[-1])
     
     # extract numbers from year range
     years = re.findall(r"\d+", year_range)
@@ -110,35 +112,35 @@ def model_population_table(df: pd.DataFrame, state: str, cols_to_remove: list, y
             cond = (pop_brackets_raw[gender][0] != ".") & (pop_brackets_raw[gender][0] != gender.upper())
             name_map = {0: "bracket", 2: 2000, 3: 2001, 4: 2002, 5: 2003, 6: 2004, 7: 2005, 8: 2006, 9: 2007, 10: 2008, 11: 2009}
             temp = pop_brackets_raw[gender][cond].drop(columns=cols_to_remove).rename(columns=name_map).reset_index(drop=True)
-            
-            # we rename also the bracket column values  
-            temp["bracket"] = temp["bracket"].apply(helper)
 
             # we remove any duplicates in the dataframe especially those with same 
             # age brackets
             temp = temp.drop_duplicates(ignore_index=True)
 
-            # wee transpose the dataframe
-            temp = temp.T
+            # clean bracket column then turn the bracket
+            # into an index
+            temp["bracket"] = temp["bracket"].apply(lambda x: x.lower().strip("."))
+            temp.index = temp["bracket"]
 
-            # we would want our first row which would now be our age brackets
-            # to be our headers instead and the indeces we have which contain
-            # our years we would want as a column instead
-            # get first row as headers but exclude the value with bracket as we
-            # won't use this as a column header
-            temp = temp.reset_index()
-            headers = temp.iloc[0]
-            temp.columns = headers
-            temp = temp.iloc[1:]
+            # delete the bracket that's a column
+            del temp["bracket"]
 
-            final_name_map = {"bracket": "year"}
-            pop_bracket_final = temp.rename(columns=final_name_map)
+            # stack the rows of the dataframe vertically
+            temp = temp.stack().reset_index()
 
-            pop_bracket_final["sex"] = gender
-            pop_bracket_final["state"] = state
+            # rename the column names after stacking
+            temp = temp.rename(columns={"level_1": "year", 0: "population"})
+            temp["population"] = temp["population"].astype(int)
+
+            # extract the lower and upper bound values in the age brackets
+            age_ranges = temp["bracket"].apply(helper).to_list()
+            temp["age_start"], temp["age_end"] = list(zip(*age_ranges))
+
+            temp["sex"] = gender
+            temp["state"] = state
 
             # append genders final population brackets
-            pop_brackets_final.append(pop_bracket_final)
+            pop_brackets_final.append(temp)
 
         final = pd.concat(pop_brackets_final, axis=0, ignore_index=True)
         return final
