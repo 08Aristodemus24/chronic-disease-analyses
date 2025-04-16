@@ -200,3 +200,63 @@ def model_population_table(df: pd.DataFrame, state: str, cols_to_remove: list, y
         temp["state"] = "Alabama"
 
         return temp
+    
+
+def model_population_by_sex_race_ho_table(df: pd.DataFrame, state: str, cols_to_remove: list, year_range: str="2000-2009") -> pd.DataFrame:
+    # extract numbers from year range
+    years = re.findall(r"\d+", year_range)
+    lo_year = ast.literal_eval(years[0])
+    hi_year = ast.literal_eval(years[-1])
+    
+    # commence preprocessing
+    if lo_year == 2000 and hi_year == 2009:
+        # save sub dataframes for it will be used for 
+        # concatenation later
+        pop_brackets_final = []
+
+        # remove unnecessary columns and rename the columns 
+        temp = df.drop(columns=cols_to_remove)
+        temp = temp.rename(columns={0: "ethnicity", 2: 2000, 3: 2001, 4: 2002, 5: 2003, 6: 2004, 7: 2005, 8: 2006, 9: 2007, 10: 2008, 11: 2009, 13: 2010})
+
+        # clean ethnicity indicator column
+        temp["ethnicity"] = temp["ethnicity"].apply(lambda string: np.nan if pd.isna(string) else string.strip(".").lower())
+
+        # calculate the list slices here
+        male_start = temp.index[temp["ethnicity"] == "male"].to_list()[0]
+        female_start = temp.index[temp["ethnicity"] == "female"].to_list()[0]
+        
+        # since there are multiple indeces with the two 
+        # or more races value we need to pick out the last value
+        female_end = temp.index[temp["ethnicity"] == "two or more races"].to_list()[-1]
+        
+        for gender in ["male", "female"]:
+            # determine the list slices during loop
+            range_1 = slice(male_start, female_start) if gender == "male" else slice(female_start, female_end + 1)
+            pop_bracket_1 = temp.iloc[range_1].reset_index(drop=True)
+
+            # calculate the list slices here for origin
+            non_hisp_start = pop_bracket_1.index[pop_bracket_1["ethnicity"] == "not hispanic"].to_list()[-1]
+            hisp_start = pop_bracket_1.index[pop_bracket_1["ethnicity"] == "hispanic"].to_list()[-1]
+            hisp_end = pop_bracket_1.index[pop_bracket_1["ethnicity"] == "two or more races"].to_list()[-1]
+
+            for origin in ["not hispanic", "hispanic"]:
+                # determine the list slices for origin during loop
+                range_2 = slice(non_hisp_start + 2, hisp_start) if origin == "not hispanic" else slice(hisp_start + 2, hisp_end + 1)
+                pop_bracket_2 = pop_bracket_1.iloc[range_2].reset_index(drop=True)
+
+                # add new columns and rename columns before and after stacking
+                pop_bracket_2["origin"] = origin
+                pop_bracket_2["sex"] = gender
+                pop_bracket_2 = pop_bracket_2.set_index(keys=["ethnicity", "origin", "sex"])
+                pop_bracket_2 = pop_bracket_2.stack().reset_index()
+                pop_bracket_2 = pop_bracket_2.rename(columns={"level_3": "year", 0: "population"})
+
+                # set population to int
+                pop_bracket_2["population"] = pop_bracket_2["population"].astype(int)
+                pop_brackets_final.append(pop_bracket_2)
+        
+        # concatenate all sub dataframes into one single dataframe
+        final = pd.concat(pop_brackets_final, axis=0, ignore_index=True)
+        final["state"] = state
+
+        return final
