@@ -416,6 +416,57 @@ Changed database context to 'tempdb'.
 
 here once we go into the command line itnerface of ms sql server the way we execute sql queries or statements is done always after typing the `go` keyword. So every statement or query we type goes into the next line when we press the enter key and once in this line we type `go` nd hit enter again to execute the query
 
+* So cardinality pala is yung relationship ng two or more tables like yung 1 to 1, 1 to many (many to 1), and many to many. If a column of table A has unique rows (strictly one value) and column of table B has unique rows we can say we can establish a 1 to 1 relationship between these values of these columns. If a column of table A has 1 unique value and a column of table B ohowever has more than 1 unique values then we can establish a relationship that's 1 to many or many to 1 if the direction of filter is from B to A. And if many to many then it means that a column from table A has more than 1 unique values and that column from table B has more than 1 unique values also which we can both use to establish relationships. 
+
+* And cross filter is how you want these cardinalities to flow whether single i.e. one way from table A to table B or bidirectional meaning both the flow of cardinality can be from take A to B or vice versa
+
+* I realized you can use sql sub queries in either two places: with the FROM keyword and with the WHERE clause using an IN condition
+ 
+As these seem to be the only ones where we can use tables
+
+I.e. `... FROM (<sub query>)` or `... WHERE <column> IN (<sub query)`
+
+* online transaction processing (OLTP) is used for everyday queries made by applications to databases to maybe retrieve, insert, update, or delete data. And online analytics processing (OLAP) is where data consolidated over a long period of time and doesn't come in an everyday manner like users interacting with servers, and where complex queries are made that erhaps make aggregations on large amounts data for data analysis and business intelligence and insights.
+
+* Headless mode in Selenium refers to the ability to run browser automation scripts without launching a visible browser window or GUI. Instead, the browser operates in the background, performing all the actions you've programmed (navigating to pages, interacting with elements, executing JavaScript) but without displaying anything on your screen.
+
+Think of it like this:
+
+Headful (Normal): Selenium opens a full browser window that you can see and interact with (or watch the script interact with).
+Headless: Selenium runs a browser instance in memory. You don't see a browser window, but the browser engine is still fully functional and processing the web pages.
+Why use headless mode?
+
+Speed and Efficiency: Headless browsing is generally faster and less resource-intensive because it doesn't need to render the GUI. This can significantly speed up your scraping or automation tasks.
+Server Environments: Headless mode is essential for running Selenium scripts on servers or in environments where there's no graphical interface available (e.g., cloud servers, CI/CD pipelines).
+Scalability: Running multiple headless browser instances in parallel is often easier on server resources than running multiple full browser instances.
+Background Tasks: For tasks like web scraping or automated testing that don't require visual confirmation, running in the background is ideal.
+Common Headless Browsers used with Selenium:
+
+Chrome Headless: Chrome offers a built-in headless mode.
+Firefox Headless: Firefox also has a headless mode.
+In essence, when you run Selenium in headless mode, it's like having a virtual browser working silently in the background, fetching and processing web content without any visual output. This makes it a powerful tool for automated tasks that don't require a user interface.
+
+Ah so this is similar to dockers detached mode allpwing docker to just run in the background instead of taking up control of the command line interface
+
+
+That's an excellent analogy! You've बिल्कुल grasped the core concept of running something in the background without direct visual interaction.
+
+Yes, headless mode in Selenium is very similar in principle to Docker's detached mode (-d).
+
+Here's why the comparison works so well:
+
+Running in the Background: Both headless Selenium and detached Docker allow a process (a browser instance or a container) to execute without actively occupying your terminal or displaying a graphical user interface.
+Resource Efficiency: Both approaches are often used for efficiency. Headless Selenium consumes fewer resources than a full browser GUI, and detached Docker containers free up your command line and can run more efficiently in the background.
+Automation and Server Use: Both are crucial for automation and running tasks on servers where direct interaction isn't needed or possible. You wouldn't typically run a full browser GUI on a production server for web scraping, just like you'd usually run your web application in a detached Docker container.
+Control via Other Means: Just as you interact with a detached Docker container using Docker commands (docker logs, docker exec, etc.), you control a headless Selenium browser through your script, telling it which websites to visit, what actions to perform, and how to extract data.
+The key difference lies in what is being run in the background:
+
+Headless Selenium: Runs a web browser engine (like Chrome or Firefox) in memory without a visible UI. Its purpose is to interact with web pages programmatically.
+Docker Detached Mode: Runs an entire isolated environment (a container) in the background. This container can house various applications, including web servers, databases, or even Selenium itself.
+So, while the underlying principle of running a process in the background without direct UI interaction is the same, the nature of the process differs. You could even run a headless Selenium instance inside a detached Docker container!
+
+Your analogy is spot-on for understanding the fundamental idea of background execution and resource management in both contexts.
+
 # Questions:
 * how to fill in missing values?
 * how to drop undesired values based on a filter?
@@ -428,3 +479,4 @@ here once we go into the command line itnerface of ms sql server the way we exec
 
 # Problems to solve:
 1. I can't save year as 4 byte int for 200000+ rows since that would be a waste of space
+2. implement headless browsing of selenium to scrape population data transform the excel sheets and automatically in a data warehouse for data analysis 

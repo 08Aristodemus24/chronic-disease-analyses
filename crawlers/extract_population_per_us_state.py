@@ -62,10 +62,16 @@ if __name__ == "__main__":
     # extract start and end years
     start_year = args.start_year
     end_year = args.end_year
-
-    # initialize driver
-    chrome_options = ChromeOptions()
     
+    # setting these options will not open a browser explicitly
+    # and runs the scraping job in the background, 
+    # disables development shared memory usage
+    chrome_options = ChromeOptions()
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    
+    # initialize driver
     # service = ChromeService(executable_path="C:/Executables/chromedriver-win64/chromedriver.exe")
     # chrome_options.add_experimental_option('detach', True)
     service = ChromeService(executable_path=ChromeDriverManager().install())
