@@ -428,6 +428,8 @@ I.e. `... FROM (<sub query>)` or `... WHERE <column> IN (<sub query)`
 
 * online transaction processing (OLTP) is used for everyday queries made by applications to databases to maybe retrieve, insert, update, or delete data. And online analytics processing (OLAP) is where data consolidated over a long period of time and doesn't come in an everyday manner like users interacting with servers, and where complex queries are made that erhaps make aggregations on large amounts data for data analysis and business intelligence and insights.
 
+basically OLTP is your typical application database like MySQL, Postgres, Microsoft SQL Server, MongoDB, Firebase, etc. And OLAP is basically a database but for extremely large amounst of data (a database on steroids) which is used for business intelligence and analytics and extracting insights from data, these are now what's considered your typical data warehouses like GCP Big Query, Azure Synapse, AWS Redshift, Snowflake, Databricks
+
 * Headless mode in Selenium refers to the ability to run browser automation scripts without launching a visible browser window or GUI. Instead, the browser operates in the background, performing all the actions you've programmed (navigating to pages, interacting with elements, executing JavaScript) but without displaying anything on your screen.
 
 Think of it like this:
@@ -466,6 +468,7 @@ Docker Detached Mode: Runs an entire isolated environment (a container) in the b
 So, while the underlying principle of running a process in the background without direct UI interaction is the same, the nature of the process differs. You could even run a headless Selenium instance inside a detached Docker container!
 
 Your analogy is spot-on for understanding the fundamental idea of background execution and resource management in both contexts.
+
 
 # Questions:
 * how to fill in missing values?

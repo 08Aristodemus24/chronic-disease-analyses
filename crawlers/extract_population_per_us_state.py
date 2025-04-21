@@ -9,16 +9,16 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.support import expected_conditions as EC
 
-import time
-
 from concurrent.futures import ThreadPoolExecutor
 from argparse import ArgumentParser
 
 import pandas as pd
+import re
+import time
+import os
 
 
-
-def extract_populations(start_year: int, end_year: int):
+def extract_populations(driver: webdriver.Chrome, start_year: int, end_year: int):
     years = []
     for year in list(range(start_year, end_year + 1)):
         # visit page per year
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
     # extract populations given the year ranges
-    years = extract_populations(start_year=start_year, end_year=end_year)
+    years = extract_populations(driver, start_year=start_year, end_year=end_year)
     years
 
     # Export extracted data to dataframe
@@ -88,7 +88,13 @@ if __name__ == "__main__":
     # | 2001 | Alabama | 4,480.089 |
     # | 2001 | Alaska | 642.337 |
     # ```
+    DATA_DIR = "../data/population-data"
+    os.makedirs(DATA_DIR, exist_ok=True)
     final = pd.concat(years, axis=0, ignore_index=True)
-    final.to_csv(f'../data/us_populations_per_state_{start_year}_to_{end_year}.csv')
+
+    # save the raw extracted files to data directory 
+    FILE_NAME = f"us_populations_per_state_{start_year}_to_{end_year}.csv"
+    FILE_PATH = os.path.join(DATA_DIR, FILE_NAME)
+    final.to_csv(FILE_PATH)
 
 

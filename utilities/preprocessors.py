@@ -191,7 +191,7 @@ def model_population_table(df: pd.DataFrame, state: str, cols_to_remove: list, y
 
         # clean bracket and population columns
         temp["bracket"] = temp["bracket"].apply(lambda x: x.lower().strip("."))
-        temp["population"] = temp["population"].astype(float)
+        temp["population"] = temp["population"].astype(int)
         
         # extract the age ranges
         age_ranges = temp["bracket"].apply(helper).to_list()
