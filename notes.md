@@ -430,6 +430,10 @@ I.e. `... FROM (<sub query>)` or `... WHERE <column> IN (<sub query)`
 
 basically OLTP is your typical application database like MySQL, Postgres, Microsoft SQL Server, MongoDB, Firebase, etc. And OLAP is basically a database but for extremely large amounst of data (a database on steroids) which is used for business intelligence and analytics and extracting insights from data, these are now what's considered your typical data warehouses like GCP Big Query, Azure Synapse, AWS Redshift, Snowflake, Databricks
 
+* However because snowflake, aws redshift, azure synapse, databricks (since it after 2 hours you have to recreate cluster for databases to run on), and bigquery aren't free some other free OLAP alternatives could be DuckDB which is an open-source column-oriented Relational Database Management System (RDBMS) designed to provide high performance on complex queries against large databases. Another is Apache Druid. However since connectors to powerbi for these OLAp alternatives aren't directly available we will have to download an Open Database Connectivity (ODBC) driver for powerbi. 
+
+for DuckDB: shttps://motherduck.com/docs/integrations/bi-tools/powerbi/
+
 * Headless mode in Selenium refers to the ability to run browser automation scripts without launching a visible browser window or GUI. Instead, the browser operates in the background, performing all the actions you've programmed (navigating to pages, interacting with elements, executing JavaScript) but without displaying anything on your screen.
 
 Think of it like this:
