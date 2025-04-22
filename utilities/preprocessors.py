@@ -364,6 +364,5 @@ def get_state_populations(DATA_DIR: str, cols_to_remove: list, populations: list
         ))
 
     state_populations_df = pd.concat(state_populations, axis=0, ignore_index=True)
-    state_populations_df["id"] = state_populations_df.index + 1
 
     return state_populations_df

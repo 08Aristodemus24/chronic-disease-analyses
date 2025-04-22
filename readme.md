@@ -53,3 +53,26 @@ Initially I thought removing the rows with a stratification of race/ethnicity bu
 But the hard part wasn't this suprisingly, the hard part was transforming the spreadsheets into a format that was not only readable but also easier to query and make some sort of aggregation so that when some operation like summing the population arises it can be easily done through tools like SQL. How I thought of doing the process of somewhat modellin the data from spreadsheet to a SQL table is detailed in the pictures below.
 
 Thanks for reading
+
+
+* Day 3 of this data analytics project: https://github.com/08Aristodemus24/chronic-disease-analyses
+
+TLDR: I never thought processing data could be much more fun than training statistical models, now after doing some sort of intial modelling using pandas (images below) I'm trying to move to processing these same tables and the 1m datapoints from the CDI dataset using PySpark. 
+
+But again if you caught my previous post basically the problem was data having difficult to interpret numbers and so I thought why not collate extra data in order to calculate a more tangible number example below...
+
+In the chronic-disease-indicators (CDI) dataset had rows with attribute/column values more or less like these
+```
+yearstart: 2012
+yearend: 2016
+locationdesc: connecticut
+question: cancer of the lung and bronchus mortality
+datavalueunit: cases per 100000
+datavaluetype: average annual crude rate
+datavalue: 9.6
+stratificationcategory: race/ethnicity
+stratification: asian or pacific islander
+```
+
+where this can be interpreted as the `average annual crude rate of cancer of the lung and bronchus mortality from 2012 to 2016 in the state of connecticut for an asian or pacific islander is 9.6 cases per 100000`. However again this isn't really useful as there isn't a tangible number we could touch on to differentiate the many datapoints of this CDI dataset. What I thought however was that certain calculations could be made such that we can extract the total number of recorded cases for a specific state at a specific year for a specific stratification for a persons specific age bracket. And to do this I had the tables modelled on the extra data I extracted to get the total population for these features and use it to calculate the total number of cases. E.g. total population of a pacific islander, with an age bracket of 0 to 85 and above, in connecticut, from year 2012 to 2016, is let's jsut say in this case 18,283,832 which I knew could be calculated using group by's, aggregations, and filtering clauses in SQL. This is in part I thought of modelling these extra data so that querying using SQL could easily be done. And having recently learned about OLAPs and OLTPs as per feedback from fellow connections here ;), as OLAPs and OLAP cubes store data and features in a manner that could be used for quick slicing and aggregations for data analysis, sI thought this was an apt situation for this problem.
+
