@@ -5,6 +5,8 @@ import json
 import re
 import ast
 
+from concurrent.futures import ThreadPoolExecutor
+
 def column_summary(df: pd.DataFrame):
     """
     returns a dataframe of all columns in the dataframe
@@ -331,5 +333,37 @@ def model_population_by_sex_race_ho_table(df: pd.DataFrame, state: str, cols_to_
             final["state"] = state
 
             return final
+        
     except Exception as e:
         print(f"Error {e} occured at state {state}.") 
+
+
+
+def get_state_populations(DATA_DIR: str, cols_to_remove: list, populations: list, year_range: str, by: str) -> pd.DataFrame:
+    def concur_model_pop_tables(file, to_remove, year_range, callback_fn=model_population_table):
+        FILE_PATH = os.path.join(DATA_DIR, file)
+        state = re.search(r"(^[A-Za-z\s]+)", file)
+        state = "Unknown" if not state else state[0]
+
+        # print(to_remove)
+        # print(year_range)
+        # read excel file
+        df = pd.read_excel(FILE_PATH, dtype=object, header=None)
+        
+        state_population = callback_fn(df, state, to_remove, year_range=year_range)
+        return state_population
+    
+    with ThreadPoolExecutor() as exe:
+        callback_fn = model_population_by_sex_race_ho_table if "sex race and ho" in by else model_population_table
+        state_populations = list(exe.map(
+            concur_model_pop_tables, 
+            populations, 
+            [cols_to_remove] * len(populations),
+            [year_range] * len(populations),
+            [callback_fn] * len(populations)
+        ))
+
+    state_populations_df = pd.concat(state_populations, axis=0, ignore_index=True)
+    state_populations_df["id"] = state_populations_df.index + 1
+
+    return state_populations_df
