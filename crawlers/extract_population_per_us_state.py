@@ -60,8 +60,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # extract start and end years
-    start_year = args.start_year
-    end_year = args.end_year
+    start_year, end_year = args.start_year, args.end_year
     
     # setting these options will not open a browser explicitly
     # and runs the scraping job in the background, 

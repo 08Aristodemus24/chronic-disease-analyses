@@ -82,7 +82,7 @@ def model_population_table(df: pd.DataFrame, state: str, cols_to_remove: list, y
             return (numbers[-1], float('inf'))
         
         # if it is a single number just return that number
-        return (np.nan, numbers[-1])
+        return (numbers[-1], np.nan)
     
     try:
         # ex`tract numbers from year range
