@@ -480,9 +480,10 @@ Your analogy is spot-on for understanding the fundamental idea of background exe
 * what is formatting data? Select a column of numbers then we select the formatting of this column and set it to currency to turn numbers into currency e.g. with decimals etc.
 
 # Relevant articles and links:
-1. https://stackoverflow.com/questions/696506/sql-datatype-how-to-store-a-year
-2. https://stackoverflow.com/questions/47357855/sql-add-only-a-year-value-in-a-date-column
-3. https://medium.com/analytics-vidhya/analysis-of-time-series-data-dad4afa56358
+* https://stackoverflow.com/questions/696506/sql-datatype-how-to-store-a-year
+* https://stackoverflow.com/questions/47357855/sql-add-only-a-year-value-in-a-date-column
+* https://medium.com/analytics-vidhya/analysis-of-time-series-data-dad4afa56358
+* performance tuning of apache spark: https://medium.com/@manoj.kdas37/how-to-optimize-your-apache-spark-jobs-top-10-approaches-and-best-practices-for-performance-tuning-4630ae864f52
 
 # Problems to solve:
 1. I can't save year as 4 byte int for 200000+ rows since that would be a waste of space
