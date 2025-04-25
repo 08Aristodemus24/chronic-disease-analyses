@@ -13,12 +13,13 @@ from concurrent.futures import ThreadPoolExecutor
 from argparse import ArgumentParser
 
 import pandas as pd
+import csv
 import re
 import time
 import os
 
 
-def extract_populations(driver: webdriver.Chrome, start_year: int, end_year: int):
+def extract_populations(driver: webdriver.Chrome, file_path: str, start_year: int, end_year: int):
     years = []
     for year in list(range(start_year, end_year + 1)):
         # visit page per year
@@ -38,19 +39,28 @@ def extract_populations(driver: webdriver.Chrome, start_year: int, end_year: int
             population = element.find_element(by=By.CSS_SELECTOR, value='td.fred-rls-elm-vl-td').text
             population = population.strip()
 
-            return state, population
+            return state, population, year
         
         with ThreadPoolExecutor() as exe:
             # state populations will be a dictionary
             state_populations = list(exe.map(helper, table_rows))
 
-        states, populations = zip(*state_populations)
-        yearly_df = pd.DataFrame({"state": states, "population": populations})
-        yearly_df["year"] = year
-        years.append(yearly_df)
+        # if csv file does not already exist yet create it 
+        headers = ['State', 'Population', 'Year']
+        if not os.path.exists(file_path):
+            with open(file_path, "w", newline="") as csv_file:
+                # identifying header
+                writer = csv.writer(csv_file)
+                writer.writerow(headers)
+                csv_file.close()
 
-    # return all years containing all states populations
-    return years
+        else:
+            # open an existing csv file
+            with open(file_path, "a", newline="") as csv_file:
+                csv_writer = csv.writer(csv_file)
+                csv_writer.writerows(state_populations)
+                csv_file.close()
+
 
 
 if __name__ == "__main__":
@@ -76,10 +86,6 @@ if __name__ == "__main__":
     service = ChromeService(executable_path=ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
-    # extract populations given the year ranges
-    years = extract_populations(driver, start_year=start_year, end_year=end_year)
-    years
-
     # Export extracted data to dataframe
     # data will be arranged in this manner:
     # ```
@@ -87,13 +93,13 @@ if __name__ == "__main__":
     # | 2001 | Alabama | 4,480.089 |
     # | 2001 | Alaska | 642.337 |
     # ```
-    DATA_DIR = "../data/population-data"
+    # DATA_DIR = "../data/population-data"
+    DATA_DIR = "../data/test"
     os.makedirs(DATA_DIR, exist_ok=True)
-    final = pd.concat(years, axis=0, ignore_index=True)
 
     # save the raw extracted files to data directory 
     FILE_NAME = f"us_populations_per_state_{start_year}_to_{end_year}.csv"
     FILE_PATH = os.path.join(DATA_DIR, FILE_NAME)
-    final.to_csv(FILE_PATH)
 
-
+    # extract populations given the year ranges
+    extract_populations(driver, FILE_PATH, start_year=start_year, end_year=end_year)

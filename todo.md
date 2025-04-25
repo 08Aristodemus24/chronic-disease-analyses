@@ -7,6 +7,8 @@
 
 * add primary key to each table during transformation phase as this will be needed when we finally upload these tables to a data warehosue for cdi the pks will be topicid, questionid, and locationid
 * the cdi will also be normalized and split into two fact tables one with age brackets and another table without age brackets e.g. 'Infants breastfed at 6 months', 'Receiving formula supplementation within the first 2 days of life among breastfed infants', 'Life expectancy at age 65 years', etc.
+* <s>clean and transform cdi data using pyspark</s>
+* place xls and xlsx population data in AWS and read in databricks
 
 * use selenium, docker, and airflow to automate extraction process and then use pyspark and databricks to transform extracted data and load the final data into a warehouse like databricks. All of this is orchestrated using airflow. 
 * we use pyspark for preprocessing the data to make sql queries

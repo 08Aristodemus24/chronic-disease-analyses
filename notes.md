@@ -473,6 +473,74 @@ So, while the underlying principle of running a process in the background withou
 
 Your analogy is spot-on for understanding the fundamental idea of background execution and resource management in both contexts.
 
+* if pyspark is not yet added to our path upon installation in our environment or globally we will need to locate the bin directory inside pyspark directory and add the bin directory path to our `PATH` environment variable. Why we do this is so we can run spark-submit and other spark related commands in our command line.
+
+* if an error 
+```
+25/04/22 12:52:59 WARN Shell: Did not find winutils.exe: java.io.FileNotFoundException: java.io.FileNotFoundException: HADOOP_HOME and hadoop.home.dir are unset. -see https://wiki.apache.org/hadoop/WindowsProblems
+Python was not found; run without arguments to install from the Microsoft Store, or disable this shortcut from Settings > Apps > Advanced app settings > App execution aliases.
+25/04/22 12:52:59 INFO ShutdownHookManager: Shutdown hook called
+25/04/22 12:52:59 INFO ShutdownHookManager: Deleting directory C:\Users\LARRY\AppData\Local\Temp\spark-b0654aae-f91c-442d-b27a-66b287ffd557
+```
+occurs this means that we have to install winutils via pip in our conda environment or globally in our  local machine.
+
+* another solution is gooing to manage app execution aliases and turning off python and python3: https://stackoverflow.com/questions/65348890/python-was-not-found-run-without-arguments-to-install-from-the-microsoft-store
+
+* another error connected to the above is...
+```
+Missing Python executable 'python3', defaulting to 'C:\Users\LARRY\anaconda3\envs\tech-interview\Scripts\..' for SPARK_HOME environment variable. Please install Python or specify the correct Python executable in PYSPARK_DRIVER_PYTHON or PYSPARK_PYTHON environment variable to detect SPARK_HOME safely.
+The system cannot find the path specified.
+The system cannot find the path specified.
+```
+this maybe due to dependency errors and certain values not being added to the path system environment variable or an environment variable not being added such as `SPARK_HOME`, `HADOOP_HOME`, and `JAVA_HOME` as system environment variables containing the installation location of these softwares
+
+take note that spark 3.5.4 requires java 8 or 17 and later. When on the downloads page it will also indicate that it is prevuilt for hadoop 3.3 and later meaning we have to install hadoop 3.3.0 and later releases (but specifically the winutils executable file as it requires winutils) and must be under these release versions.
+
+steps for setting up apache spark from scratch
+- java development kit 17: https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html
+- apache spark: https://spark.apache.org/downloads.html
+- hadoop winutils: https://github.com/kontext-tech/winutils/blob/master/hadoop-3.3.0/bin/winutils.exe
+- once downloaded extract the `spark-3.x.x-bin.hadoop3.tgz`
+- rename the extracted folder `spark-3.x.x-bin.hadoop3` to just `spark-3.x.x`
+- once jdk17 is downloaded run executable file and install JDK and keep track fo installation location which is commonly at `C:\Program Files\Java\jdk-17` 
+- create folder named hadoop and inside it create sub directory/ named bin and move the downloaded hadoop `winutils.exe` file inside
+- move the spark and hadoop folders in any directory or perhaps the `C:\Program Files` directory
+- copy the `C:\Program Files\spark-3.5.5`, `C:\Program Files\hadoop`, `C:\Program Files\Java\jdk-17` paths which contain the bin files of spark, hadoop, and jdk 17
+- add new system environment variables named `SPARK_HOME`, `HADOOP_HOME`, and `JAVA_HOME`, with these values respectively. AH so now I know that you can download these software in a docker container and replicate the same process of copying their installation paths and creating system environment variables through `export JAVA_HOME="installation/dir/of/jdk"`, `export SPARK_HOME="installation/dir/of/jdk"`, `export HADOOP_HOME="installation/dir/of/hadoop"` (however note this inly does it for the current shell and all processes in current shell if you want to do it globally or add it as a system environment variable you need to use `sudo -H gedit /etc/environment`)
+- in windows we can reference these system environment variables as `%<name of env var>%` e.g. `%SPARK_HOME%` and we'd get the value we assigned to this environment/system environment variable and add backslashes to it to reference sub directories in this directory e.g. `%SPARK_HOME%/bin` will be `C:\Program Files\spark-3.5.5\bin`. In linux we use `$<name of env var>`. But we add new values to the system path environment variable where we will now reference these newly created system environment variables. We add `%SPARK_HOME%\bin`, `%HADOOP_HOME%\bin`, and `%JAVA_HOME%\bin`
+- restart the command line and run `javac --version`, `spark-shell`, to check if the installed software has been installed and commands are able to run in command line. spark-shell is a CLI for spark. Now we can use `spark-submit` for our python scripts containing spark sessions
+- we need to also add PYSPARK_HOME containing the path to our global python interpreter which would be in path `C:\Users\LARRY\AppData\Local\Programs\Python\Python312\` and appended to it the `python.exe` e.g. `C:\Users\LARRY\AppData\Local\Programs\Python\Python312\python.exe` as this string will be needed in order for `spark-submit` to run our python scripts containing spark commands
+
+```
+C:\Users\LARRY>spark-shell
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/04/22 13:50:20 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+25/04/22 13:50:22 WARN Utils: Service 'SparkUI' could not bind on port 4040. Attempting port 4041.
+Spark context Web UI available at http://LAPTOP-3GL266K9.bbrouter:4041
+Spark context available as 'sc' (master = local[*], app id = local-1745301022738).
+Spark session available as 'spark'.
+Welcome to
+      ____              __
+     / __/__  ___ _____/ /__
+    _\ \/ _ \/ _ `/ __/  '_/
+   /___/ .__/\_,_/_/ /_/\_\   version 3.5.5
+      /_/
+
+Using Scala version 2.12.18 (Java HotSpot(TM) 64-Bit Server VM, Java 17.0.12)
+Type in expressions to have them evaluated.
+Type :help for more information.
+
+scala>
+```
+
+* in order to read excel files spark needs to download and then include external packages which can be run by command `spark-submit --packages com.crealytics:spark-excel_2.12:3.5.1_0.20.4 test_submit.py`. In order to execute this spark script it is imperative to add this packages argument as this indicates the dependency that we need installed when running this script transforming excel files
+
+* `com.crealytics:spark-excel_2.12:3.5.1_0.20.4` is actuall ythe package we need to read these excel files using spark where `com.crealytics` is the group id, `spark-excel_2.12` is the artifact id, and `3.5.1_0.20.4` is the release version
+
+* but how come this works when using `spark-submit` but when using jupyter notebooks the extra packages are not downloaded 
+
+* this is why if your going to use spark with airflow or in a docker container it is better to install it globally in the container rather than as a package and then set the paths manually
 
 # Questions:
 * how to fill in missing values?
