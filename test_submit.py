@@ -64,12 +64,29 @@ if __name__ == "__main__":
     # create index for spark dataframe
     increasing_col = f.monotonically_increasing_id()
     window = Window.orderBy(increasing_col)
-    test_spark_df_00_10 = test_spark_df_00_10.withColumn("index", f.row_number().over(window) - 1)
+    index_col = f.row_number().over(window) - 1
+    test_spark_df_00_10 = test_spark_df_00_10.withColumn("index", index_col)
 
     # extract the index location of where the row first indicates male
-    male_start = test_spark_df_00_10.filter(f.col("_c0") == "MALE").select("index") 
-    print(male_start.collect())
-    male_start.show()
-    # f.slice("*", 39)
+    male_start = test_spark_df_00_10.filter(f.col("_c0") == "MALE").select("index").collect()[0]["index"]
+    pop_bracket_raw = test_spark_df_00_10.where(f.col("index").between(male_start, test_spark_df_00_10.count() - 1))
+    
+    # get indeces
+    female_start = pop_bracket_raw.filter(f.col("_c0") == "FEMALE").select("index").collect()[0]["index"]
+    end_indeces = pop_bracket_raw.filter(f.col("_c0") == ".Median age (years)").select("index").collect()
+    male_end, female_end = end_indeces[0]["index"], end_indeces[-1]["index"]
 
+    print(f"male start: {male_start}")
+    print(f"female start: {female_start}")
+    print(f"male end: {male_end}")
+    print(f"female end: {female_end}")
 
+    # split the excel spreadsheet into the male and female population brackets
+    # and reset index using earlier made row_num window function 
+    pop_bracket_raw = {
+        "male": test_spark_df_00_10.where(f.col("index").between(male_start, male_end + 1)).withColumn("index", index_col), 
+        "female": test_spark_df_00_10.where(f.col("index").between(female_start, female_end + 1)).withColumn("index", index_col)
+    }
+
+    pop_bracket_raw["male"].show()
+    pop_bracket_raw["female"].show()

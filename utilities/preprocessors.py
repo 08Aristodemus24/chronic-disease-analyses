@@ -101,7 +101,10 @@ def model_population_table(df: pd.DataFrame, state: str, cols_to_remove: list, y
             male_end, female_end = pop_brackets_raw[pop_brackets_raw[0] == ".Median age (years)"].index.to_list()
 
             # split the excel spreadsheet into the male and female population brackets
-            pop_brackets_raw = {"male": df.iloc[male_start:male_end], "female": df.iloc[female_start:female_end]}
+            pop_brackets_raw = {
+                "male": df.iloc[male_start:male_end].reset_index(drop=True), 
+                "female": df.iloc[female_start:female_end].reset_index(drop=True)
+            }
 
             # collects population brackets of females and males
             pop_brackets_final = []
