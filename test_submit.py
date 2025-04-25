@@ -44,7 +44,7 @@ if __name__ == "__main__":
     populations_by_sex_race_ho_10_19 = list(filter(lambda file: "2010-2019" in file and "by_sex_race_and_ho" in file, files))
     populations_by_sex_age_20_23 = list(filter(lambda file: "2020-2023" in file and "by_sex_and_age" in file, files))
     populations_by_sex_race_ho_20_23 = list(filter(lambda file: "2020-2023" in file and "by_sex_race_and_ho" in file, files))
-    
+
 
     # .\data\population-data\Alabama_pop_by_sex_and_age_2000-2010.xls
     path = os.path.join(DATA_DIR, "Alabama_pop_by_sex_and_age_2000-2010.xls")
@@ -70,5 +70,6 @@ if __name__ == "__main__":
     male_start = test_spark_df_00_10.filter(f.col("_c0") == "MALE").select("index") 
     print(male_start.collect())
     male_start.show()
+    # f.slice("*", 39)
 
 
