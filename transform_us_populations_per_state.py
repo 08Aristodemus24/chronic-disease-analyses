@@ -16,6 +16,9 @@ def transform(df: pyspark.sql.dataframe.DataFrame):
     df = df.withColumn("Population", f.regexp_replace(df.Population, f.lit(r"[.,]"), f.lit("")).cast(LongType()))
     df.show()
 
+    # clear dataframe from memory
+    df.unpersist()
+
 if __name__ == "__main__":
     DATA_DIR = "./data/population-data"
 

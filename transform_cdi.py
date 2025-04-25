@@ -278,6 +278,9 @@ def transform(df: pyspark.sql.dataframe.DataFrame):
     df = df.drop("Stratification1")
     df.show()
 
+    # clear dataframe from memory
+    df.unpersist()
+
 
 if __name__ == "__main__":
     DATA_DIR = "./data/chronic-disease-data"

@@ -95,7 +95,7 @@ def model_population_table(df: pd.DataFrame, state: str, cols_to_remove: list, y
             # get start of population values with male sex
             male_start = df[df[0] == "MALE"].index.to_list()[0]
 
-            pop_brackets_raw = df.iloc[male_start:]
+            pop_brackets_raw = df.iloc[male_start:] 
 
             female_start = pop_brackets_raw[pop_brackets_raw[0] == "FEMALE"].index.to_list()[0]
             male_end, female_end = pop_brackets_raw[pop_brackets_raw[0] == ".Median age (years)"].index.to_list()
