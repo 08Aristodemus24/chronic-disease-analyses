@@ -2,14 +2,22 @@ import os
 import re
 import ast
 
+from functools import reduce
 from pyspark.sql.functions import (monotonically_increasing_id, 
     row_number, 
     col,
     lower as sparkLower,
     regexp_replace,
-    lit)
-from pyspark.sql.types import DoubleType, LongType
+    regexp,
+    regexp_extract_all,
+    regexp_extract,
+    lit,
+    when,
+    concat,
+    array,)
+from pyspark.sql.types import DoubleType, LongType, ArrayType, FloatType, IntegerType
 from pyspark.sql import SparkSession, Window
+from pyspark.sql.dataframe import DataFrame
 
 
 # def get_state_populations(DATA_DIR: str, cols_to_remove: list, populations: list, year_range: str, by: str) -> pd.DataFrame:
@@ -174,8 +182,9 @@ if __name__ == "__main__":
         # remove rows with at least 5 nan values
         temp = temp.dropna(thresh=5)
 
-        # clean bracket column then turn the bracket
-        # into an index
+        # clean bracket column then stack the year columns
+        # onto each other and have each value in their rows
+        # to be the population values
         temp = temp.withColumn(
             "Bracket", 
             # we place square brackets to match . because if we remvoe
@@ -190,32 +199,71 @@ if __name__ == "__main__":
             variableColumnName="Year",
             valueColumnName="Population"
         )
+
+        # set sex and state columns
         temp = temp.withColumn("Sex", lit(gender))
         temp = temp.withColumn("State", lit("Alabama"))
 
-        # def helper(bracket: str | None):
-        #     bracket = bracket.lower()
-        #     keyword = re.search(r"(under|to|and over|\+)", bracket)
-        #     keyword = np.nan if not keyword else keyword[0]
-        #     numbers = re.findall(r"\d+", bracket)
-        #     numbers = [ast.literal_eval(number) for number in numbers]
-        #     # print(keyword)
-        #     # print(numbers)
-
-        #     # e.g. "under 5" becomes "_under_5"
-        #     if keyword == "under":
-        #         return (0, numbers[-1])
-            
-        #     # e.g. "5 to 9" becomes "_5_to_9"
-        #     elif keyword == "to":
-        #         return (numbers[0], numbers[-1])
-            
-        #     # e.g. "9 and over" becomes "_9_and_over"
-        #     elif keyword == "and over" or keyword == "+": 
-        #         return (numbers[-1], float('inf'))
-            
-        #     # if it is a single number just return that number
-        #     return (numbers[-1], np.nan)
+        # extract keyword from column
+        keyword_col = regexp_extract(col("Bracket"), r"(under|to|and\s*over|\+)", 1)
+        age_cases = when(
+            keyword_col == "under",
+            concat(
+                array(lit(0.0)),
+                regexp_extract_all(
+                    col("Bracket"), 
+                    lit(r"(\d+)"), 
+                    1
+                ).cast(ArrayType(FloatType()))
+            )
+        )\
+        .when(
+            keyword_col == "to",
+            regexp_extract_all(
+                col("Bracket"), 
+                lit(r"(\d+)"), 
+                1
+            ).cast(ArrayType(FloatType()))
+        )\
+        .when(
+            keyword_col == "and over",
+            concat(
+                regexp_extract_all(
+                    col("Bracket"), 
+                    lit(r"(\d+)"), 
+                    1
+                ).cast(ArrayType(FloatType())),
+                array(lit(float("inf"))),
+            )
+        )\
+        .otherwise(
+            concat(
+                # [1] or [85] or [2] these imply that the
+                # bracket column was only a single number and had
+                # no substrings like "to", "under", "+", and "and over" 
+                regexp_extract_all(
+                    col("Bracket"), 
+                    lit(r"(\d+)"), 
+                    1
+                ).cast(ArrayType(FloatType())),
+                # [NULL]
+                array(lit(None))
+            )
+        )
         
+        # create AgeStart and AgeEnd columns
+        temp = temp.withColumn("AgeStart", age_cases[0]) \
+        .withColumn("AgeEnd", age_cases[1])
+
+        # remove underscore in year values and cast to int
+        temp = temp.withColumn("Year", regexp_replace(col("Bracket"), r"[_]", "").cast(IntegerType()))
         temp.show()
-        print(f"{gender} bracket count and dtypes: {temp.count()} {temp.dtypes}")
+
+        # append to pop_brackets_list for later concatenation
+        pop_brackets_final.append(temp)
+
+    final = reduce(DataFrame.unionByName, pop_brackets_final)
+    final.show(580)
+
+
+    
