@@ -226,6 +226,8 @@ def model_population_by_sex_race_ho_table(df: pd.DataFrame, state: str, cols_to_
         # remove unnecessary columns lets say [1, 2] or [1, 12]
         # and rename the columns that are left to the years_list
         # excluding ethnicity column which is always the first column 0
+        # {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12} - {0, 1, 12} = 
+        # {2, 3, 4, 5, 6, 7, 8, 9, 10, 11}
         new_cols = list(set(df.columns) - set(cols_to_remove + [0]))
 
         # new cols is calculated through set(df.columns) - set(cols_to_remove) 
@@ -234,6 +236,9 @@ def model_population_by_sex_race_ho_table(df: pd.DataFrame, state: str, cols_to_
         # dictionary comprehension
 
         # assert len(new_cols) == len(years_list)
+
+        # {2: 2000, 3: 2001, 4: 2002, 5: 2004, 6: 2005, 7: 2006, 8: 2007, 9: 2008
+        # 10: 2009} will be the name mapper to rename the left out columns in the dataframe
         name_mapper = {new_col: years_list[i] for i, new_col in enumerate(new_cols)}
         
         # drop columsn first then rename columns left

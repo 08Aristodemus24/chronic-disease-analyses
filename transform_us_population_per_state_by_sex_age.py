@@ -1,0 +1,160 @@
+import os
+import re
+import ast
+
+from pyspark.sql.functions import (monotonically_increasing_id, 
+    row_number, 
+    col,)
+from pyspark.sql import SparkSession, Window
+
+
+# def get_state_populations(DATA_DIR: str, cols_to_remove: list, populations: list, year_range: str, by: str) -> pd.DataFrame:
+#     def concur_model_pop_tables(file, to_remove, year_range, callback_fn=model_population_table):
+#         FILE_PATH = os.path.join(DATA_DIR, file)
+#         state = re.search(r"(^[A-Za-z\s]+)", file)
+#         state = "Unknown" if not state else state[0]
+
+#         # print(to_remove)
+#         # print(year_range)
+#         # read excel file
+#         df = pd.read_excel(FILE_PATH, dtype=object, header=None)
+        
+#         state_population = callback_fn(df, state, to_remove, year_range=year_range)
+#         return state_population
+    
+#     with ThreadPoolExecutor() as exe:
+#         callback_fn = model_population_by_sex_race_ho_table if "sex race and ho" in by else model_population_table
+#         state_populations = list(exe.map(
+#             concur_model_pop_tables, 
+#             populations, 
+#             [cols_to_remove] * len(populations),
+#             [year_range] * len(populations),
+#             [callback_fn] * len(populations)
+#         ))
+
+#     state_populations_df = pd.concat(state_populations, axis=0, ignore_index=True)
+
+#     return state_populations_df
+
+
+if __name__ == "__main__":
+    DATA_DIR = './data/population-data'
+    EXCLUSIONS = ["us_populations_per_state_2001_to_2021.csv"]
+    files = list(filter(lambda file: not file in EXCLUSIONS, os.listdir(DATA_DIR)))
+    populations_by_sex_age_00_10 = list(filter(lambda file: "2000-2010" in file and "by_sex_and_age" in file, files))
+    populations_by_sex_race_ho_00_10 = list(filter(lambda file: "2000-2010" in file and "by_sex_race_and_ho" in file, files))
+    populations_by_sex_age_10_19 = list(filter(lambda file: "2010-2019" in file and "by_sex_and_age" in file, files))
+    populations_by_sex_race_ho_10_19 = list(filter(lambda file: "2010-2019" in file and "by_sex_race_and_ho" in file, files))
+    populations_by_sex_age_20_23 = list(filter(lambda file: "2020-2023" in file and "by_sex_and_age" in file, files))
+    populations_by_sex_race_ho_20_23 = list(filter(lambda file: "2020-2023" in file and "by_sex_race_and_ho" in file, files))
+
+    year_range = "2000-2009"
+
+    # extract numbers from year range
+    years = re.findall(r"\d+", year_range)
+    lo_year = ast.literal_eval(years[0])
+    hi_year = ast.literal_eval(years[-1])
+    year_fmtr = lambda year: f"_{year}"
+    year_cols = [year_fmtr(year) for year in range(lo_year, hi_year + 1)]
+    print(f"year cols: {year_cols}")
+
+    # .\data\population-data\Alabama_pop_by_sex_and_age_2000-2010.xls
+    path = os.path.join(DATA_DIR, "Alabama_pop_by_sex_and_age_2000-2010.xls")
+    # path = os.path.join(DATA_DIR, "U.S._Chronic_Disease_Indicators__CDI___2023_Release.csv")
+
+    spark = SparkSession.builder.appName('test')\
+        .config("spark.jars.packages", "com.crealytics:spark-excel_2.12:3.5.1_0.20.4")\
+        .getOrCreate()
+
+    test_spark_df_00_10 = spark.read.format("com.crealytics.spark.excel")\
+        .option("header", "false")\
+        .option("inferSchema", "true")\
+        .load(path)
+
+    # since cols in spark are _c0, _c1, ..., _cN we need
+    # to format the numbers into these string values so that
+    # we can specify the columns to be removed later 
+    col_fmtr = lambda col: f"_c{col}"
+    cols_to_remove = [col_fmtr(col) for col in [1, 12, 13]]
+    
+    # remove unnecessary columns lets say [1, 12, 13]
+    # and rename the columns that are left to the years_list
+    # excluding ethnicity column which is always the first column 0
+    # {_c0, _c1, _c2, _c3, _c4, _c5, _c6, _c7, _c8, _c9, _c10, 
+    # _c11, _c12} - {_c1, _c12, _c13, _c0} = 
+    # {_c2, _c3, _c4, _c5, _c6, _c7, _c8, _c9, _c10, _c11}
+    cols_left = sorted(
+        list(
+            set(test_spark_df_00_10.columns) - set(cols_to_remove + [col_fmtr(0)])
+        ), 
+        key=lambda col: int(re.sub(r"_c", "", col))
+    )
+    print(f"cols left: {cols_left}")
+    # new cols is calculated through set(df.columns) - set(cols_to_remove) 
+    # we need to check if length of yeras_list == (length of new cols) - 1
+    # in order to proceed with creating name mapper through
+    # dictionary comprehension
+
+    # {_c2: _2000, _c3: _c2001, _c4: _2002, _c5: _2004, 6: 2005, 7: 2006, 8: 2007, 9: 2008
+    # 10: 2009} will be the name mapper to rename the left out columns in the dataframe
+    name_map = {col: year_cols[i] for i, col in enumerate(cols_left)}
+    print(f"new col names: {name_map}")
+
+    # rename columns
+    for old_col, new_col in name_map.items():
+        test_spark_df_00_10 = test_spark_df_00_10.withColumnRenamed(old_col, new_col)
+    test_spark_df_00_10 = test_spark_df_00_10.withColumnRenamed("_c0", "bracket")
+
+    # remove the columns or the columns that weren't renamed
+    test_spark_df_00_10 = test_spark_df_00_10.drop(*cols_to_remove)
+
+    # create index for spark dataframe
+    increasing_col = monotonically_increasing_id()
+    window = Window.orderBy(increasing_col)
+
+    # returns a column object going from 0 to n
+    index_col = row_number().over(window) - 1
+    test_spark_df_00_10 = test_spark_df_00_10.withColumn("index", index_col)
+
+    # extract the index location of where the row first indicates male
+    male_start = test_spark_df_00_10.where(col("bracket") == "MALE").select("index").collect()[0]["index"]
+    pop_bracket_raw = test_spark_df_00_10.where(col("index").between(male_start, test_spark_df_00_10.count() - 1))
+    
+    # get indeces
+    female_start = pop_bracket_raw.where(col("bracket") == "FEMALE").select("index").collect()[0]["index"]
+    end_indeces = pop_bracket_raw.where(col("bracket") == ".Median age (years)").select("index").collect()
+    male_end, female_end = end_indeces[0]["index"], end_indeces[-1]["index"]
+
+    # print(f"male start: {male_start}")
+    # print(f"female start: {female_start}")
+    # print(f"male end: {male_end}")
+    # print(f"female end: {female_end}")
+
+    # split the excel spreadsheet into the male and female population brackets
+    # and reset index using earlier made row_num window function 
+    pop_bracket_raw = {
+        "male": test_spark_df_00_10.where(col("index").between(male_start, male_end + 1)).withColumn("index", index_col), 
+        "female": test_spark_df_00_10.where(col("index").between(female_start, female_end + 1)).withColumn("index", index_col)
+    }
+
+    # clear previous spark dataframe from memory
+    test_spark_df_00_10.unpersist()
+
+    # pop_bracket_raw["male"].show()
+    # pop_bracket_raw["female"].show()
+
+    # print(pop_bracket_raw["male"].tail(5))
+
+    
+
+    # collects population brackets of females and males
+    pop_brackets_final = []
+    for gender in ["male", "female"]:
+        # Remove the following`
+        # * column `1`, column `12`, and column `13` (the reasoning is these contain only the population estimates of april 1 and not the most recent one which is supposed to be at july 1, and that column `13` is the year 2010 which already exists in the next population years)
+        # * rows with mostly Nan and the a dot symbol in column `1` i.e. `[. Nan Nan Nan Nan Nan ... Nan]`
+        # * and the male column 
+
+        cond = (col("bracket") != ".") & (col("bracket") != gender.upper())
+        temp = pop_bracket_raw[gender].where(cond)
+        temp.show()
