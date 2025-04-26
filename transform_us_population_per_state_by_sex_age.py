@@ -4,7 +4,11 @@ import ast
 
 from pyspark.sql.functions import (monotonically_increasing_id, 
     row_number, 
-    col,)
+    col,
+    lower as sparkLower,
+    regexp_replace,
+    lit)
+from pyspark.sql.types import DoubleType, LongType
 from pyspark.sql import SparkSession, Window
 
 
@@ -103,7 +107,16 @@ if __name__ == "__main__":
     # rename columns
     for old_col, new_col in name_map.items():
         test_spark_df_00_10 = test_spark_df_00_10.withColumnRenamed(old_col, new_col)
-    test_spark_df_00_10 = test_spark_df_00_10.withColumnRenamed("_c0", "bracket")
+    test_spark_df_00_10 = test_spark_df_00_10.withColumnRenamed("_c0", "Bracket")
+
+    # _2000 column is unfortunately read as string by spark so remove , chars 
+    # in number and cast to long int type. Then cast other year columns to longs 
+    type_map = {
+        year_col: regexp_replace(col(year_col), r"[,]", "").cast(LongType()) if year_col == "_2000" \
+        else col(year_col).cast(LongType()) \
+        for year_col in year_cols
+    }
+    test_spark_df_00_10 = test_spark_df_00_10.withColumns(type_map)
 
     # remove the columns or the columns that weren't renamed
     test_spark_df_00_10 = test_spark_df_00_10.drop(*cols_to_remove)
@@ -114,16 +127,16 @@ if __name__ == "__main__":
 
     # returns a column object going from 0 to n
     index_col = row_number().over(window) - 1
-    test_spark_df_00_10 = test_spark_df_00_10.withColumn("index", index_col)
+    test_spark_df_00_10 = test_spark_df_00_10.withColumn("Index", index_col)
 
     # extract the index location of where the row first indicates male
-    male_start = test_spark_df_00_10.where(col("bracket") == "MALE").select("index").collect()[0]["index"]
-    pop_bracket_raw = test_spark_df_00_10.where(col("index").between(male_start, test_spark_df_00_10.count() - 1))
+    male_start = test_spark_df_00_10.where(col("Bracket") == "MALE").select("Index").collect()[0]["Index"]
+    pop_bracket_raw = test_spark_df_00_10.where(col("Index").between(male_start, test_spark_df_00_10.count() - 1))
     
     # get indeces
-    female_start = pop_bracket_raw.where(col("bracket") == "FEMALE").select("index").collect()[0]["index"]
-    end_indeces = pop_bracket_raw.where(col("bracket") == ".Median age (years)").select("index").collect()
-    male_end, female_end = end_indeces[0]["index"], end_indeces[-1]["index"]
+    female_start = pop_bracket_raw.where(col("Bracket") == "FEMALE").select("Index").collect()[0]["Index"]
+    end_indeces = pop_bracket_raw.where(col("Bracket") == ".Median age (years)").select("Index").collect()
+    male_end, female_end = end_indeces[0]["Index"], end_indeces[-1]["Index"]
 
     # print(f"male start: {male_start}")
     # print(f"female start: {female_start}")
@@ -133,28 +146,76 @@ if __name__ == "__main__":
     # split the excel spreadsheet into the male and female population brackets
     # and reset index using earlier made row_num window function 
     pop_bracket_raw = {
-        "male": test_spark_df_00_10.where(col("index").between(male_start, male_end + 1)).withColumn("index", index_col), 
-        "female": test_spark_df_00_10.where(col("index").between(female_start, female_end + 1)).withColumn("index", index_col)
+        "Male": test_spark_df_00_10.where(col("Index").between(male_start, male_end - 1)).withColumn("Index", index_col), 
+        "Female": test_spark_df_00_10.where(col("Index").between(female_start, female_end - 1)).withColumn("Index", index_col)
     }
 
     # clear previous spark dataframe from memory
     test_spark_df_00_10.unpersist()
 
-    # pop_bracket_raw["male"].show()
-    # pop_bracket_raw["female"].show()
-
-    # print(pop_bracket_raw["male"].tail(5))
-
-    
+    # print(f"male count: {pop_bracket_raw["Male"].count()}")
+    # print(f"99999999999999 {pop_bracket_raw["Male"].select("Bracket").distinct().collect()}")
+    # print(f"female count: {pop_bracket_raw["Female"].count()}")
 
     # collects population brackets of females and males
     pop_brackets_final = []
-    for gender in ["male", "female"]:
+    for gender in ["Male", "Female"]:
         # Remove the following`
         # * column `1`, column `12`, and column `13` (the reasoning is these contain only the population estimates of april 1 and not the most recent one which is supposed to be at july 1, and that column `13` is the year 2010 which already exists in the next population years)
         # * rows with mostly Nan and the a dot symbol in column `1` i.e. `[. Nan Nan Nan Nan Nan ... Nan]`
         # * and the male column 
-
-        cond = (col("bracket") != ".") & (col("bracket") != gender.upper())
+        cond = (col("Bracket") != ".") & (col("Bracket") != gender.upper())
         temp = pop_bracket_raw[gender].where(cond)
+
+        # we remove any duplicates in the dataframe especially those with same 
+        # age brackets
+        temp = temp.drop_duplicates(subset=year_cols + ["Bracket"])
+        
+        # remove rows with at least 5 nan values
+        temp = temp.dropna(thresh=5)
+
+        # clean bracket column then turn the bracket
+        # into an index
+        temp = temp.withColumn(
+            "Bracket", 
+            # we place square brackets to match . because if we remvoe
+            # brackets this will mean to match anything except for a 
+            # linebreak which is what only . does 
+            regexp_replace(sparkLower(col("Bracket")), r"[.]", "")
+        )
+        # print(f"data types: {temp.dtypes}")
+        temp = temp.melt(
+            ids=["Bracket"],
+            values=year_cols,
+            variableColumnName="Year",
+            valueColumnName="Population"
+        )
+        temp = temp.withColumn("Sex", lit(gender))
+        temp = temp.withColumn("State", lit("Alabama"))
+
+        # def helper(bracket: str | None):
+        #     bracket = bracket.lower()
+        #     keyword = re.search(r"(under|to|and over|\+)", bracket)
+        #     keyword = np.nan if not keyword else keyword[0]
+        #     numbers = re.findall(r"\d+", bracket)
+        #     numbers = [ast.literal_eval(number) for number in numbers]
+        #     # print(keyword)
+        #     # print(numbers)
+
+        #     # e.g. "under 5" becomes "_under_5"
+        #     if keyword == "under":
+        #         return (0, numbers[-1])
+            
+        #     # e.g. "5 to 9" becomes "_5_to_9"
+        #     elif keyword == "to":
+        #         return (numbers[0], numbers[-1])
+            
+        #     # e.g. "9 and over" becomes "_9_and_over"
+        #     elif keyword == "and over" or keyword == "+": 
+        #         return (numbers[-1], float('inf'))
+            
+        #     # if it is a single number just return that number
+        #     return (numbers[-1], np.nan)
+        
         temp.show()
+        print(f"{gender} bracket count and dtypes: {temp.count()} {temp.dtypes}")
