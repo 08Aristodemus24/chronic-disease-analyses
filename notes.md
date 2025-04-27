@@ -534,7 +534,7 @@ Type :help for more information.
 scala>
 ```
 
-* in order to read excel files spark needs to download and then include external packages which can be run by command `spark-submit --packages com.crealytics:spark-excel_2.12:3.5.1_0.20.4 test_submit.py`. In order to execute this spark script it is imperative to add this packages argument as this indicates the dependency that we need installed when running this script transforming excel files
+* in order to read excel files spark needs to download and then include external packages which can be run by command `spark-submit --packages com.crealytics:spark-excel_2.12:3.5.1_0.20.4 transform_us_population_per_state_by_sex_age.py <arg1> <arg2>`. In order to execute this spark script it is imperative to add this packages argument as this indicates the dependency that we need installed when running this script transforming excel files
 
 * `com.crealytics:spark-excel_2.12:3.5.1_0.20.4` is actuall ythe package we need to read these excel files using spark where `com.crealytics` is the group id, `spark-excel_2.12` is the artifact id, and `3.5.1_0.20.4` is the release version
 
