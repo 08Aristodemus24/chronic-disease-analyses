@@ -9,19 +9,18 @@ from pyspark.sql.functions import (monotonically_increasing_id,
     row_number, 
     col,
     lower as sparkLower,
+    upper as sparkUpper,
+    initcap,
     regexp_replace,
-    regexp,
-    regexp_extract_all,
-    regexp_extract,
     lit,
-    when,
-    concat,
-    array,)
+    when,)
 from pyspark.sql.types import DoubleType, LongType, ArrayType, FloatType, IntegerType
 from pyspark.sql import SparkSession, Window
 from pyspark.sql.dataframe import DataFrame
 
-from concurrent.futures import ThreadPoolExecutor
+from argparse import ArgumentParser
+from utilities.utils import get_state_populations
+
 
 
 def process_population_by_sex_race_ho_table(df: DataFrame, 
@@ -64,15 +63,26 @@ def process_population_by_sex_race_ho_table(df: DataFrame,
     # in order to proceed with creating name mapper through
     # dictionary comprehension
 
-    # remove the columns or the columns that will not
-    # be renamed
-    df = df.drop(*cols_to_remove)
-    
     # {_c2: _2000, _c3: _c2001, _c4: _2002, _c5: _2004, 6: 2005, 7: 2006, 8: 2007, 9: 2008
     # 10: 2009} will be the name mapper to rename the left out columns in the dataframe
     name_map = {col: year_cols[i] for i, col in enumerate(cols_left)}
     print(f"new col names: {name_map}")
 
+    # remove the columns or the columns that will not
+    # be renamed and remove rows that have more than 5
+    # columns of null values also
+    df = df.drop(*cols_to_remove)
+    df = df.dropna(thresh=5)
+
+    # # if there are string columns then check if there are rows
+    # # in this column with alphabetical chars and if so remove those
+    # # rows as e only want number strings in this column to be casted
+    # # to ints
+    # str_cols_left = [col for col in cols_left if df.schema(col).dataType.typeName == "string"]
+    # cond = " | ".join([f'(regexp({col}, r"([A-Za-z]+)"))' for col in str_cols_left])
+    # df = df.where(~cond)
+    
+    
     # rename columns
     for old_col, new_col in name_map.items():
         df = df.withColumnRenamed(old_col, new_col)
@@ -81,15 +91,37 @@ def process_population_by_sex_race_ho_table(df: DataFrame,
     # _2000 column is unfortunately read as string by spark so remove , chars 
     # in number and cast to long int type. Then cast other year columns to longs 
     type_map = {
-        year_col: regexp_replace(col(year_col), r"[,]", "").cast(LongType()) if year_col == "_2000" \
+        year_col: regexp_replace(col(year_col), r"[,]+", "").cast(LongType()) if year_col == "_2000" or year_col == "_2010" or year_col == "_2020" \
         else col(year_col).cast(LongType()) \
         for year_col in year_cols
     }
     df = df.withColumns(type_map)
 
-    # 
-    df = df.withColumn("Ethnicity", regexp_replace(sparkLower(col("Ethnicity")), r"[.]", ""))
-    
+    # remove periods
+    df = df.withColumn("Ethnicity", regexp_replace(sparkLower(col("Ethnicity")), r"[.]+", ""))
+
+    # convert ethnicities to shorter keywords
+    cases = when(
+        col("Ethnicity") == "black or african american",
+        "Black"
+    )\
+    .when(
+        col("Ethnicity") == "american indian and alaska native",
+        "AIAN"
+    )\
+    .when(
+        col("Ethnicity") == "native hawaiian and other pacific islander",
+        "NHPI"
+    )\
+    .when(
+        col("Ethnicity") == "two or more races",
+        "Multiracial"
+    )\
+    .otherwise(
+        initcap(col("Ethnicity"))
+    )
+    df = df.withColumn("Ethnicity", cases)
+
     # create index for spark dataframe
     increasing_col = monotonically_increasing_id()
     window = Window.orderBy(increasing_col)
@@ -100,13 +132,13 @@ def process_population_by_sex_race_ho_table(df: DataFrame,
 
     # extract the index location of where the row first indicates male
     # calculate the list slices here
-    male_start = df.where(col("Ethnicity") == "male").select("Index").collect()[0]["Index"]
-    female_start = df.where(col("Ethnicity") == "female").select("Index").collect()[0]["Index"]
+    male_start = df.where(col("Ethnicity") == "Male").select("Index").collect()[0]["Index"]
+    female_start = df.where(col("Ethnicity") == "Female").select("Index").collect()[0]["Index"]
     
     # since there are multiple indeces with the two 
     # or more races value we need to pick out the last value
-    female_end = df.where(col("Ethnicity") == "two or more races").select("Index").collect()[-1]["Index"]
-    
+    female_end = df.where(col("Ethnicity") == "Multiracial").select("Index").collect()[-1]["Index"]
+
     # collects population brackets of females and males 
     # and origins of both sexes
     pop_brackets_final = []
@@ -119,17 +151,16 @@ def process_population_by_sex_race_ho_table(df: DataFrame,
         # pop_bracket_1.show(pop_bracket_1.count())
 
         # calculate the list slices here for origin
-        non_hisp_start = pop_bracket_1.where(col("Ethnicity") == "not hispanic").select("Index").collect()[0]["Index"]
-        hisp_start = pop_bracket_1.where(col("Ethnicity") == "hispanic").select("Index").collect()[-1]["Index"]
-        end_indeces = pop_bracket_1.where(col("Ethnicity") == "two or more races").select("Index").collect()
+        non_hisp_start = pop_bracket_1.where(col("Ethnicity") == "Not Hispanic").select("Index").collect()[0]["Index"]
+        hisp_start = pop_bracket_1.where(col("Ethnicity") == "Hispanic").select("Index").collect()[-1]["Index"]
+        end_indeces = pop_bracket_1.where(col("Ethnicity") == "Multiracial").select("Index").collect()
         non_hisp_end, hisp_end = end_indeces[-2]["Index"], end_indeces[-1]["Index"]
-
-        # print(f"non hispanic indeces: {non_hisp_start}, {non_hisp_end}")
-        # print(f"hispanic indeces: {hisp_start}, {hisp_end}")
 
         for origin in ["Not Hispanic", "Hispanic"]:
             # determine the list slices for origin during loop
-            range_cond_2 = col("Index").between(non_hisp_start + 2, non_hisp_end) if origin == "Not Hispanic" else col("Index").between(hisp_start + 2, hisp_end)
+            range_cond_2 = col("Index").between(non_hisp_start + (2 if lo_year == 2000 and hi_year == 2009 else 1), non_hisp_end) \
+                if origin == "Not Hispanic" \
+                else col("Index").between(hisp_start + (2 if lo_year == 2000 and hi_year == 2009 else 1), hisp_end)
             pop_bracket_2 = pop_bracket_1.where(range_cond_2)
             # pop_bracket_2.show(pop_bracket_2.count())
 
@@ -162,32 +193,61 @@ def process_population_by_sex_race_ho_table(df: DataFrame,
 
 if __name__ == "__main__":
     # get year range and state from user input
-    year_range = sys.argv[1]
-    state = sys.argv[2].capitalize()
+    parser = ArgumentParser()
+    parser.add_argument("--year-range-list", type=str, default="2000-2009", nargs="+", help="represents the lists of year ranges that spark script would base on to transform excel files of these year ranges")
+    parser.add_argument("--state", type=str, default="alabama")
+    args = parser.parse_args()
 
-    # spark-submit --packages com.crealytics:spark-excel_2.12:3.5.1_0.20.4 transform_us_population_per_state_by_sex_race_ho.py
-    # define file paths, and data directories
+    # get arguments
+    year_range_list = args.year_range_list
+    # state = args.state.capitalize()
+
     DATA_DIR = './data/population-data'
-    FILE = f"{state}_pop_by_sex_race_and_ho_{"2000-2010" if year_range == "2000-2009" else year_range}.xls{"" if year_range == "2000-2009" else "x"}"
-    FILE_PATH = os.path.join(DATA_DIR, FILE)
+    EXCLUSIONS = ["us_populations_per_state_2001_to_2021.csv"]
+    files = list(filter(lambda file: not file in EXCLUSIONS, os.listdir(DATA_DIR)))
+    populations_by_sex_race_ho_00_10 = list(filter(lambda file: "2000-2010" in file and "by_sex_race_and_ho" in file, files))
+    populations_by_sex_race_ho_10_19 = list(filter(lambda file: "2010-2019" in file and "by_sex_race_and_ho" in file, files))
+    populations_by_sex_race_ho_20_23 = list(filter(lambda file: "2020-2023" in file and "by_sex_race_and_ho" in file, files))
 
     # create spark session
     spark = SparkSession.builder.appName('test')\
         .config("spark.jars.packages", "com.crealytics:spark-excel_2.12:3.5.1_0.20.4")\
         .getOrCreate()
-
-    # read excel file
-    df = spark.read.format("com.crealytics.spark.excel")\
-        .option("header", "false")\
-        .option("inferSchema", "true")\
-        .load(FILE_PATH)
     
-    if year_range == "2000-2009":
-        cols_to_remove = [1, 12, 13]
-    elif year_range == "2010-2019":
-        cols_to_remove = [1, 2]
-    elif year_range == "2020-2023":
-        cols_to_remove = [1]
+    # get year range from system arguments sys.argv
+    state_populations_all_years = []
 
-    state_population = process_population_by_sex_race_ho_table(df, state, cols_to_remove, year_range)
-    state_population.show(state_population.count())
+    # loop through year_ranges
+    for year_range in year_range_list:
+        # 2000 - 2010
+        if year_range == "2000-2009":
+            cols_to_remove = [1, 12, 13]
+            populations = populations_by_sex_race_ho_00_10 
+
+        # 2010 - 2019
+        elif year_range == "2010-2019":
+            cols_to_remove = [1, 2]
+            populations = populations_by_sex_race_ho_10_19
+
+        # 2020 - 2023
+        elif year_range == "2020-2023":
+            cols_to_remove = [1]
+            populations = populations_by_sex_race_ho_20_23
+
+        # concurrently process state populations by year range
+        state_populations_df = get_state_populations(
+            DATA_DIR, 
+            spark, 
+            cols_to_remove, 
+            populations, 
+            year_range,
+            callback_fn=process_population_by_sex_race_ho_table)
+        
+        # collect state populations from all years using list
+        state_populations_all_years.append(state_populations_df)
+
+    # concatenate all state populations from all year ranges
+    final = reduce(DataFrame.unionByName, state_populations_all_years)
+    final.show(final.count())
+    print(f"final population dtypes: {final.dtypes}")
+    print(f"final population count: {final.count()}")

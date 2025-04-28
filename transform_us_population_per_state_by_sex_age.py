@@ -21,7 +21,8 @@ from pyspark.sql.types import DoubleType, LongType, ArrayType, FloatType, Intege
 from pyspark.sql import SparkSession, Window
 from pyspark.sql.dataframe import DataFrame
 
-from concurrent.futures import ThreadPoolExecutor
+from argparse import ArgumentParser
+from utilities.utils import get_state_populations
 
 
 
@@ -187,7 +188,7 @@ def process_population_by_sex_age_table(df: DataFrame,
         
         # _2000 column is unfortunately read as string by spark so remove , chars 
         # in number and cast to long int type. Then cast other year columns to longs 
-        type_map = {year_col: regexp_replace(col(year_col), r"[,]", "").cast(LongType()) for year_col in year_cols}
+        type_map = {year_col: regexp_replace(col(year_col), r"[,]+", "").cast(LongType()) for year_col in year_cols}
         for gender in ["Male", "Female"]:
             pop_bracket_raw[gender]["DataFrame"] = pop_bracket_raw[gender]["DataFrame"].withColumns(type_map)
         
@@ -214,7 +215,7 @@ def process_population_by_sex_age_table(df: DataFrame,
             # we place square brackets to match . because if we remvoe
             # brackets this will mean to match anything except for a 
             # linebreak which is what only . does 
-            regexp_replace(sparkLower(col("Bracket")), r"[.]", "")
+            regexp_replace(sparkLower(col("Bracket")), r"[.]+", "")
         )
         # print(f"data types: {temp.dtypes}")
         temp = temp.melt(
@@ -298,64 +299,22 @@ def process_population_by_sex_age_table(df: DataFrame,
 
 
 
-def get_state_populations_by_sex_age(
-    DATA_DIR: str,
-    session: SparkSession,
-    cols_to_remove: list,
-    populations: list,
-    year_range: str,
-    by: str):
-    
-    """
-    concurrently runs the state population processor functions for
-    each dataframe loaded
-    """
-
-    # define function to read each excel file as spark
-    # dataframe concurrently
-    def concur_model_pop_tables(file, to_remove, year_range, callback_fn=process_population_by_sex_age_table):
-        FILE_PATH = os.path.join(DATA_DIR, file)
-        state = re.search(r"(^[A-Za-z\s]+)", file)
-        state = "Unknown" if not state else state[0]
-
-        # print(to_remove)
-        # print(year_range)
-        # read excel file
-        df = session.read.format("com.crealytics.spark.excel")\
-        .option("header", "false")\
-        .option("inferSchema", "true")\
-        .load(FILE_PATH)
-        
-        state_population = callback_fn(df, state, to_remove, year_range=year_range)
-        return state_population
-    
-    # concurrently run function to build spark dataframes
-    with ThreadPoolExecutor(max_workers=2) as exe:
-        callback_fn = function if "sex race and ho" in by else process_population_by_sex_age_table
-        state_populations = list(exe.map(
-            concur_model_pop_tables, 
-            populations, 
-            [cols_to_remove] * len(populations),
-            [year_range] * len(populations),
-            [callback_fn] * len(populations)
-        ))
-
-    # concatenate and unionize all spark dataframes
-    state_populations_df = reduce(DataFrame.unionByName, state_populations)
-
-    return state_populations_df
-
-
 if __name__ == "__main__":
+    # get year range and state from user input
+    parser = ArgumentParser()
+    parser.add_argument("--year-range-list", type=str, default="2000-2009", nargs="+", help="represents the lists of year ranges that spark script would base on to transform excel files of these year ranges")
+    parser.add_argument("--state", type=str, default="alabama")
+    args = parser.parse_args()
+
+    # get arguments
+    year_range_list = args.year_range_list
+
     DATA_DIR = './data/population-data'
     EXCLUSIONS = ["us_populations_per_state_2001_to_2021.csv"]
     files = list(filter(lambda file: not file in EXCLUSIONS, os.listdir(DATA_DIR)))
     populations_by_sex_age_00_10 = list(filter(lambda file: "2000-2010" in file and "by_sex_and_age" in file, files))
-    populations_by_sex_race_ho_00_10 = list(filter(lambda file: "2000-2010" in file and "by_sex_race_and_ho" in file, files))
     populations_by_sex_age_10_19 = list(filter(lambda file: "2010-2019" in file and "by_sex_and_age" in file, files))
-    populations_by_sex_race_ho_10_19 = list(filter(lambda file: "2010-2019" in file and "by_sex_race_and_ho" in file, files))
     populations_by_sex_age_20_23 = list(filter(lambda file: "2020-2023" in file and "by_sex_and_age" in file, files))
-    populations_by_sex_race_ho_20_23 = list(filter(lambda file: "2020-2023" in file and "by_sex_race_and_ho" in file, files))
 
     # create spark session
     spark = SparkSession.builder.appName('test')\
@@ -364,10 +323,9 @@ if __name__ == "__main__":
 
     # get year range from system arguments sys.argv
     state_populations_all_years = []
-    year_ranges = sys.argv
 
     # loop through year_ranges
-    for year_range in year_ranges[1:]:
+    for year_range in year_range_list:
         # 2000 - 2010
         if year_range == "2000-2009":
             cols_to_remove = [1, 12, 13]
@@ -384,20 +342,20 @@ if __name__ == "__main__":
             populations = populations_by_sex_age_20_23
 
         # concurrently process state populations by year range
-        state_populations_df = get_state_populations_by_sex_age(
+        state_populations_df = get_state_populations(
             DATA_DIR, 
             spark, 
             cols_to_remove, 
             populations, 
-            year_range, 
-            by="sex and age")
+            year_range,
+            callback_fn=process_population_by_sex_age_table)
         
         # collect state populations from all years using list
         state_populations_all_years.append(state_populations_df)
 
     # concatenate all state populations from all year ranges
     final = reduce(DataFrame.unionByName, state_populations_all_years)
-    final.show()
-
+    final.show(final.count())
+    print(f"final population dtypes: {final.dtypes}")
     print(f"final population count: {final.count()}")
     
