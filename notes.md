@@ -628,9 +628,27 @@ COPY ./requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 ```
 - extract the components of the downloaded tar.gz or .tgz file using `tar xvzf <name of compressed tar file> --directory <directory in linux/docker container you want the tar file contents to be dumped once extracted>`
-- know where each package namely spark, hadoop, and jdk was installed and copy its path and use this path to set environment variables in the docker file
+- know where each package namely spark, hadoop, and jdk was installed and copy its path and use this path to set environment variables in the docker file e.g. SPARK_HOME, JAVA_HOME, PYSPARK_HOME
 - somehow you're going to need to change permissions when copying, moving, and reading the files downloaded in the container so you have to learn `chmod` and other commands like it
--
+- 
+
+* `-L`, `--location` - Allow curl to follow any redirections. E.g. `curl -L https://example.com` 
+* `f`, `--fail` - If the server returns an error, curl fails silently and returns error 22. e.g. `curl --fail https://example.com`
+* `-o`, `--output` <file> - Store output in a file. The output is not shown in stdout. E.g. `curl -o file https://example.com -o file2 https://example.net`
+* `-O`, `--remote-name`	- Specify that the local file should have the name of the remote file that was downloaded. E.g. `curl -O https://example.com/filename` otherwise we can provide our own file name using the `-o` argument
+* we can combine multiple arguments in one, using only a hyphen and the letters upper or lowercase that represent a specific argument e.g. `curl -LfO 'https://airflow.apache.org/docs/apache-airflow/3.0.0/docker-compose.yaml'` means we will download a file in this location and that the local file should have this same remote files name and if it returns an error it will do so silently and return only `22`
+
+* with the `chmod` command you can use either numeric or symbols to change permissions of a file or directory in linux
+* `ls` command with argument `-l` indicates that we want to list the files in a directory with meta data such as the permission level of each user for a file or files
+* there are 3 types of users, root, group, and other users
+* when we see the meta data of a file using `ls -l`, it might list the ff. examples
+- `---------- 1 <e.g. > <e.g. > <timestamp e.g. 24 Oct 1 22:31><name of file e.g. spark-3.5.1-bin-hadoop3.tgz>`
+- `-rwxrwxrwx 1 <e.g. > <e.g. > <timestamp e.g. 24 Oct 1 22:31><name of file e.g. spark-3.5.1-bin-hadoop3.tgz>`
+- `drwxr-xr-x 4 <e.g. > <e.g. > <timestamp e.g. 24 Oct 1 22:31><name of file e.g. spark-3.5.1-bin-hadoop3.tgz>`
+as you can see the first char can either be `d` or `-` where `d` just means the listed content is a directory and a `-` is a file. The rest of the 9 chars moreover are what's more important because when we divide this into 3 groups we get exactly three divisions of `---` where each hyphen represents a permission a user can apply on a file such as read represented as `r`, write repd. as `w`, and execute repd. as `x` and each group of `---` is what represents the type of user such as root user or the admin of the system which can usually virtually have all permissions like reading, writing, and executing files where a file woudl have `-rwx------`, the grouped users, and other users in this order.
+- in the numeric way of adding because there are always 3 hyphens per division or user type each hyphen can be represented as an octal number from 0 to 7. E.g. the `755` in `chmod 755` when converted to binary is 111 101 101 because 111 when converted to back to octal is 7 since $2*2 + 2*1 + 2*0 = 4 + 2 + 1 = 7$
+
+* In Docker containers, Quarto refers to using the Quarto publishing system to create static and interactive content within a Docker environment. You can utilize Docker to render Quarto documents and projects, deploy them as static websites, or host interactive web applications with backends like R Shiny. 
 
 # Questions:
 * how to fill in missing values?
