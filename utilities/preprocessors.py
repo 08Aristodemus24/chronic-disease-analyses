@@ -293,6 +293,7 @@ def model_population_by_sex_race_ho_table(df: pd.DataFrame, state: str, cols_to_
             return final
 
         elif (lo_year == 2010 and hi_year == 2019) or (lo_year == 2020 and hi_year == 2023):
+
             # start partitioning the spreadsheet by its important rows 
             # like the sex, and whether or not it is of hispanic origin
             male_start = temp.index[temp["ethnicity"] == "male"].to_list()[0]

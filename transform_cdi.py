@@ -248,12 +248,12 @@ def transform(df: pyspark.sql.dataframe.DataFrame):
             strat_col[0] == "american indian or alaska native",
             # | Sex | Ethnicity | Origin |
             # | Both | AIAN | Non Hispanic |
-            f.array(f.lit("Both"), f.lit("AIAN"), f.lit("Non Hispanic"))
+            f.array(f.lit("Both"), f.lit("AIAN"), f.lit("Not Hispanic"))
         ).when(
             strat_col[0] == "asian or pacific islander",
             # | Sex | Ethnicity | Origin |
             # | Both | NHPI | Non Hispanic |
-            f.array(f.lit("Both"), f.lit("NHPI"), f.lit("Non Hispanic"))
+            f.array(f.lit("Both"), f.lit("NHPI"), f.lit("Not Hispanic"))
         ).when(
             f.rlike(strat_col[0], f.lit(r"(asian|black|white|other|multiracial)")),
             # | Sex | Ethnicity | Origin |
@@ -262,7 +262,7 @@ def transform(df: pyspark.sql.dataframe.DataFrame):
             # | Both | asian | Non Hispanic |
             # | Both | other | Non Hispanic |
             # | Both | multiracial | Non Hispanic |
-            f.array(f.lit("Both"), f.initcap(strat_col[0]), f.lit("Non Hispanic"))
+            f.array(f.lit("Both"), f.initcap(strat_col[0]), f.lit("Not Hispanic"))
         ).when(
             f.rlike(strat_col[0], f.lit(r"(male|female)")),
             # | Sex | Ethnicity | Origin |
