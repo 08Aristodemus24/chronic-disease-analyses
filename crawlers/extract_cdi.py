@@ -14,7 +14,7 @@ if __name__ == "__main__":
     link = args.L
     response = requests.get(link, stream=True)
 
-    DATA_DIR = "../data/chronic-disease-data"
+    DATA_DIR = "../data/cdi-data-raw"
     os.makedirs(DATA_DIR, exist_ok=True)
 
     # save the raw extracted files to data directory 

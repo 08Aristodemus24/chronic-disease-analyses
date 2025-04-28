@@ -195,14 +195,13 @@ if __name__ == "__main__":
     # get year range and state from user input
     parser = ArgumentParser()
     parser.add_argument("--year-range-list", type=str, default="2000-2009", nargs="+", help="represents the lists of year ranges that spark script would base on to transform excel files of these year ranges")
-    parser.add_argument("--state", type=str, default="alabama")
     args = parser.parse_args()
 
     # get arguments
     year_range_list = args.year_range_list
     # state = args.state.capitalize()
 
-    DATA_DIR = './data/population-data'
+    DATA_DIR = './data/population-data-raw'
     EXCLUSIONS = ["us_populations_per_state_2001_to_2021.csv"]
     files = list(filter(lambda file: not file in EXCLUSIONS, os.listdir(DATA_DIR)))
     populations_by_sex_race_ho_00_10 = list(filter(lambda file: "2000-2010" in file and "by_sex_race_and_ho" in file, files))

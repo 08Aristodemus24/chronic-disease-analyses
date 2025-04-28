@@ -114,7 +114,7 @@ if __name__ == "__main__":
     keyword_20_23_url = "Annual Estimates of the Resident Population by Single Year of Age and Sex: April 1, 2020 to July 1, 2023 (SC-EST2023-SYASEX)"
 
     # specify data directory and create it
-    DATA_DIR = "../data/population-data"
+    DATA_DIR = "../data/population-data-raw"
     os.makedirs(DATA_DIR, exist_ok=True)
 
     # specify downloads directory based on given argument by user

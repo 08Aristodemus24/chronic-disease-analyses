@@ -93,8 +93,7 @@ if __name__ == "__main__":
     # | 2001 | Alabama | 4,480.089 |
     # | 2001 | Alaska | 642.337 |
     # ```
-    # DATA_DIR = "../data/population-data"
-    DATA_DIR = "../data/test"
+    DATA_DIR = "../data/population-data-raw"
     os.makedirs(DATA_DIR, exist_ok=True)
 
     # save the raw extracted files to data directory 

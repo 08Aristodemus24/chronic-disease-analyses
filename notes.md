@@ -500,6 +500,23 @@ steps for setting up apache spark from scratch
 - java development kit 17: https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html
 - apache spark: https://spark.apache.org/downloads.html
 - hadoop winutils: https://github.com/kontext-tech/winutils/blob/master/hadoop-3.3.0/bin/winutils.exe
+- apache hadoop: https://hadoop.apache.org/release/3.3.4.html
+- whatever spark version you download must be compatible with hadoop version e.g. if we go to with a 3.5.5 version of apache spark we check https://github.com/apache/spark/blob/v3.5.5/pom.xml and see the the ff.
+```
+...
+<slf4j.version>2.0.7</slf4j.version>
+<log4j.version>2.20.0</log4j.version>
+<!-- make sure to update IsolatedClientLoader whenever this version is changed -->
+```
+**`<hadoop.version>3.3.4</hadoop.version>`**
+```
+<!-- SPARK-41247: When updating `protobuf.version`, also need to update `protoVersion` in `SparkBuild.scala` -->
+<protobuf.version>3.23.4</protobuf.version>
+<protoc-jar-maven-plugin.version>3.11.4</protoc-jar-maven-plugin.version>
+...
+```
+here it indicates that under the 3.5.5 version or branch of spark it needs the hadoop version to be 3.3.4 and so we search for hadoop with version 3.3.4 and download it specifically the `.tgz` it usually is encased in at https://hadoop.apache.org/release/3.3.4.html
+
 - once downloaded extract the `spark-3.x.x-bin.hadoop3.tgz`
 - rename the extracted folder `spark-3.x.x-bin.hadoop3` to just `spark-3.x.x`
 - once jdk17 is downloaded run executable file and install JDK and keep track fo installation location which is commonly at `C:\Program Files\Java\jdk-17` 
@@ -541,6 +558,79 @@ scala>
 * but how come this works when using `spark-submit` but when using jupyter notebooks the extra packages are not downloaded 
 
 * this is why if your going to use spark with airflow or in a docker container it is better to install it globally in the container rather than as a package and then set the paths manually
+
+* AFAIK the way to dockerize everything every dependency of this data pipeline would be to do the ff.
+- download spark, hadoop, and java development kit
+1st reference
+```
+FROM apache/airflow:2.9.2
+COPY requirements.txt /
+RUN pip install --no-cache-dir -r /requirements.txt
+
+COPY quarto.sh /
+RUN cd / && bash /quarto.sh
+
+COPY setup_conn.py $AIRFLOW_HOME
+
+User root
+
+# RUN python $AIRFLOW_HOME/setup_conn.py
+# RUN apt-get update && \
+#     apt-get install -y --no-install-recommends \
+#     default-jdk
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    default-jdk
+
+# export JAVA_HOME='/usr/lib/jvm/java-17-openjdk-amd64'
+# export PATH=$PATH:$JAVA_HOME/bin
+# export SPARK_HOME='/opt/spark'
+# export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin
+RUN curl https://archive.apache.org/dist/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3.tgz -o spark-3.5.1-bin-hadoop3.tgz
+
+# Change permissions of the downloaded tarball
+RUN chmod 755 spark-3.5.1-bin-hadoop3.tgz
+
+# Create the target directory and extract the tarball to it
+RUN mkdir -p /opt/spark && tar xvzf spark-3.5.1-bin-hadoop3.tgz --directory /opt/spark --strip-components=1
+
+#### These set the environment variables in the container
+ENV JAVA_HOME='/usr/lib/jvm/java-17-openjdk-amd64'
+ENV PATH=$PATH:$JAVA_HOME/bin
+ENV SPARK_HOME='/opt/spark'
+ENV PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin
+```
+
+2nd reference
+```
+FROM apache/airflow:2.10.5
+
+USER root
+
+# Install OpenJDK-17
+RUN apt update && \
+    apt-get install -y openjdk-17-jdk && \
+    apt-get install -y ant && \
+    apt-get clean;
+
+# Set JAVA_HOME
+# if in macos use 
+# ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-arm64/
+ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-amd64/
+RUN export JAVA_HOME
+
+# switch to airflow user right after setting env variables
+USER airflow
+
+# copy and install dependencies in airflow container
+COPY ./requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+```
+- extract the components of the downloaded tar.gz or .tgz file using `tar xvzf <name of compressed tar file> --directory <directory in linux/docker container you want the tar file contents to be dumped once extracted>`
+- know where each package namely spark, hadoop, and jdk was installed and copy its path and use this path to set environment variables in the docker file
+- somehow you're going to need to change permissions when copying, moving, and reading the files downloaded in the container so you have to learn `chmod` and other commands like it
+-
 
 # Questions:
 * how to fill in missing values?

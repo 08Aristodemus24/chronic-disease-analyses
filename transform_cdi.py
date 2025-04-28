@@ -283,7 +283,7 @@ def transform(df: pyspark.sql.dataframe.DataFrame):
 
 
 if __name__ == "__main__":
-    DATA_DIR = "./data/chronic-disease-data"
+    DATA_DIR = "./data/cdi-data-raw"
     path = os.path.join(DATA_DIR, "U.S._Chronic_Disease_Indicators__CDI___2023_Release.csv")
 
     spark = SparkSession.builder.appName('test')\

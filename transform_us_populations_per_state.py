@@ -20,7 +20,7 @@ def transform(df: pyspark.sql.dataframe.DataFrame):
     df.unpersist()
 
 if __name__ == "__main__":
-    DATA_DIR = "./data/population-data"
+    DATA_DIR = "./data/population-data-raw"
 
     path = os.path.join(DATA_DIR, "us_populations_per_state_2001_to_2021.csv")
 

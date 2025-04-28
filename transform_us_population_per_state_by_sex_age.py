@@ -303,13 +303,12 @@ if __name__ == "__main__":
     # get year range and state from user input
     parser = ArgumentParser()
     parser.add_argument("--year-range-list", type=str, default="2000-2009", nargs="+", help="represents the lists of year ranges that spark script would base on to transform excel files of these year ranges")
-    parser.add_argument("--state", type=str, default="alabama")
     args = parser.parse_args()
 
     # get arguments
     year_range_list = args.year_range_list
 
-    DATA_DIR = './data/population-data'
+    DATA_DIR = './data/population-data-raw'
     EXCLUSIONS = ["us_populations_per_state_2001_to_2021.csv"]
     files = list(filter(lambda file: not file in EXCLUSIONS, os.listdir(DATA_DIR)))
     populations_by_sex_age_00_10 = list(filter(lambda file: "2000-2010" in file and "by_sex_and_age" in file, files))
@@ -321,41 +320,47 @@ if __name__ == "__main__":
         .config("spark.jars.packages", "com.crealytics:spark-excel_2.12:3.5.1_0.20.4")\
         .getOrCreate()
 
-    # get year range from system arguments sys.argv
-    state_populations_all_years = []
+    df = spark.read.format("com.crealytics.spark.excel")\
+        .option("header", "false")\
+        .option("inferSchema", "true")\
+        .load(os.path.join(DATA_DIR, "Alabama_pop_by_sex_and_age_2000-2010.xls"))
+    # # get year range from system arguments sys.argv
+    # state_populations_all_years = []
 
-    # loop through year_ranges
-    for year_range in year_range_list:
-        # 2000 - 2010
-        if year_range == "2000-2009":
-            cols_to_remove = [1, 12, 13]
-            populations = populations_by_sex_age_00_10 
+    # # loop through year_ranges
+    # for year_range in year_range_list:
+    #     # 2000 - 2010
+    #     if year_range == "2000-2009":
+    #         cols_to_remove = [1, 12, 13]
+    #         populations = populations_by_sex_age_00_10 
 
-        # 2010 - 2019
-        elif year_range == "2010-2019":
-            cols_to_remove = [1, 2, 3, 4, 5, 6, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34]
-            populations = populations_by_sex_age_10_19
+    #     # 2010 - 2019
+    #     elif year_range == "2010-2019":
+    #         cols_to_remove = [1, 2, 3, 4, 5, 6, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34]
+    #         populations = populations_by_sex_age_10_19
 
-        # 2020 - 2023
-        elif year_range == "2020-2023":
-            cols_to_remove = [1, 2, 3, 4, 7, 10, 13]
-            populations = populations_by_sex_age_20_23
+    #     # 2020 - 2023
+    #     elif year_range == "2020-2023":
+    #         cols_to_remove = [1, 2, 3, 4, 7, 10, 13]
+    #         populations = populations_by_sex_age_20_23
 
-        # concurrently process state populations by year range
-        state_populations_df = get_state_populations(
-            DATA_DIR, 
-            spark, 
-            cols_to_remove, 
-            populations, 
-            year_range,
-            callback_fn=process_population_by_sex_age_table)
+    #     # concurrently process state populations by year range
+    #     state_populations_df = get_state_populations(
+    #         DATA_DIR, 
+    #         spark, 
+    #         cols_to_remove, 
+    #         populations, 
+    #         year_range,
+    #         callback_fn=process_population_by_sex_age_table)
         
-        # collect state populations from all years using list
-        state_populations_all_years.append(state_populations_df)
+    #     # collect state populations from all years using list
+    #     state_populations_all_years.append(state_populations_df)
 
-    # concatenate all state populations from all year ranges
-    final = reduce(DataFrame.unionByName, state_populations_all_years)
-    final.show(final.count())
-    print(f"final population dtypes: {final.dtypes}")
-    print(f"final population count: {final.count()}")
+    # # concatenate all state populations from all year ranges
+    # final = reduce(DataFrame.unionByName, state_populations_all_years)
+    # final.show(final.count())
+
+    # final.write.parquet("./")
+    # print(f"final population dtypes: {final.dtypes}")
+    # print(f"final population count: {final.count()}")
     
