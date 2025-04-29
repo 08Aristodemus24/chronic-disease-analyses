@@ -659,10 +659,17 @@ when we want a user specifically a root user and the other users to have all per
 
 * if an `java.lang.UnsatisfiedLinkError: 'boolean org.apache.hadoop.io.nativeio.NativeIO$Windows.access0(java.lang.String, int)` error occurs it maybe because you don't have `hadoop.dll` inside your system32 folder
 
-- For PySpark 3.3.1, Win10, Java 18. Download bin folder (from here https://github.com/cdarlint/winutils or here https://github.com/steveloughran/winutils ) with winutils.exe and hadoop.dll inside it (my version is 3.0.0 or any other greater then 3.0.0), put the folder into C:\hadoop
-Go to System variables and create HADOOP_HOME and set to C\hadoop.
-Then add it to path under System vars like that %HADOOP_HOME%\bin .
-If any issues occur during writing the file json or parquet etc. Just try putting the hadoop.dll file into System32 folder. That's it.
+* Master URLs passed to Spark can be in one of the following formats:
+- `local` - Run Spark locally with one worker thread (i.e. no parallelism at all).
+- `spark://HOST:PORT` - Connect to the given Spark standalone cluster master. The port must be whichever one your master is configured to use, which is `7077` by default (which we know in airflow images is what is used).
+
+* important configurations in spark
+- `spark.driver.cores` - 1 - Number of cores to use for the driver process, only in cluster mode.	1.3.0
+- `spark.driver.maxResultSize` - 1g - Limit of total size of serialized results of all partitions for each Spark action (e.g. collect) in bytes. Should be at least 1M, or 0 for unlimited. Jobs will be aborted if the total size is above this limit. Having a high limit may cause out-of-memory errors in driver (depends on spark.driver.memory and memory overhead of objects in JVM). Setting a proper limit can protect the driver from out-of-memory errors.	1.2.0
+- `spark.driver.memory` - 1g - Amount of memory to use for the driver process, i.e. where SparkContext is initialized, in the same format as JVM memory strings with a size unit suffix ("k", "m", "g" or "t") (e.g. 512m, 2g).
+Note: In client mode, this config must not be set through the SparkConf directly in your application, because the driver JVM has already started at that point. Instead, please set this through the --driver-memory command line option or in your default properties file.
+- `spark.executor.memory` - 1g - Amount of memory to use per executor process, in the same format as JVM memory strings with a size unit suffix ("k" for kilobytes, "m" for megabytes, "g" for gigabytse or "t" for terabytes) (e.g. 512m, 2g).
+- `spark.executor.cores` - 1 - in YARN mode, all the available cores on the worker in standalone and Mesos coarse-grained modes. The number of cores to use on each executor. In standalone and Mesos coarse-grained modes, for more detail, see this description.
 
 # Questions:
 * how to fill in missing values?
@@ -672,8 +679,8 @@ If any issues occur during writing the file json or parquet etc. Just try puttin
 # Relevant articles and links:
 * https://stackoverflow.com/questions/696506/sql-datatype-how-to-store-a-year
 * https://stackoverflow.com/questions/47357855/sql-add-only-a-year-value-in-a-date-column
-* https://medium.com/analytics-vidhya/analysis-of-time-series-data-dad4afa56358
 * performance tuning of apache spark: https://medium.com/@manoj.kdas37/how-to-optimize-your-apache-spark-jobs-top-10-approaches-and-best-practices-for-performance-tuning-4630ae864f52
+* configuring apache spark to enhance performance and avoid memory limit errors: https://spark.apache.org/docs/latest/configuration.html
 
 # Problems to solve:
 1. I can't save year as 4 byte int for 200000+ rows since that would be a waste of space

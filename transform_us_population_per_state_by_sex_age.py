@@ -5,6 +5,7 @@ import sys
 
 from functools import reduce
 
+from pyspark import SparkConf
 from pyspark.sql.functions import (monotonically_increasing_id, 
     row_number, 
     col,
@@ -317,9 +318,17 @@ if __name__ == "__main__":
     populations_by_sex_age_20_23 = list(filter(lambda file: "2020-2023" in file and "by_sex_and_age" in file, files))
 
     # create spark session
-    spark = SparkSession.builder.appName('test')\
+    # default is 1g for spark.executor.memory and 1 for spark.executor.cores
+    spark = SparkSession.builder\
         .config("spark.jars.packages", "com.crealytics:spark-excel_2.12:3.5.1_0.20.4")\
+        .config("spark.executor.memory", "4g")\
+        .config("spark.executor.cores", "2")\
         .getOrCreate()
+    
+    conf_view = spark.sparkContext.getConf()
+    print(f"spark jars packages: {conf_view.get("spark.jars.packages")}")
+    print(f"spark.executor.memory: {conf_view.get("spark.executor.memory")}")
+    print(f"spark.executor.cores: {conf_view.get("spark.executor.cores")}")
 
     # get year range from system arguments sys.argv
     state_populations_all_years = []
@@ -362,8 +371,11 @@ if __name__ == "__main__":
     # create output directory 
     OUTPUT_DATA_DIR = "./data/population-data-transformed"
     os.makedirs(OUTPUT_DATA_DIR, exist_ok=True)
-    OUTPUT_FILE_PATH = os.path.join(OUTPUT_DATA_DIR, f"us_population_per_state_by_sex_age_{year_range_list[-1]}.csv")
-    final.write.csv(OUTPUT_FILE_PATH)
+    
+    # create output file path
+    FILE_NAME = "us_population_per_state_by_sex_race_ho.parquet"
+    OUTPUT_FILE_PATH = os.path.join(OUTPUT_DATA_DIR, FILE_NAME)
+    final.write.parquet(OUTPUT_FILE_PATH)
 
     
     
