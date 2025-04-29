@@ -14,3 +14,5 @@
 * use selenium, docker, and airflow to automate extraction process and then use pyspark and databricks to transform extracted data and load the final data into a warehouse like databricks. All of this is orchestrated using airflow. 
 
 * use PowerBI to make analyses on the data from databricks
+
+* 

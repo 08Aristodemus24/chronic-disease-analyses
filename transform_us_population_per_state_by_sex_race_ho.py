@@ -194,12 +194,11 @@ def process_population_by_sex_race_ho_table(df: DataFrame,
 if __name__ == "__main__":
     # get year range and state from user input
     parser = ArgumentParser()
-    parser.add_argument("--year-range-list", type=str, default="2000-2009", nargs="+", help="represents the lists of year ranges that spark script would base on to transform excel files of these year ranges")
+    parser.add_argument("--year-range-list", type=str, default=["2000-2009"], nargs="+", help="represents the lists of year ranges that spark script would base on to transform excel files of these year ranges")
     args = parser.parse_args()
 
     # get arguments
     year_range_list = args.year_range_list
-    # state = args.state.capitalize()
 
     DATA_DIR = './data/population-data-raw'
     EXCLUSIONS = ["us_populations_per_state_2001_to_2021.csv"]
@@ -221,17 +220,17 @@ if __name__ == "__main__":
         # 2000 - 2010
         if year_range == "2000-2009":
             cols_to_remove = [1, 12, 13]
-            populations = populations_by_sex_race_ho_00_10 
+            populations = populations_by_sex_race_ho_00_10[:1]
 
         # 2010 - 2019
         elif year_range == "2010-2019":
             cols_to_remove = [1, 2]
-            populations = populations_by_sex_race_ho_10_19
+            populations = populations_by_sex_race_ho_10_19[:1]
 
         # 2020 - 2023
         elif year_range == "2020-2023":
             cols_to_remove = [1]
-            populations = populations_by_sex_race_ho_20_23
+            populations = populations_by_sex_race_ho_20_23[:1]
 
         # concurrently process state populations by year range
         state_populations_df = get_state_populations(
@@ -243,6 +242,10 @@ if __name__ == "__main__":
             callback_fn=process_population_by_sex_race_ho_table)
         
         # collect state populations from all years using list
+        # there should be 240 rows per us state regardless of year range
+        # except for 2020-2023 which is 96 rows since this is only a span 
+        # of 4 years. So 240 * 51 states * 2 year ranges spanning 10 years
+        # + 96 * 51 states is 29376 rows all in all  
         state_populations_all_years.append(state_populations_df)
 
     # concatenate all state populations from all year ranges
@@ -250,3 +253,9 @@ if __name__ == "__main__":
     final.show(final.count())
     print(f"final population dtypes: {final.dtypes}")
     print(f"final population count: {final.count()}")
+
+    # create output directory 
+    OUTPUT_DATA_DIR = "./data/population-data-transformed"
+    os.makedirs(OUTPUT_DATA_DIR, exist_ok=True)
+    OUTPUT_FILE_PATH = os.path.join(OUTPUT_DATA_DIR, f"us_population_per_state_by_sex_race_ho_{year_range_list[-1]}.csv")
+    final.write.csv(OUTPUT_FILE_PATH)

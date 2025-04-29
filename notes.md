@@ -494,14 +494,13 @@ The system cannot find the path specified.
 ```
 this maybe due to dependency errors and certain values not being added to the path system environment variable or an environment variable not being added such as `SPARK_HOME`, `HADOOP_HOME`, and `JAVA_HOME` as system environment variables containing the installation location of these softwares
 
-take note that spark 3.5.4 requires java 8 or 17 and later. When on the downloads page it will also indicate that it is prevuilt for hadoop 3.3 and later meaning we have to install hadoop 3.3.0 and later releases (but specifically the winutils executable file as it requires winutils) and must be under these release versions.
+take note that spark 3.5.5 requires java 8 or 17 and later. When on the downloads page it will also indicate that it is prevuilt for hadoop 3.3 and later meaning we have to install hadoop 3.3.0 and later releases (but specifically the winutils.exe file and hadoop.dll files as it requires these in order to run spark in windows) and must be under these release versions.
 
-steps for setting up apache spark from scratch
+steps for setting up apache spark from scratch locally in windows
 - java development kit 17: https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html
 - apache spark: https://spark.apache.org/downloads.html
 - hadoop winutils: https://github.com/kontext-tech/winutils/blob/master/hadoop-3.3.0/bin/winutils.exe
-- apache hadoop: https://hadoop.apache.org/release/3.3.4.html
-- whatever spark version you download must be compatible with hadoop version e.g. if we go to with a 3.5.5 version of apache spark we check https://github.com/apache/spark/blob/v3.5.5/pom.xml and see the the ff.
+- hadoop winutils: https://github.com/kontext-tech/winutils/blob/master/hadoop-3.3.0/bin/hadoop.dll. Note that whatever spark version you download must be compatible with hadoop version e.g. if we go to with a 3.5.5 version of apache spark we check https://github.com/apache/spark/blob/v3.5.5/pom.xml and see the the ff.
 ```
 ...
 <slf4j.version>2.0.7</slf4j.version>
@@ -527,6 +526,8 @@ here it indicates that under the 3.5.5 version or branch of spark it needs the h
 - in windows we can reference these system environment variables as `%<name of env var>%` e.g. `%SPARK_HOME%` and we'd get the value we assigned to this environment/system environment variable and add backslashes to it to reference sub directories in this directory e.g. `%SPARK_HOME%/bin` will be `C:\Program Files\spark-3.5.5\bin`. In linux we use `$<name of env var>`. But we add new values to the system path environment variable where we will now reference these newly created system environment variables. We add `%SPARK_HOME%\bin`, `%HADOOP_HOME%\bin`, and `%JAVA_HOME%\bin`
 - restart the command line and run `javac --version`, `spark-shell`, to check if the installed software has been installed and commands are able to run in command line. spark-shell is a CLI for spark. Now we can use `spark-submit` for our python scripts containing spark sessions
 - we need to also add PYSPARK_HOME containing the path to our global python interpreter which would be in path `C:\Users\LARRY\AppData\Local\Programs\Python\Python312\` and appended to it the `python.exe` e.g. `C:\Users\LARRY\AppData\Local\Programs\Python\Python312\python.exe` as this string will be needed in order for `spark-submit` to run our python scripts containing spark commands
+- because we will be running spark on a windows machine locally it is imperative that even if we already added the `HADOOP_HOME` system environment variable and added added `%HADOOP_HOME%\bin` containing our `hadoop.dll` and `winutils.exe` to our PATH system environment variable, we must also add the `hadoop.dll` to our `system32` folder as this will be needed in order to prevent future errors like `java.lang.UnsatisfiedLinkError` this is because spark requires certain Hadoop binaries (particularly `winutils.exe` & `hadoop.dll`) to simulate the Hadoop environment that Spark relies on. This step is essential for enabling Spark to run properly on Windows, as these binaries help in file system operations like setting permissions configurations that are otherwise required in unix and posix systems like those that use Linux OS. This is why in a docker container/linux machien this wouldn't be the case; all these unnecessary hardwork to install spark as spark and hadoop distributed file system (HDFS) already works in synergy with linux os. Lesson learned don't try to make Spark applications for Windows unless you need to. But you can avoid the pain if you follow the above steps so maybe it's not so bad. Good luck and thanks for reading! **https://medium.com/data-engineer-things/deploying-a-spark-based-application-as-a-windows-application-4ddc88231784**
+
 
 ```
 C:\Users\LARRY>spark-shell
@@ -629,8 +630,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 ```
 - extract the components of the downloaded tar.gz or .tgz file using `tar xvzf <name of compressed tar file> --directory <directory in linux/docker container you want the tar file contents to be dumped once extracted>`
 - know where each package namely spark, hadoop, and jdk was installed and copy its path and use this path to set environment variables in the docker file e.g. SPARK_HOME, JAVA_HOME, PYSPARK_HOME
-- somehow you're going to need to change permissions when copying, moving, and reading the files downloaded in the container so you have to learn `chmod` and other commands like it
-- 
+- somehow you're going to need to change permissions when copying, moving, and reading the files downloaded in the container so you have to learn `chmod` and other commands like it 
 
 * `-L`, `--location` - Allow curl to follow any redirections. E.g. `curl -L https://example.com` 
 * `f`, `--fail` - If the server returns an error, curl fails silently and returns error 22. e.g. `curl --fail https://example.com`
@@ -656,6 +656,13 @@ when we want a user specifically a root user and the other users to have all per
 - now for an easier way using symbolic mode we can change the permission by indicating either `u`, `g`, `o`, two of these or all of them in our chmod command. `u` represents a root user, `g` the grouped users, and `o` the other users then succeeded by a `+` char then the letters `r`, `w`, `x`, two of these, or all of them which we know represent read, write, and execute permissions. So when we write `chmod ug+rw <name of file>` we are adding read & write permissions to hte root and grouped users. When we write `chmod o+rwx` we add read, write, execute permissions to the other users
 
 * In Docker containers, Quarto refers to using the Quarto publishing system to create static and interactive content within a Docker environment. You can utilize Docker to render Quarto documents and projects, deploy them as static websites, or host interactive web applications with backends like R Shiny. 
+
+* if an `java.lang.UnsatisfiedLinkError: 'boolean org.apache.hadoop.io.nativeio.NativeIO$Windows.access0(java.lang.String, int)` error occurs it maybe because you don't have `hadoop.dll` inside your system32 folder
+
+- For PySpark 3.3.1, Win10, Java 18. Download bin folder (from here https://github.com/cdarlint/winutils or here https://github.com/steveloughran/winutils ) with winutils.exe and hadoop.dll inside it (my version is 3.0.0 or any other greater then 3.0.0), put the folder into C:\hadoop
+Go to System variables and create HADOOP_HOME and set to C\hadoop.
+Then add it to path under System vars like that %HADOOP_HOME%\bin .
+If any issues occur during writing the file json or parquet etc. Just try putting the hadoop.dll file into System32 folder. That's it.
 
 # Questions:
 * how to fill in missing values?
