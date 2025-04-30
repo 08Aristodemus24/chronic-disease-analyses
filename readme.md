@@ -78,24 +78,12 @@ where this can be interpreted as the `average annual crude rate of cancer of the
 
 * Day 4 of this data analytics project: https://github.com/08Aristodemus24/chronic-disease-analyses
 
-TLDR: just discovered how I should just use a container if not a linux OS next time I'll be submitting spark jobs for data transformations, but 
+day 4 of this data analytics project: https://github.com/08Aristodemus24/chronic-disease-analyses
 
-I never thought processing data could be much more fun than training statistical models, now after doing some sort of intial modelling using pandas (images below) I'm trying to move to processing these same tables and the 1m datapoints from the CDI dataset using PySpark. 
+I really learned a lot especially when it came to using apache spark for transformations as opposed to pandas previously, such as using the right configurations for the spark cluster (how many workers and their memory size) I was going to submit to the transformation script to, using external jar packages to process excel files which was personally the hardest part of this, and as much as possible not stupidly collecting all the spark dataframes in a list and then concatenating them all at once resulting in an `out of memory` error 😅. 
 
-But again if you caught my previous post basically the problem was data having difficult to interpret numbers and so I thought why not collate extra data in order to calculate a more tangible number example below...
+My reasoning for all this unnecessary hard work? That I was going to use spark anyway, one way or another in future corporate work, so I might as well suffer now and learn the hard (but fun) way 😊. 
 
-In the chronic-disease-indicators (CDI) dataset had rows with attribute/column values more or less like these
-```
-yearstart: 2012
-yearend: 2016
-locationdesc: connecticut
-question: cancer of the lung and bronchus mortality
-datavalueunit: cases per 100000
-datavaluetype: average annual crude rate
-datavalue: 9.6
-stratificationcategory: race/ethnicity
-stratification: asian or pacific islander
-```
+But here it is now: basically right after saving the partitioned dataframes as .parquet files (which I researched was actually a format faster in reading and writing than .csv). I now loaded them to an in-process open source OLAP data warehouse called DuckDB which I recently also learned also was basically an equivalent of the OLTP DB sqlite. I figured also I couldn't pay for DWHs like snowflake or databricks so I thought of using free alternatives like this instead. 
 
-where this can be interpreted as the `average annual crude rate of cancer of the lung and bronchus mortality from 2012 to 2016 in the state of connecticut for an asian or pacific islander is 9.6 cases per 100000`. However again this isn't really useful as there isn't a tangible number we could touch on to differentiate the many datapoints of this CDI dataset. What I thought however was that certain calculations could be made such that we can extract the total number of recorded cases for a specific state at a specific year for a specific stratification for a persons specific age bracket. And to do this I had the tables modelled on the extra data I extracted to get the total population for these features and use it to calculate the total number of cases. E.g. total population of a pacific islander, with an age bracket of 0 to 85 and above, in connecticut, from year 2012 to 2016, is let's jsut say in this case 18,283,832 which I knew could be calculated using group by's, aggregations, and filtering clauses in SQL. This is in part I thought of modelling these extra data so that querying using SQL could easily be done. And having recently learned about OLAPs and OLTPs as per feedback from fellow connections here ;), as OLAPs and OLAP cubes store data and features in a manner that could be used for quick slicing and aggregations for data analysis, I thought this was an apt situation for this problem.
-
+So now I ought to do some analytics on these tables using SQL and post here again hopefully with an initial dashboard using PowerBI. 
