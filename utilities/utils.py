@@ -53,3 +53,4 @@ def get_state_populations(
     state_populations_df = reduce(DataFrame.unionByName, state_populations)
 
     return state_populations_df
+    # return state_populations

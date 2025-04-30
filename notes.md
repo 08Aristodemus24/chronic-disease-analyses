@@ -671,6 +671,18 @@ Note: In client mode, this config must not be set through the SparkConf directly
 - `spark.executor.memory` - 1g - Amount of memory to use per executor process, in the same format as JVM memory strings with a size unit suffix ("k" for kilobytes, "m" for megabytes, "g" for gigabytse or "t" for terabytes) (e.g. 512m, 2g).
 - `spark.executor.cores` - 1 - in YARN mode, all the available cores on the worker in standalone and Mesos coarse-grained modes. The number of cores to use on each executor. In standalone and Mesos coarse-grained modes, for more detail, see this description.
 
+* the erason why you get out of memory errors in your script is because even though you are yes not using broadcast joins or collecting the results from each executor/worker you are implicitly collecting the results in a list and then concnatenating these resultant tables into one big table thus overwhelming the driver in the spark cluster. 
+
+- Accumulation of Data: As you process more data and generate more of these lists of lists of DataFrames, the memory consumption on the driver grows proportionally to the total size of the data contained within all those DataFrames.
+- Large Concatenation Operation: When you finally perform the concatenation of all these DataFrames at once (using pd.concat() if you're bringing them to the driver as Pandas DataFrames, or even Spark's union() if you're keeping them as Spark DataFrames but performing the union on the driver), the driver needs to hold the entire combined dataset in its memory before writing it to Parquet. This is exactly the "one big table" scenario you mentioned.
+- Driver Memory Limits: The Spark driver has a finite amount of memory allocated to it (controlled by the spark.driver.memory configuration). If the total size of the data you are accumulating and then trying to concatenate exceeds this limit, the driver will run out of memory and throw an OOM error.
+
+What you could do is either do iterative saving processing the data in chunks as a Spark DataFrame and saving it to a separate Parquet file. You can then read all these Parquet files later for further analysis. This avoids accumulating everything in the driver's memory. Another is by increasing the Driver Memory (as a last resort and with caution). While increasing `spark.driver.memory` might temporarily alleviate the issue for moderately larger datasets, it's not a sustainable long-term solution for truly large-scale data. It also makes your driver a potential bottleneck and point of failure. It's generally better to address the underlying data processing pattern.
+
+a solution could be is to save the dataframe of each state of specific year ranges. Since there are 51 states 24 years this would be
+(10 * 51) + (10 * 51) + (4 * 51) = 1224 dataframes all in all
+
+
 # Questions:
 * how to fill in missing values?
 * how to drop undesired values based on a filter?
