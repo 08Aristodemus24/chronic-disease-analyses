@@ -308,15 +308,25 @@ if __name__ == "__main__":
 
     # get arguments
     year_range_list = args.year_range_list
-    print(f"year range list: {year_range_list}")
 
     DATA_DIR = './data/population-data-raw'
     EXCLUSIONS = ["us_populations_per_state_2001_to_2021.csv"]
     files = list(filter(lambda file: not file in EXCLUSIONS, os.listdir(DATA_DIR)))
-    populations_by_sex_age_00_10 = list(filter(lambda file: "2000-2010" in file and "by_sex_and_age" in file, files))
-    populations_by_sex_age_10_19 = list(filter(lambda file: "2010-2019" in file and "by_sex_and_age" in file, files))
-    populations_by_sex_age_20_23 = list(filter(lambda file: "2020-2023" in file and "by_sex_and_age" in file, files))
-
+    cases = {
+            "2000-2009": {
+                "cols_to_remove": [1, 12, 13],
+                "populations": list(filter(lambda file: "2000-2010" in file and "by_sex_and_age" in file, files))  
+            },
+            "2010-2019": {
+                "cols_to_remove": [1, 2, 3, 4, 5, 6, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34],
+                "populations": list(filter(lambda file: "2010-2019" in file and "by_sex_and_age" in file, files))  
+            },
+            "2020-2023": {
+                "cols_to_remove": [1, 2, 3, 4, 7, 10, 13],
+                "populations": list(filter(lambda file: "2020-2023" in file and "by_sex_and_age" in file, files))  
+            }
+        }
+    
     # create spark session
     # default is 1g for spark.executor.memory and 1 for spark.executor.cores
     spark = SparkSession.builder\
@@ -330,52 +340,32 @@ if __name__ == "__main__":
     print(f"spark.executor.memory: {conf_view.get("spark.executor.memory")}")
     print(f"spark.executor.cores: {conf_view.get("spark.executor.cores")}")
 
+    # create output directory 
+    OUTPUT_DATA_DIR = "./data/population-data-transformed"
+    os.makedirs(OUTPUT_DATA_DIR, exist_ok=True)
+    
     # get year range from system arguments sys.argv
     state_populations_all_years = []
 
     # loop through year_ranges
     for year_range in year_range_list:
-        # 2000 - 2010
-        if year_range == "2000-2009":
-            cols_to_remove = [1, 12, 13]
-            populations = populations_by_sex_age_00_10[:1]
-
-        # 2010 - 2019
-        elif year_range == "2010-2019":
-            cols_to_remove = [1, 2, 3, 4, 5, 6, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34]
-            populations = populations_by_sex_age_10_19[:1]
-
-        # 2020 - 2023
-        elif year_range == "2020-2023":
-            cols_to_remove = [1, 2, 3, 4, 7, 10, 13]
-            populations = populations_by_sex_age_20_23[:1]
-
         # concurrently process state populations by year range
-        state_populations_df = get_state_populations(
+        state_populations = get_state_populations(
             DATA_DIR, 
             spark, 
-            cols_to_remove, 
-            populations, 
+            cases[year_range]["cols_to_remove"], 
+            cases[year_range]["populations"], 
             year_range,
             callback_fn=process_population_by_sex_age_table)
         
-        # collect state populations from all years using list
-        state_populations_all_years.append(state_populations_df)
-
-    # concatenate all state populations from all year ranges
-    final = reduce(DataFrame.unionByName, state_populations_all_years)
-    final.show(final.count())
-    print(f"final population dtypes: {final.dtypes}")
-    print(f"final population count: {final.count()}")
-    
-    # create output directory 
-    OUTPUT_DATA_DIR = "./data/population-data-transformed"
-    os.makedirs(OUTPUT_DATA_DIR, exist_ok=True)
-    
-    # create output file path
-    FILE_NAME = "us_population_per_state_by_sex_race_ho.parquet"
-    OUTPUT_FILE_PATH = os.path.join(OUTPUT_DATA_DIR, FILE_NAME)
-    final.write.parquet(OUTPUT_FILE_PATH)
-
-    
-    
+        # # collect state populations from all years using list
+        # # there should be 240 rows per us state regardless of year range
+        # # except for 2020-2023 which is 96 rows since this is only a span 
+        # # of 4 years. So 240 * 51 states * 2 year ranges spanning 10 years
+        # # + 96 * 51 states is 29376 rows all in all  
+        # state_populations_all_years.extend(state_populations)
+        # create output file path
+        indicator = year_range.replace("-", "_")
+        FILE_NAME = f"us_populations_per_state_by_sex_age_{indicator}.parquet"
+        OUTPUT_FILE_PATH = os.path.join(OUTPUT_DATA_DIR, FILE_NAME)
+        state_populations.write.parquet(OUTPUT_FILE_PATH)

@@ -258,14 +258,8 @@ if __name__ == "__main__":
         # state_populations_all_years.extend(state_populations)
         # create output file path
         indicator = year_range.replace("-", "_")
-        FILE_NAME = f"us_population_per_state_by_sex_race_ho_{indicator}.parquet"
+        FILE_NAME = f"us_populations_per_state_by_sex_race_ho_{indicator}.parquet"
         OUTPUT_FILE_PATH = os.path.join(OUTPUT_DATA_DIR, FILE_NAME)
         state_populations.write.parquet(OUTPUT_FILE_PATH)
-
-    # # concatenate all state populations from all year ranges
-    # final = reduce(DataFrame.unionByName, state_populations_all_years)
-    # # final.show(final.count())
-    # # print(f"final population dtypes: {final.dtypes}")
-    # # print(f"final population count: {final.count()}")
 
     

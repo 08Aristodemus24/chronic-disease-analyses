@@ -281,6 +281,8 @@ def transform(df: pyspark.sql.dataframe.DataFrame):
     # clear dataframe from memory
     df.unpersist()
 
+    return df
+
 
 if __name__ == "__main__":
     DATA_DIR = "./data/cdi-data-raw"
@@ -297,4 +299,12 @@ if __name__ == "__main__":
         .load(path)
     
     # commence transformation
-    transform(cdi_df)
+    final = transform(cdi_df)
+
+    # create output directory 
+    OUTPUT_DATA_DIR = "./data/cdi-data-transformed"
+    os.makedirs(OUTPUT_DATA_DIR, exist_ok=True)
+
+    FILE_NAME = f"cdi.parquet"
+    OUTPUT_FILE_PATH = os.path.join(OUTPUT_DATA_DIR, FILE_NAME)
+    final.write.parquet(OUTPUT_FILE_PATH)
