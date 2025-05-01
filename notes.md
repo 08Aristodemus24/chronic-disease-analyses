@@ -682,6 +682,7 @@ What you could do is either do iterative saving processing the data in chunks as
 a solution could be is to save the dataframe of each state of specific year ranges. Since there are 51 states 24 years this would be
 (10 * 51) + (10 * 51) + (4 * 51) = 1224 dataframes all in all
 
+* `=COUNTIF(<range of cells>, "*")` actually counts cells given range of cells that are not empty strings 
 
 # Questions:
 * how to fill in missing values?
