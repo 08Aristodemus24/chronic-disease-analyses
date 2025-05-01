@@ -49,6 +49,8 @@ def transform(df: pyspark.sql.dataframe.DataFrame):
 
     # rename datavaluealt column (which is already a double) to just datavalue 
     df = df.withColumnRenamed("DataValueAlt", "DataValue")
+    df = df.withColumnRenamed("StratificationID1", "Stratification1ID")
+    df = df.withColumnRenamed("StratificationCategoryID1", "StratificationCategory1ID")
 
     # Replace `per 100,000` and `per 100,000 residents` with
     # `cases per 100,000` instead to reduce redundancy
@@ -210,7 +212,6 @@ def transform(df: pyspark.sql.dataframe.DataFrame):
     # | Sex | Race | Origin |
     # | Both genders | White | hispanic |
     # | Both genders | Black | Hispanic |
-    # | Both genders | White | Hispanic |
     # | Both genders | Asian | Hispanic |
     # | Both genders | Other | Hispanic |
     # | Both genders | Multiracial | hispanic |
