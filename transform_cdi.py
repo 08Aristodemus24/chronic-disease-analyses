@@ -1,13 +1,24 @@
 import os
 
-import pyspark
-import pyspark.sql.functions as f
-
+from pyspark.sql.dataframe import DataFrame
+from pyspark.sql.functions import (col,
+    lower as sparkLower,
+    split,
+    rlike,
+    initcap,
+    regexp,
+    regexp_extract_all,
+    isnull,
+    regexp_extract,
+    lit,
+    when,
+    concat,
+    array,)
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StringType, ArrayType, StructField, StructType, FloatType, DoubleType, IntegerType
 
 
-def transform(df: pyspark.sql.dataframe.DataFrame):
+def transform(df: DataFrame):
     # Drop uneccessary columns
     cols_to_drop = ["Response",
         "ResponseID",
@@ -34,11 +45,15 @@ def transform(df: pyspark.sql.dataframe.DataFrame):
     # Remove rows with null values either in datavalue, datavalueunit, 
     # and datavaluetype means thhat if datavalueunit or datavalue or 
     # datavaluetype is null then return true and negate it
-    cond = ~(f.isnull("DataValueUnit") | f.isnull("DataValue") | f.isnull("DataValueType"))
-    df = df.filter(cond)
+    data_val_cond = ~(isnull("DataValueUnit") | isnull("DataValue") | isnull("DataValueType"))
+    df = df.where(data_val_cond)
+
+    # remvoe rows with location desc set to Guam, Puerto Rico, United States, and Virgin Islands
+    loc_cond = ~(col("LocationDesc").isin("Guam", "Puerto Rico", "United States", "Virgin Islands"))
+    df = df.where(loc_cond)
 
     # Extract latitude and longitude from geolocation
-    df = df.withColumn("GeoLocation", f.regexp_extract_all(f.col("GeoLocation"), f.lit(r"(-*\d+.\d+)"), 1))
+    df = df.withColumn("GeoLocation", regexp_extract_all(col("GeoLocation"), lit(r"(-*\d+.\d+)"), 1))
     
     # Cast latitude and longitude str columns to doubles
     df = df.withColumn("Latitude", df.GeoLocation[0].cast(DoubleType()))
@@ -54,9 +69,9 @@ def transform(df: pyspark.sql.dataframe.DataFrame):
 
     # Replace `per 100,000` and `per 100,000 residents` with
     # `cases per 100,000` instead to reduce redundancy
-    dvu_cases = f.when(f.col("DataValueUnit") == "per 100,000", "cases per 100,000")\
-    .when(f.col("DataValueUnit") == "per 100,000 residents", "cases per 100,000")\
-    .otherwise(f.col("DataValueUnit"))
+    dvu_cases = when(col("DataValueUnit") == "per 100,000", "cases per 100,000")\
+    .when(col("DataValueUnit") == "per 100,000 residents", "cases per 100,000")\
+    .otherwise(col("DataValueUnit"))
     df = df.withColumn("DataValueUnit", dvu_cases)
     
     # Extract out the age brackets in each question if there are any
@@ -87,59 +102,61 @@ def transform(df: pyspark.sql.dataframe.DataFrame):
     #  Row(AgeBracket='aged 50-74 years'),
     #  Row(AgeBracket='aged 1-17 years')
 
-    age_info_col = f.regexp_extract(f.col("Question"), pattern, 1)
-    cases = f.when(
-            f.regexp(
+    age_info_col = regexp_extract(col("Question"), pattern, 1)
+    cases = when(
+            regexp(
                 age_info_col,
                 # this is where we check if a column has >=, <=, >, <, 
                 # then we return whatever number is in this as a list
                 # and then cast this list of matched string numbers to
                 # a list of int numbers  
-                f.lit(r"([><=]+(?=\s*\d+))")
+                lit(r"([><=]+(?=\s*\d+))")
             ),
             # returns a list of all number strings 
-            f.concat(
-                f.regexp_extract_all(
+            concat(
+                regexp_extract_all(
                     age_info_col,
-                    f.lit(r"(\d+)"), 
+                    lit(r"(\d+)"), 
                     1
                 ).cast(ArrayType(FloatType())),
-                f.array(f.lit(float("inf")))
+                array(lit(float("inf")))
             )
         ).when(
-            f.regexp(
+            regexp(
                 age_info_col,
-                f.lit(r"((?<=\d+)-+(?=\d+))")
+                # this is to match a hyphen that occurs once or twice
+                # if a digit/s (?>=\d+) precedes it and succeeds it (?=\d+)
+                lit(r"((?<=\d+)-+(?=\d+))")
             ),
-            f.regexp_extract_all(
+            regexp_extract_all(
                 age_info_col, 
-                f.lit(r"(\d+)"), 
+                lit(r"(\d+)"), 
                 1
             ).cast(ArrayType(FloatType()))
         ).when(
-            f.regexp(
+            regexp(
                 age_info_col,
-                f.lit(r"(youth)")
+                lit(r"(youth)")
             ),
             # when youth is detected in the age info column we
             # regexp will return true and when a row is true we return
             # in this case an array of literal/constant float values of 
             # 18 and 24 as these are the age ranges of this group 
-            f.array(f.lit(float(18)), f.lit(float(24)))
+            array(lit(float(18)), lit(float(24)))
         ).when(
-            f.regexp(
+            regexp(
                 age_info_col,
-                f.lit(r"(high\s*school student)")
+                lit(r"(high\s*school student)")
             ),
             # and lastly in a case where no age bracket numbers or youth
             # keywords are detected it is assumed that this group is highschool
             # which has an age range of 14 to 18 
-            f.array(f.lit(float(14)), f.lit(float(18)))
+            array(lit(float(14)), lit(float(18)))
         ).otherwise(
             # if there is no age ranges, arithmetic operators, or groups
             # implying age range then question has no age range to extract
             # so return null values instead
-            f.array(f.lit(None), f.lit(None))
+            array(lit(None), lit(None))
         )
 
     # create a dataframe with column AgeBracket and 
@@ -234,42 +251,42 @@ def transform(df: pyspark.sql.dataframe.DataFrame):
     # hispanic or hispanic individuals)
 
     # so all in all the condition would be the ff.
-    strat_col = f.split(f.lower(f.col("Stratification1")), ",")
-    strat_cases = f.when(
+    strat_col = split(sparkLower(col("Stratification1")), ",")
+    strat_cases = when(
             strat_col[0] == "overall",
             # | Sex | Ethnicity | Origin |
             # | Both | All | Both |
-            f.array(f.lit("Both"), f.lit("All"), f.lit("Both"))
+            array(lit("Both"), lit("All"), lit("Both"))
         ).when(
             strat_col[0] == "hispanic",
             # | Sex | Ethnicity | Origin |
             # | Both | All | Hispanic |
-            f.array(f.lit("Both"), f.lit("All"), f.lit("Hispanic"))
+            array(lit("Both"), lit("All"), lit("Hispanic"))
         ).when(
             strat_col[0] == "american indian or alaska native",
             # | Sex | Ethnicity | Origin |
             # | Both | AIAN | Non Hispanic |
-            f.array(f.lit("Both"), f.lit("AIAN"), f.lit("Not Hispanic"))
+            array(lit("Both"), lit("AIAN"), lit("Not Hispanic"))
         ).when(
             strat_col[0] == "asian or pacific islander",
             # | Sex | Ethnicity | Origin |
             # | Both | NHPI | Non Hispanic |
-            f.array(f.lit("Both"), f.lit("NHPI"), f.lit("Not Hispanic"))
+            array(lit("Both"), lit("NHPI"), lit("Not Hispanic"))
         ).when(
-            f.rlike(strat_col[0], f.lit(r"(asian|black|white|other|multiracial)")),
+            rlike(strat_col[0], lit(r"(asian|black|white|other|multiracial)")),
             # | Sex | Ethnicity | Origin |
             # | Both | white | Non Hispanic |
             # | Both | black | Non Hispanic |
             # | Both | asian | Non Hispanic |
             # | Both | other | Non Hispanic |
             # | Both | multiracial | Non Hispanic |
-            f.array(f.lit("Both"), f.initcap(strat_col[0]), f.lit("Not Hispanic"))
+            array(lit("Both"), initcap(strat_col[0]), lit("Not Hispanic"))
         ).when(
-            f.rlike(strat_col[0], f.lit(r"(male|female)")),
+            rlike(strat_col[0], lit(r"(male|female)")),
             # | Sex | Ethnicity | Origin |
             # | Male | All | Both |
             # | Female | All | Both |
-            f.array(f.initcap(strat_col[0]), f.lit("All"), f.lit("Both"))
+            array(initcap(strat_col[0]), lit("All"), lit("Both"))
         )
 
     df = df.withColumn("Sex", strat_cases[0])\
@@ -290,7 +307,7 @@ if __name__ == "__main__":
     path = os.path.join(DATA_DIR, "U.S._Chronic_Disease_Indicators__CDI___2023_Release.csv")
 
     spark = SparkSession.builder.appName('test')\
-        .config("spark.executor.memory", "6g")\
+        .config("spark.driver.memory", "6g")\
         .config("spark.sql.execution.arrow.maxRecordsPerBatch","100")\
         .getOrCreate()
 
@@ -308,4 +325,4 @@ if __name__ == "__main__":
 
     FILE_NAME = f"cdi.parquet"
     OUTPUT_FILE_PATH = os.path.join(OUTPUT_DATA_DIR, FILE_NAME)
-    final.write.parquet(OUTPUT_FILE_PATH)
+    final.write.parquet(OUTPUT_FILE_PATH, mode="overwrite")

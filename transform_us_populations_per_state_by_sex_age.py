@@ -358,12 +358,11 @@ if __name__ == "__main__":
             year_range,
             callback_fn=process_population_by_sex_age_table)
         
-        # # collect state populations from all years using list
-        # # there should be 240 rows per us state regardless of year range
-        # # except for 2020-2023 which is 96 rows since this is only a span 
-        # # of 4 years. So 240 * 51 states * 2 year ranges spanning 10 years
-        # # + 96 * 51 states is 29376 rows all in all  
-        # state_populations_all_years.extend(state_populations)
+        # collect state populations from all years using list
+        # there should be 240 rows per us state regardless of year range
+        # except for 2020-2023 which is 96 rows since this is only a span 
+        # of 4 years. So 240 * 51 states * 2 year ranges spanning 10 years
+        # + 96 * 51 states is 29376 rows all in all  
         # create output file path
         indicator = year_range.replace("-", "_")
         FILE_NAME = f"us_populations_per_state_by_sex_age_{indicator}.parquet"

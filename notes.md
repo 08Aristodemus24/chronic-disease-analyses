@@ -684,6 +684,48 @@ a solution could be is to save the dataframe of each state of specific year rang
 
 * `=COUNTIF(<range of cells>, "*")` actually counts cells given range of cells that are not empty strings 
 
+* finally found the complete population data with all age years, sex, ethnicity, and origin at https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2010-evaluation-estimates.html, https://www.census.gov/data/tables/time-series/demo/popest/2010s-state-detail.html, and https://www.census.gov/data/tables/time-series/demo/popest/2020s-state-detail.html
+
+only thing left to do is to preprocess these csv's again with spark
+
+* if we have 24 gb of installed ram and 23 gb usable and have 8 cores in our CPU we can utilize this memory to partition it across all 8 cores of our cpu for concurrent processing in spark. 
+
+* so doing the following in spark isn't good for the driver memory since it is what collects all executors processed dataframes. And if we try and concatenate all our dataframes without sufficient memory for the driver it will result in an out of memory error whereas if we can partition our memory with our executors and save it instead by chunks then we can avoid this error
+```
+    # loop through year_ranges
+    for year_range in year_range_list:
+        # 2000 - 2010
+        if year_range == "2000-2009":
+            cols_to_remove = [1, 12, 13]
+            populations = populations_by_sex_age_00_10 
+
+        # 2010 - 2019
+        elif year_range == "2010-2019":
+            cols_to_remove = [1, 2, 3, 4, 5, 6, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34]
+            populations = populations_by_sex_age_10_19
+
+        # 2020 - 2023
+        elif year_range == "2020-2023":
+            cols_to_remove = [1, 2, 3, 4, 7, 10, 13]
+            populations = populations_by_sex_age_20_23
+
+        # concurrently process state populations by year range
+        state_populations_df = get_state_populations(
+            DATA_DIR, 
+            spark, 
+            cols_to_remove, 
+            populations, 
+            year_range,
+            callback_fn=process_population_by_sex_age_table)
+    
+        # collect state populations from all years using list
+        state_populations_all_years.append(state_populations_df)
+
+    # concatenate all state populations from all year ranges
+    final = reduce(DataFrame.unionByName, state_populations_all_years)
+    final.show(final.count())
+```
+
 # Questions:
 * how to fill in missing values?
 * how to drop undesired values based on a filter?
