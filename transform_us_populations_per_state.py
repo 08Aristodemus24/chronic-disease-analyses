@@ -8,7 +8,7 @@ import pyspark.sql.functions as f
 from pyspark.sql import SparkSession
 from pyspark.sql.types import LongType
 
-def transform(df: pyspark.sql.dataframe.DataFrame):
+def process_populations_table(df: pyspark.sql.dataframe.DataFrame):
     # remove index column
     df = df.drop("_c0")
 
@@ -36,7 +36,7 @@ if __name__ == "__main__":
         .load(path)
     
     # commence transformation
-    final = transform(upps_df)
+    final = process_populations_table(upps_df)
 
     # create output directory 
     OUTPUT_DATA_DIR = "./data/population-data-transformed"

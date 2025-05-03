@@ -18,7 +18,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import StringType, ArrayType, StructField, StructType, FloatType, DoubleType, IntegerType
 
 
-def transform(df: DataFrame):
+def process_cdi_table(df: DataFrame):
     # Drop uneccessary columns
     cols_to_drop = ["Response",
         "ResponseID",
@@ -317,7 +317,7 @@ if __name__ == "__main__":
         .load(path)
     
     # commence transformation
-    final = transform(cdi_df)
+    final = process_cdi_table(cdi_df)
 
     # create output directory 
     OUTPUT_DATA_DIR = "./data/cdi-data-transformed"

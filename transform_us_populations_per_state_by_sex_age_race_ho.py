@@ -123,9 +123,11 @@ def process_population_by_sex_age_race_ho_table(df: DataFrame,
         valueColumnName="Population"
     )
 
-    # clean year column and cast population to long int
+    # clean year column, cast age to float, and cast 
+    # population to long int
     df = df.withColumn("Year", regexp_replace(col("Year"), r"[_]", "").cast(IntegerType()))
     df = df.withColumn("Population", col("Population").cast(LongType()))
+    df = df.withColumn("Age", col("Age").cast(FloatType()))
 
     return df
 

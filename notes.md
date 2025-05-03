@@ -688,7 +688,7 @@ a solution could be is to save the dataframe of each state of specific year rang
 
 only thing left to do is to preprocess these csv's again with spark
 
-* if we have 24 gb of installed ram and 23 gb usable and have 8 cores in our CPU we can utilize this memory to partition it across all 8 cores of our cpu for concurrent processing in spark. 
+* if we have 24 gb of installed ram and 23 gb usable and have 8 cores in our CPU we can utilize this memory to partition it across all 8 cores of our cpu for concurrent processing in spark. We need to also take note of background processes in our task manager taking up our memory so if need be we have to end these background processes that take up too much memory in order to free up space for our spark driver memory and spark executor memory 
 
 * so doing the following in spark isn't good for the driver memory since it is what collects all executors processed dataframes. And if we try and concatenate all our dataframes without sufficient memory for the driver it will result in an out of memory error whereas if we can partition our memory with our executors and save it instead by chunks then we can avoid this error
 ```
