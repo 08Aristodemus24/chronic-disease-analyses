@@ -765,6 +765,43 @@ Caused by: java.io.EOFException
         ... 26 more
 ```
 
+* `<groupid>:<artifactid>:<release version>` e.g. `com.google.guava:guava:33.4.8-jre` which whne translated to `.xml` is...
+```
+<dependency>
+    <groupId>com.google.guava</groupId>
+    <artifactId>guava</artifactId>
+    <version>23.6-jre</version>
+</dependency> 
+```
+
+example 2: 
+`org.apache.hadoop:hadoop-aws:3.3.0` that we include during spark submit in `.xml` is 
+```
+<dependency>
+    <groupId>org.apache.hadoop</groupId>
+    <artifactId>hadoop-aws</artifactId>
+    <version>3.3.0</version>
+</dependency>
+```
+
+* to specify multiple packages in spark-submit the list of packages should be separated using commas without whitespaces (breaking lines should work just fine) for instance: `spark-submit --packages org.apache.hadoop:hadoop-aws:3.3.0,com.google.guava:guava:23.6-jre test_s3.py`
+
+* reading csv files from s3 requires many packages 
+- `org.apache.hadoop:hadoop-aws:3.3.0` this is the right version
+- `com.amazonaws:aws-java-sdk-bundle:1.11.563` tried version 1.12.367
+- `org.apache.httpcomponents:httpcore:4.4.16`
+- `com.google.guava:guava:33.4.0-jre` tried version 33.4.0-jre, 27.0-jre, 33.3.1-jre, 33.3.0-jre
+ 
+- the maven package `org.apache.hadoop:hadoop-aws:3.3.0` when we read the packages compile dependencies requires `com.amazonaws:aws-java-sdk-bundle:1.11.563` so it makes sense to also include this in our spark submit
+
+* solved the  java no such method error com google common base preconditions by installing  guava 27.0-jre version since by default spark 3.5.5 uses guava 14 which does not have the common base preconditions check argument methodas the error says but guava 27 does and so installing this is what is required to sovle the above problem
+
+* to install aws cli run `msiexec.exe /i https://awscli.amazonaws.com/AWSCLIV2.msi` or download the AWS CLI MSI installer for Windows (64-bit) at `https://awscli.amazonaws.com/AWSCLIV2.msi`
+
+* always take note if you are assigning the right value to the `fs.s3a.access.key` and `fs.s3a.secret.key` keys as even interchanging your IAM user credentials will result in `The AWS Access Key Id you provided does not exist in our records` error. 
+
+
+
 # Questions:
 * how to fill in missing values?
 * how to drop undesired values based on a filter?
@@ -775,6 +812,11 @@ Caused by: java.io.EOFException
 * https://stackoverflow.com/questions/47357855/sql-add-only-a-year-value-in-a-date-column
 * performance tuning of apache spark: https://medium.com/@manoj.kdas37/how-to-optimize-your-apache-spark-jobs-top-10-approaches-and-best-practices-for-performance-tuning-4630ae864f52
 * configuring apache spark to enhance performance and avoid memory limit errors: https://spark.apache.org/docs/latest/configuration.html
+* error reading s3 `com google common base preconditions`: 
+- https://stackoverflow.com/questions/42206440/java-lang-nosuchmethoderror-com-google-common-base-preconditions-checkargument
+- http://www.openkb.info/2022/07/spark-writing-to-s3-failed_19.html
+- https://abrkljac.medium.com/solving-the-nosuchmethoderror-exception-in-spark-minio-integration-8324f3d464e3
+* resolving `Class org.apache.hadoop.fs.s3a.auth.IAMInstanceCredentialsProvider not found` error: https://stackoverflow.com/questions/71546208/class-org-apache-hadoop-fs-s3a-auth-iaminstancecredentialsprovider-not-found-whe 
 
 # Problems to solve:
 1. I can't save year as 4 byte int for 200000+ rows since that would be a waste of space

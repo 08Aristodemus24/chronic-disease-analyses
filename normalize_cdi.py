@@ -71,7 +71,6 @@ if __name__ == "__main__":
     path = os.path.join(DATA_DIR, "cdi.parquet")
 
     spark = SparkSession.builder\
-        .master("local[1]")\
         .config("spark.driver.memory", "6g")\
         .config("spark.sql.execution.arrow.maxRecordsPerBatch","100")\
         .appName('test')\
