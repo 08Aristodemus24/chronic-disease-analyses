@@ -726,6 +726,45 @@ only thing left to do is to preprocess these csv's again with spark
     final.show(final.count())
 ```
 
+* if we ever get the ff. error when we jsut merely create a dataframe and show it e.g. `strat_perms_df = session.createDataFrame(strat_perms, ["Sex", "Ethnicity", "Origin"]) strat_perms_df.show()` then it means according to this post **https://stackoverflow.com/questions/77369508/python-worker-keeps-on-crashing-in-pyspark** that our installed python that spark uses may not be compatible with it, this was the case when I had python `3.12.6` installed but when I downgraded to `3.11.5` or `3.11.8` or any other `3.11.x` version accordin the the post then the `EOF exception` disappears 
+
+```
+23/10/26 14:10:52 ERROR Executor: Exception in task 0.0 in stage 0.0 (TID 0)/ 1]
+org.apache.spark.SparkException: Python worker exited unexpectedly (crashed)
+        at org.apache.spark.api.python.BasePythonRunner$ReaderIterator$$anonfun$1.applyOrElse(PythonRunner.scala:612)
+        ...
+
+23/10/26 14:10:52 ERROR TaskSetManager: Task 0 in stage 0.0 failed 1 times; aborting job
+Traceback (most recent call last):
+  File "c:\Users\<USER>\PySparkTesting\spark_test.py", line 14, in <module>
+    df.show()
+  File "C:\Users\<USER>\AppData\Local\Programs\Python\Python312\Lib\site-packages\pyspark\sql\dataframe.py", line 959, in show
+    print(self._jdf.showString(n, 20, vertical))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\<USER>\AppData\Local\Programs\Python\Python312\Lib\site-packages\py4j\java_gateway.py", line 1322, in __call__
+    return_value = get_return_value(
+                   ^^^^^^^^^^^^^^^^^
+  File "C:\Users\<USER>\AppData\Local\Programs\Python\Python312\Lib\site-packages\pyspark\errors\exceptions\captured.py", line 179, in deco
+    return f(*a, **kw)
+           ^^^^^^^^^^^
+  File "C:\Users\<USER>\AppData\Local\Programs\Python\Python312\Lib\site-packages\py4j\protocol.py", line 326, in get_return_value
+    raise Py4JJavaError(
+py4j.protocol.Py4JJavaError: An error occurred while calling o42.showString.
+: org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 0.0 failed 1 times, most recent failure: Lost task 0.0 in stage 0.0 (TID 0) 
+(LAPTOP-3GL266K9 executor driver): org.apache.spark.SparkException: Python worker exited unexpectedly (crashed)
+        at org.apache.spark.api.python.BasePythonRunner$ReaderIterator$$anonfun$1.applyOrElse(PythonRunner.scala:612)
+        ...
+        at java.lang.Thread.run(Thread.java:750)
+Caused by: org.apache.spark.SparkException: Python worker exited unexpectedly (crashed)
+        at org.apache.spark.api.python.BasePythonRunner$ReaderIterator$$anonfun$1.applyOrElse(PythonRunner.scala:612)
+        ...
+        ... 1 more
+Caused by: java.io.EOFException
+        at java.io.DataInputStream.readInt(DataInputStream.java:392)
+        at org.apache.spark.api.python.PythonRunner$$anon$3.read(PythonRunner.scala:774)
+        ... 26 more
+```
+
 # Questions:
 * how to fill in missing values?
 * how to drop undesired values based on a filter?

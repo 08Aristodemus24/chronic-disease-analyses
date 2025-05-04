@@ -107,11 +107,11 @@ def process_population_by_sex_race_ho_table(df: DataFrame,
         "Black"
     )\
     .when(
-        col("Ethnicity") == "american indian and alaska native",
+        (col("Ethnicity") == "american indian and alaska native") | (col("Ethnicity") == "AIAN"),
         "AIAN"
     )\
     .when(
-        col("Ethnicity") == "native hawaiian and other pacific islander",
+        (col("Ethnicity") == "native hawaiian and other pacific islander") | (col("Ethnicity") == "NHPI"),
         "NHPI"
     )\
     .when(
