@@ -28,12 +28,14 @@ def get_state_populations(
         state = re.search(r"(^[A-Za-z\s]+)", file)
         state = "Unknown" if not state else state[0]
         FILE_EXT = re.search(r'(.json|.txt|.rtf|.docx|.csv|.xlsx|.xls|.md|.pdf|.webp|.png|.jpg)$', FILE_PATH)
+        FILE_EXT = FILE_EXT[0] if FILE_EXT else ".xls" 
 
         # print(to_remove)
         # print(year_range)
         # read excel file
-        file_format = "com.crealytics.spark.excel" if FILE_EXT == ".xls" or FILE_EXT == ".xlsx" else "csv"
-        header = ("header", "false") if FILE_EXT == ".xls" or FILE_EXT == ".xlsx" else ("header", "true")
+        file_format = "com.crealytics.spark.excel" if (FILE_EXT == ".xls") or (FILE_EXT == ".xlsx") else "csv"
+        header = ("header", "false") if (FILE_EXT == ".xls") or (FILE_EXT == ".xlsx") else ("header", "true")
+        print(header, file_format)
         df = session.read.format(file_format)\
         .option(*header)\
         .option("inferSchema", "true")\

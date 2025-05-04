@@ -202,7 +202,7 @@ if __name__ == "__main__":
     year_range_list = args.year_range_list
 
     DATA_DIR = './data/population-data-raw'
-    EXCLUSIONS = ["us_populations_per_state_2001_to_2021.csv"]
+    EXCLUSIONS = ["us_populations_per_state_2001_to_2021.csv", "population-data.zip"]
     files = list(filter(lambda file: not file in EXCLUSIONS, os.listdir(DATA_DIR)))
     cases = {
             "2000-2009": {
@@ -228,9 +228,9 @@ if __name__ == "__main__":
         .getOrCreate()
     
     conf_view = spark.sparkContext.getConf()
-    print(f"spark jars packages: {conf_view.get("spark.jars.packages")}")
-    print(f"spark.executor.memory: {conf_view.get("spark.executor.memory")}")
-    print(f"spark.executor.cores: {conf_view.get("spark.executor.cores")}")
+    print(f"spark jars packages: {conf_view.get('spark.jars.packages')}")
+    print(f"spark.executor.memory: {conf_view.get('spark.executor.memory')}")
+    print(f"spark.executor.cores: {conf_view.get('spark.executor.cores')}")
 
     # create output directory 
     OUTPUT_DATA_DIR = "./data/population-data-transformed"
@@ -260,6 +260,6 @@ if __name__ == "__main__":
         indicator = year_range.replace("-", "_")
         FILE_NAME = f"us_populations_per_state_by_sex_race_ho_{indicator}.parquet"
         OUTPUT_FILE_PATH = os.path.join(OUTPUT_DATA_DIR, FILE_NAME)
-        state_populations.write.parquet(OUTPUT_FILE_PATH)
+        state_populations.write.parquet(OUTPUT_FILE_PATH, mode="overwrite")
 
     

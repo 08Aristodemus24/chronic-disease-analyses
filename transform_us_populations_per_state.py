@@ -44,6 +44,6 @@ if __name__ == "__main__":
 
     FILE_NAME = f"us_populations_per_state.parquet"
     OUTPUT_FILE_PATH = os.path.join(OUTPUT_DATA_DIR, FILE_NAME)
-    final.write.parquet(OUTPUT_FILE_PATH)
+    final.write.parquet(OUTPUT_FILE_PATH, mode="overwrite")
 
 
