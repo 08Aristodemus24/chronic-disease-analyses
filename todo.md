@@ -6,13 +6,25 @@
 * use box plot to see interquartile ranges (get it from data-mining-hw repo)
 
 * add primary key to each table during transformation phase as this will be needed when we finally upload these tables to a data warehosue for cdi the pks will be topicid, questionid, and locationid
-* the cdi will also be normalized and split into two fact tables one with age brackets and another table without age brackets e.g. 'Infants breastfed at 6 months', 'Receiving formula supplementation within the first 2 days of life among breastfed infants', 'Life expectancy at age 65 years', etc.
+* cdi fact table still contains id's that need to be dropped and retained at a separate dimension table as part of normalization process for later loading to warehouse 
+* break down us_populations_by_sex_age_race_ho table into fact table and dimension table by dropping the id's that are contained in this fact table and then retaining it in the dimension table as part of normalization process for later loading to warehouse 
+* union the stratification dimension table from cdi and us populations per state by sex age race ho tables 
 * <s>clean and transform cdi data using pyspark</s>
 * <s>we use pyspark for preprocessing the data to make sql queries</s>
-* place xls and xlsx population data in AWS and read in databricks
+
+* use selenium to automate download of us populations per state by sex age race ho csv's from `www.census.gov` 
 
 * use selenium, docker, and airflow to automate extraction process and then use pyspark and databricks to transform extracted data and load the final data into a warehouse like databricks. All of this is orchestrated using airflow. 
 
-* use PowerBI to make analyses on the data from databricks
+* document everything
+- from automating the extraction of data
+- your thought process of loading the raw data locally
+- your thought process of getting extra population data 
+- how you noticed sex and age or sex race origin wasn't enough and that it needed to be sex age race origin and why you needed this extra data
+- how you structured the tables first using spark for easier analytical queries by joins and group bys
+- thought process behind each transformation step
+- learning to finally implement read and write operations using spark to aws s3
+- the process of normalization for faster querying
+- weaving every process of extraction and transformation and loading using orchestration tools like airflow 
 
-* 
+* use PowerBI to make analyses on the data from databricks
