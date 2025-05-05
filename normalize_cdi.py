@@ -2,6 +2,7 @@ import os
 import itertools
 
 from pyspark.sql.dataframe import DataFrame
+from pyspark.sql import Window
 from pyspark.sql.functions import (col,
     lower as sparkLower,
     split,
@@ -13,56 +14,62 @@ from pyspark.sql.functions import (col,
     regexp_extract,
     lit,
     when,
+    dense_rank,
     concat,
     array,)
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StringType, ArrayType, StructField, StructType, FloatType, DoubleType, IntegerType
 
 def normalize_cdi_table(df: DataFrame, session: SparkSession):
+    """
+    extract the unique id's of each column to be retained
+    and placed also in a dimension table
+    """
+
+    # once Stratification1ID column is added select only the sex,
+    # ethnicity, origin, and stratification1id columns and then drop
+    # the duplicates so that all unique values are kept
+    strat_df = df.select("Sex", "Ethnicity", "Origin", "Stratification1ID").dropDuplicates()
+    
+    # drop the columns in the fact table that is already 
+    # in the dimension table
+    df = df.drop("Sex", "Ethnicity", "Origin")
+    # strat_df.show()
+
     # remove location desc
     # remove location abbr
-    # retain in locations dimension table with location abbr as id
+    # retain in location dimension table with location abbr as id
+    df = df.drop("LocationID")
+    df = df.withColumnRenamed("LocationAbbr", "LocationID")
+    location_df = df.select("LocationID", "LocationDesc").dropDuplicates()
+
+    # drop location descriptions as we have already retained its 
+    # corresponding id in the dimension table in the location df
+    df = df.drop("LocationDesc")
+    # location_df.show(location_df.count())
 
     # remove topic
     # remove question
     # remove topicid
     # retain in questions table with question id
+    question_df = df.select("QuestionID", "TopicID", "Question", "Topic", "AgeStart", "AgeEnd").dropDuplicates()
+    df = df.drop("TopicID", "Question", "Topic", "AgeStart", "AgeEnd")
+    # question_df.show()
 
     # remove data value type
     # retain in data value type table with data value type id as id
+    dvt_df = df.select("DataValueTypeID", "DataValueType").drop_duplicates()
+    df = df.drop("DataValueType")
+    # dvt_df.show()
 
-    # remove stratification 1
+    # this will cover slowly changing dimension cases if a unique row in dimension
+    # table is updated, if a unique row is added to dimension table or if another column
+    # is added to dimension table
+    df.show()
 
-    # remove sex, ethnicity, and origin get all unique
-    # permutations of sex, ethnicity, and origin and
-    # assign them a value
-
-    # extract the unique id's of each column to be retained
-    # and placed also in a dimension table
-    loc_id = df.select("LocationAbbr").distinct().collect()
-    question_id = df.select("QuestionID").distinct().collect()
-    dvt_id = df.select("DataValueTypeID").distinct().collect()
-    u_sex = [row["Sex"] for row in df.select("Sex").distinct().collect()]
-    u_ethnicity = [row["Ethnicity"] for row in df.select("Ethnicity").distinct().collect()]
-    u_origin = [row["Origin"] for row in df.select("Origin").distinct().collect()]
-
-    # create unique sex, ethnicity, and origin permutations
-    # these are the list of unique values we need to use to 
-    # extract the products which are the permutations   
-    values = [u_sex, u_ethnicity, u_origin]
-
-    # since values is an iterable and product receives variable arguments,
-    # variable arg in product are essentially split thus above values
-    # will be split into [both, male, female], [white, black, AIAN, asian, NHPI, 
-    # multiracial], and [both, hispanic, not hispanic] this can be then easily
-    # used to produce all possible permutations of these values e.g. (both, white, hispanic), 
-    # (male, black, not hispanic), (female, AIAN, both) and so on... which represent the
-    # sex, ethnicity, and hispanic origin and all unique permuattions produced by these will
-    # be assigned an id that our cdi fact table can use to determine what a cdi stratification
-    # permutation is 
-    strat_perms = list(itertools.product(*values))
-    strat_perms_df = session.createDataFrame(strat_perms, ["Sex", "Ethnicity", "Origin"])
-    strat_perms_df.show()
+    # return all normalized tables
+    return [df, strat_df, question_df, location_df, dvt_df]
+    
     
 
 
@@ -82,4 +89,4 @@ if __name__ == "__main__":
         .load(path)
 
     # print(f"CDI LENGTH: {cdi_df.count()}")
-    normalize_cdi_table(cdi_df, spark)
+    tables = normalize_cdi_table(cdi_df, spark)

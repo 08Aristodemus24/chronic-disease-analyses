@@ -1,6 +1,6 @@
 # Usage:
 * navigate to directory with `readme.md` and `requirements.txt` file
-* run command; `conda create -n <name of env e.g. chronic-disease-analyses> python=3.12.3`. Note that 3.11.4 must be the python version otherwise packages to be installed would not be compatible with a different python version
+* run command; `conda create -n <name of env e.g. chronic-disease-analyses> python=3.11.8`. Note that 3.11.8 must be the python version otherwise packages to be installed would not be compatible with a different python version
 * once environment is created activate it by running command `conda activate`
 * then run `conda activate chronic-disease-analyses`
 * check if pip is installed by running `conda list -e` and checking list

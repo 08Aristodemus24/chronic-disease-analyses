@@ -10,12 +10,15 @@ from pyspark.sql.functions import (monotonically_increasing_id,
     row_number, 
     col,
     lower as sparkLower,
+    upper as sparkUpper,
     regexp_replace,
     regexp,
     regexp_extract_all,
+    substring,
     regexp_extract,
     lit,
     when,
+    array_join,
     concat,
     array,)
 from pyspark.sql.types import DoubleType, LongType, ArrayType, FloatType, IntegerType
@@ -113,11 +116,102 @@ def process_population_by_sex_age_race_ho_table(df: DataFrame,
     sex_cases = when(col("Sex") == 1, "Male")\
     .when(col("Sex") == 2, "Female")
     df = df.withColumn("Sex", sex_cases)
+    
+    # for origin and sex pick out the initial character of each word
+    # Not Hispanic -> NH
+    # Both -> B
+    # Hispanic -> H
+    # Male -> M
+    # Female -> F
+    # Both -> B
+    origin_codes = array_join(
+        regexp_extract_all(col("Origin"), lit(r"(\b[A-Za-z])"), 1),
+        ""
+    )
+    sex_codes = array_join(
+        regexp_extract_all(col("Sex"), lit(r"(\b[A-Za-z])"), 1),
+        ""
+    )
+
+    # for races pick out all characters that are at most 5 
+    # chars in length 
+    # Black -> BLACK
+    # AIAN -> AIAN
+    # Asian -> ASIAN
+    # WHITE -> WHITE
+    # NHPI -> NHPI
+    # Other -> OTHER
+    # Multiracial -> MULTI
+    # All -> ALL
+    eth_codes = sparkUpper(substring(col("Ethnicity"), 1, 5))
+    strat_id = concat(origin_codes, lit("_"), sex_codes, lit("_"), eth_codes)
+    df = df.withColumn("StratificationID", strat_id)
+    df.select("StratificationID").distinct().show()
+
+    strat_df = df.select("Sex", "Ethnicity", "Origin", "StratificationID").drop_duplicates()
+    strat_df.show()
+
+
+    # create id for States and permutations of origin, sex,
+    # and ethnicity before unpivoting/melting df
+    state_id_cases = when(col("State") == "Michigan", "MI")\
+    .when(col("State") == "Washington", "WA")\
+    .when(col("State") == "Delaware", "DE")\
+    .when(col("State") == "Arkansas", "AR")\
+    .when(col("State") == "Georgia", "GA")\
+    .when(col("State") == "Vermont", "VT")\
+    .when(col("State") == "Montana", "MT")\
+    .when(col("State") == "Idaho", "ID")\
+    .when(col("State") == "Texas", "TX")\
+    .when(col("State") == "New York", "NY")\
+    .when(col("State") == "Connecticut", "CT")\
+    .when(col("State") == "Louisiana", "LA")\
+    .when(col("State") == "Missouri", "MO")\
+    .when(col("State") == "Kentucky", "KY")\
+    .when(col("State") == "California", "CA")\
+    .when(col("State") == "Alabama", "AL")\
+    .when(col("State") == "Florida", "FL")\
+    .when(col("State") == "North Dakota", "ND")\
+    .when(col("State") == "South Carolina", "SC")\
+    .when(col("State") == "Iowa", "IA")\
+    .when(col("State") == "South Dakota", "SD")\
+    .when(col("State") == "Oklahoma", "OK")\
+    .when(col("State") == "Pennsylvania", "PA")\
+    .when(col("State") == "Virginia", "VA")\
+    .when(col("State") == "Rhode Island", "RI")\
+    .when(col("State") == "Utah", "UT")\
+    .when(col("State") == "Wisconsin", "WI")\
+    .when(col("State") == "Arizona", "AZ")\
+    .when(col("State") == "New Mexico", "NM")\
+    .when(col("State") == "New Hampshire", "NH")\
+    .when(col("State") == "Illinois", "IL")\
+    .when(col("State") == "Maryland", "MD")\
+    .when(col("State") == "Mississippi", "MS")\
+    .when(col("State") == "Wyoming", "WY")\
+    .when(col("State") == "Nevada", "NV")\
+    .when(col("State") == "Ohio", "OH")\
+    .when(col("State") == "Minnesota", "MN")\
+    .when(col("State") == "Hawaii", "HI")\
+    .when(col("State") == "Tennessee", "TN")\
+    .when(col("State") == "Indiana", "IN")\
+    .when(col("State") == "West Virginia", "WV")\
+    .when(col("State") == "Maine", "ME")\
+    .when(col("State") == "Colorado", "CO")\
+    .when(col("State") == "District of Columbia", "DC")\
+    .when(col("State") == "Nebraska", "NE")\
+    .when(col("State") == "Kansas", "KS")\
+    .when(col("State") == "Alaska", "AK")\
+    .when(col("State") == "North Carolina", "NC")\
+    .when(col("State") == "New Jersey", "NJ")\
+    .when(col("State") == "Oregon", "OR")\
+    .when(col("State") == "Massachusett", "MA")
+
+    df = df.withColumn("StateID", state_id_cases)
 
     # stack year columns with all ids being state, sex, age, 
     # ethnicity, and origin 
     df = df.melt(
-        ids=["State", "Age", "Ethnicity", "Origin", "Sex"],
+        ids=["StateID", "State", "Age", "Ethnicity", "Origin", "Sex", "StratificationID"],
         values=year_cols,
         variableColumnName="Year",
         valueColumnName="Population"
@@ -156,7 +250,7 @@ if __name__ == "__main__":
                     "POPESTIMATE42010",
                     "POPESTIMATE72010"
                  ],
-                "populations": list(filter(lambda file: "2000-2010" in file and "by_sex_age_race_ho" in file, files))  
+                "populations": list(filter(lambda file: "2000-2010" in file and "by_sex_age_race_ho" in file, files))
             },
             "2010-2019": {
                 "cols_to_remove": [

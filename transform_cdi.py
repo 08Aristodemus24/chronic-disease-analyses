@@ -1,16 +1,20 @@
 import os
 
+from pyspark.sql import Window
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.functions import (col,
     lower as sparkLower,
+    upper as sparkUpper,
     split,
     rlike,
+    substring,
     initcap,
     regexp,
     regexp_extract_all,
     isnull,
     regexp_extract,
     lit,
+    array_join,
     when,
     concat,
     array,)
@@ -28,14 +32,21 @@ def process_cdi_table(df: DataFrame):
         "DataSource", 
         "DataValue",
 
-        "StratificationCategory2",
-        "Stratification2",
-        "StratificationCategory3",
+        
+        # stratification1
         "Stratification3",
+        "Stratification2",
 
+        "StratificationCategory1",
+        "StratificationCategory2",
+        "StratificationCategory3",
+        
+        "StratificationCategoryID1",
         "StratificationCategoryID2",
-        "StratificationID2",
         "StratificationCategoryID3",
+
+        "StratificationID1",
+        "StratificationID2",
         "StratificationID3"]
     df = df.drop(*cols_to_drop)
 
@@ -64,8 +75,6 @@ def process_cdi_table(df: DataFrame):
 
     # rename datavaluealt column (which is already a double) to just datavalue 
     df = df.withColumnRenamed("DataValueAlt", "DataValue")
-    df = df.withColumnRenamed("StratificationID1", "Stratification1ID")
-    df = df.withColumnRenamed("StratificationCategoryID1", "StratificationCategory1ID")
 
     # Replace `per 100,000` and `per 100,000 residents` with
     # `cases per 100,000` instead to reduce redundancy
@@ -294,7 +303,54 @@ def process_cdi_table(df: DataFrame):
     .withColumn("Origin", strat_cases[2])   
 
     df = df.drop("Stratification1")
-    df.show()
+    
+    # because some columns when grouped will not have id
+    # we will need to add an id column for these groups  
+    # | Sex | Ethnicity | Origin | Stratification1ID |
+    # | both | white | both | B_B_WHITE |
+    # | both | white | both | B_B_WHITE |
+    # | male | black | hispanic | H_M_BLACK |
+    # | male | black | hispanic | H_M_BLACK |
+    # | male | black | hispanic | H_M_BLACK |
+    # | female | AIAN | hispanic | H_F_AIAN |
+    # | male | NHPI | not hispanic | NH_M_NHPI |
+    # | female | AIAN | hispanic | H_F_AIAN |
+    # | female | AIAN | hispanic | H_F_AIAN |
+    # we need this id column as we will have to extract sex, 
+    # ethnicity, origin, and id column and drop the aforementioned 
+    # except the stratification1ID we just created
+    # in order to retain the connection to these extracted columns
+    # but now as a separate table
+
+    # for origin and sex pick out the initial character of each word
+    # Not Hispanic -> NH
+    # Both -> B
+    # Hispanic -> H
+    # Male -> M
+    # Female -> F
+    # Both -> B
+    origin_codes = array_join(
+        regexp_extract_all(col("Origin"), lit(r"(\b[A-Za-z])"), 1),
+        ""
+    )
+    sex_codes = array_join(
+        regexp_extract_all(col("Sex"), lit(r"(\b[A-Za-z])"), 1),
+        ""
+    )
+
+    # for races pick out all characters that are at most 5 
+    # chars in length 
+    # Black -> BLACK
+    # AIAN -> AIAN
+    # Asian -> ASIAN
+    # WHITE -> WHITE
+    # NHPI -> NHPI
+    # Other -> OTHER
+    # Multiracial -> MULTI
+    # All -> ALL
+    eth_codes = sparkUpper(substring(col("Ethnicity"), 1, 5))
+    strat_id = concat(origin_codes, lit("_"), sex_codes, lit("_"), eth_codes)
+    df = df.withColumn("Stratification1ID", strat_id)
 
     # clear dataframe from memory
     df.unpersist()

@@ -24,7 +24,7 @@ from pyspark.context import SparkContext
 from pyspark.sql.types import StringType, ArrayType, StructField, StructType, FloatType, DoubleType, IntegerType
 
 
-
+# spark-submit --packages org.apache.hadoop:hadoop-aws:3.3.0,com.amazonaws:aws-java-sdk-bundle:1.11.563,org.apache.httpcomponents:httpcore:4.4.16 test_s3.py
 if __name__ == "__main__":
     # Build paths inside the project like this: BASE_DIR / 'subdir'.
     # use this only in development
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     # com.amazonaws:aws-java-sdk-bundle:1.11.563,\
     # org.apache.httpcomponents:httpcore:4.4.16,\
     # com.google.guava:guava:33.4.0-jre test_s3.py
-    # the maven package org.apache.hadoop:hadoop-aws:3.3.0
+    # the maven package org.apac    he.hadoop:hadoop-aws:3.3.0
     # when we read the packages compile dependencies requires
     # com.amazonaws:aws-java-sdk-bundle:1.11.563 so it makes sense 
     # to also include this in our spark submit
