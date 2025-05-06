@@ -18,7 +18,9 @@ def get_state_populations(
     
     """
     concurrently runs the state population processor functions for
-    each dataframe loaded
+    each dataframe loaded e.g. alabama_population_2000-2010.xls, 
+    alaska_population_2000-2010.xls, ..., wyoming_population_2000-2010.xls
+    is processed concurrently and then unionized by column
     """
 
     # define function to read each excel file as spark

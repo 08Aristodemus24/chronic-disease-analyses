@@ -22,7 +22,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import StringType, ArrayType, StructField, StructType, FloatType, DoubleType, IntegerType
 
 
-def process_cdi_table(df: DataFrame):
+def process_cdi_table(df: DataFrame) -> DataFrame:
     # Drop uneccessary columns
     cols_to_drop = ["Response",
         "ResponseID",
@@ -350,12 +350,69 @@ def process_cdi_table(df: DataFrame):
     # All -> ALL
     eth_codes = sparkUpper(substring(col("Ethnicity"), 1, 5))
     strat_id = concat(origin_codes, lit("_"), sex_codes, lit("_"), eth_codes)
-    df = df.withColumn("Stratification1ID", strat_id)
-
-    # clear dataframe from memory
-    df.unpersist()
+    df = df.withColumn("StratificationID", strat_id)
 
     return df
+
+
+
+def normalize_cdi_table(df: DataFrame, session: SparkSession) -> list[DataFrame]:
+    """
+    extract the unique id's of each column to be retained
+    and placed also in a dimension table
+    """
+
+    # once Stratification1ID column is added select only the sex,
+    # ethnicity, origin, and stratification1id columns and then drop
+    # the duplicates so that all unique values are kept
+    strat_df = df.select("Sex", "Ethnicity", "Origin", "StratificationID").dropDuplicates()
+    
+    # drop the columns in the fact table that is already 
+    # in the dimension table
+    df = df.drop("Sex", "Ethnicity", "Origin")
+
+    # remove location desc
+    # remove location abbr
+    # retain in location dimension table with location abbr as id
+    df = df.drop("LocationID")
+    df = df.withColumnRenamed("LocationAbbr", "LocationID")
+    location_df = df.select("LocationID", "LocationDesc").dropDuplicates()
+
+    # drop location descriptions as we have already retained its 
+    # corresponding id in the dimension table in the location df
+    df = df.drop("LocationDesc")
+
+    # remove topic
+    # remove question
+    # remove topicid
+    # retain in questions table with question id
+    question_df = df.select("QuestionID", "TopicID", "Question", "Topic", "AgeStart", "AgeEnd").dropDuplicates()
+    df = df.drop("TopicID", "Question", "Topic", "AgeStart", "AgeEnd")
+
+    # remove data value type
+    # retain in data value type table with data value type id as id
+    dvt_df = df.select("DataValueTypeID", "DataValueType").drop_duplicates()
+    df = df.drop("DataValueType")
+
+    # this will cover slowly changing dimension cases if a unique row in dimension
+    # table is updated, if a unique row is added to dimension table or if another column
+    # is added to dimension table
+    tables = dict(zip(["CDI", "Stratification", "Question", "Location", "DataValueType"], [df, strat_df, question_df, location_df, dvt_df]))
+
+    # return all normalized tables
+    return tables
+
+
+
+def save_tables(tables: dict, OUTPUT_DATA_DIR: str="./data/cdi-data-transformed"):
+    # create output directory
+    os.makedirs(OUTPUT_DATA_DIR, exist_ok=True)
+
+    # loop through each table and save as parquet 
+    for name, table in tables.items():
+        FILE_NAME = f"{name}.parquet"
+        OUTPUT_FILE_PATH = os.path.join(OUTPUT_DATA_DIR, FILE_NAME)
+        table.write.parquet(OUTPUT_FILE_PATH, mode="overwrite")
 
 
 if __name__ == "__main__":
@@ -372,13 +429,10 @@ if __name__ == "__main__":
         .option("inferSchema", "true")\
         .load(path)
     
-    # commence transformation
-    final = process_cdi_table(cdi_df)
+    # commence transformation and then normalization
+    first_stage_cdi_df = process_cdi_table(cdi_df)
+    tables = normalize_cdi_table(first_stage_cdi_df, spark)
 
-    # create output directory 
-    OUTPUT_DATA_DIR = "./data/cdi-data-transformed"
-    os.makedirs(OUTPUT_DATA_DIR, exist_ok=True)
-
-    FILE_NAME = f"cdi.parquet"
-    OUTPUT_FILE_PATH = os.path.join(OUTPUT_DATA_DIR, FILE_NAME)
-    final.write.parquet(OUTPUT_FILE_PATH, mode="overwrite")
+    # save transformed and normalized dfs/tables to some 
+    # lake like s3
+    save_tables(tables)

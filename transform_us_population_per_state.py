@@ -42,7 +42,7 @@ if __name__ == "__main__":
     OUTPUT_DATA_DIR = "./data/population-data-transformed"
     os.makedirs(OUTPUT_DATA_DIR, exist_ok=True)
 
-    FILE_NAME = f"us_populations_per_state.parquet"
+    FILE_NAME = f"us_population_per_state.parquet"
     OUTPUT_FILE_PATH = os.path.join(OUTPUT_DATA_DIR, FILE_NAME)
     final.write.parquet(OUTPUT_FILE_PATH, mode="overwrite")
 

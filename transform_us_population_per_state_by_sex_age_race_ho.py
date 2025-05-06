@@ -1,26 +1,21 @@
 import os
 import re
 import ast
-import sys
 
 from functools import reduce
 
 from pyspark import SparkConf
-from pyspark.sql.functions import (monotonically_increasing_id, 
-    row_number, 
+from pyspark.sql.functions import (
     col,
     lower as sparkLower,
     upper as sparkUpper,
     regexp_replace,
-    regexp,
     regexp_extract_all,
     substring,
-    regexp_extract,
     lit,
     when,
     array_join,
-    concat,
-    array,)
+    concat,)
 from pyspark.sql.types import DoubleType, LongType, ArrayType, FloatType, IntegerType
 from pyspark.sql import SparkSession, Window
 from pyspark.sql.dataframe import DataFrame
@@ -29,7 +24,7 @@ from argparse import ArgumentParser
 from utilities.utils import get_state_populations
 
 
-def process_population_by_sex_age_race_ho_table(df: DataFrame, 
+def process_population_per_state_by_sex_age_race_ho_table(df: DataFrame, 
     state: str, 
     cols_to_remove: list, 
     year_range: str="2000-2009"):
@@ -146,11 +141,6 @@ def process_population_by_sex_age_race_ho_table(df: DataFrame,
     eth_codes = sparkUpper(substring(col("Ethnicity"), 1, 5))
     strat_id = concat(origin_codes, lit("_"), sex_codes, lit("_"), eth_codes)
     df = df.withColumn("StratificationID", strat_id)
-    df.select("StratificationID").distinct().show()
-
-    strat_df = df.select("Sex", "Ethnicity", "Origin", "StratificationID").drop_duplicates()
-    strat_df.show()
-
 
     # create id for States and permutations of origin, sex,
     # and ethnicity before unpivoting/melting df
@@ -226,6 +216,107 @@ def process_population_by_sex_age_race_ho_table(df: DataFrame,
     return df
 
 
+def normalize_population_per_state_by_sex_age_race_ho_table(df: DataFrame, session: SparkSession, year_range: str):
+    """
+    extract the unique id's of each column to be retained
+    and placed also in a dimension table
+    """
+
+    # create state dimension table and then drop state column
+    # and retain stateID as foreign key to state dim table
+    state_df = df.select("State", "StateID").dropDuplicates()
+    df = df.drop("State")
+
+    # drop sex, ethnicity, and origin strat columns and retain
+    # in separate dimension table like state table
+    strat_df = df.select("Sex", "Ethnicity", "Origin", "StratificationID").dropDuplicates()
+    df = df.drop("Sex", "Ethnicity", "Origin")
+    print(year_range)
+    tables = list(zip(
+        ["Population", "State", "Stratification"], 
+        [df, state_df, strat_df], 
+        [year_range] * 3)
+    )
+
+    # return all normalized tables
+    return tables
+
+
+def save_tables(tables_all_years: list[tuple[str, DataFrame, str]], OUTPUT_DATA_DIR: str="./data/population-data-transformed"):
+    """
+    decouples the population fact tables since these are large tables from
+    rows with dimension tables as these dimension tables will be unionized.
+    The tables_all_years is detailed below  
+
+    [
+        ('Population', DataFrame[StateID: string, Age: float, StratificationID: string, Year: int, Population: bigint], '2000-2009'), 
+        ('State', DataFrame[State: string, StateID: string], '2000-2009'), 
+        ('Stratification', DataFrame[Sex: string, Ethnicity: string, Origin: string, StratificationID: string], '2000-2009'), 
+        ('Population', DataFrame[StateID: string, Age: float, StratificationID: string, Year: int, Population: bigint], '2010-2019'), 
+        ('State', DataFrame[State: string, StateID: string], '2010-2019'), 
+        ('Stratification', DataFrame[Sex: string, Ethnicity: string, Origin: string, StratificationID: string], '2010-2019'), 
+        ('Population', DataFrame[StateID: string, Age: float, StratificationID: string, Year: int, Population: bigint], '2020-2023'), 
+        ('State', DataFrame[State: string, StateID: string], '2020-2023'), 
+        ('Stratification', DataFrame[Sex: string, Ethnicity: string, Origin: string, StratificationID: string], '2020-2023')
+    ]
+    """
+
+    # create output directory
+    os.makedirs(OUTPUT_DATA_DIR, exist_ok=True)
+    
+    # tables_all_years contains list of tuples which can be unzipped
+    # into names, dataframes, and year range
+    # other dimension tables
+    # [
+    #     ('Stratification', DataFrame[Sex: string, Ethnicity: string, Origin: string, StratificationID: string], '2020-2023'), 
+    #     ('Stratification', DataFrame[Sex: string, Ethnicity: string, Origin: string, StratificationID: string], '2000-2009'), 
+    #     ('Stratification', DataFrame[Sex: string, Ethnicity: string, Origin: string, StratificationID: string], '2010-2019'), 
+    # ]
+
+    # [
+    #     ('State', DataFrame[State: string, StateID: string], '2010-2019'), 
+    #     ('State', DataFrame[State: string, StateID: string], '2020-2023'), 
+    #     ('State', DataFrame[State: string, StateID: string], '2000-2009')
+    # ]
+
+    # population fact tables
+    # [
+    #     ('Population', DataFrame[StateID: string, Age: float, StratificationID: string, Year: int, Population: bigint], '2000-2009'), 
+    #     ('Population', DataFrame[StateID: string, Age: float, StratificationID: string, Year: int, Population: bigint], '2010-2019'), 
+    #     ('Population', DataFrame[StateID: string, Age: float, StratificationID: string, Year: int, Population: bigint], '2020-2023')
+    # ]
+    population_tables_all_years = list(filter(lambda table: table[0] == "Population", tables_all_years))
+    state_tables_all_years = list(filter(lambda table: table[0] == "State", tables_all_years))
+    stratification_tables_all_years = list(filter(lambda table: table[0] == "Stratification", tables_all_years))
+    # print(dimension_tables_all_years)
+    # print(population_tables_all_years)
+
+    # state dimension table
+    _, state_tables, _ = zip(*state_tables_all_years)
+    state_df = reduce(DataFrame.unionByName, state_tables).dropDuplicates()
+    
+    # save to disk or s3 bucket
+    FILE_NAME = "State.parquet"
+    OUTPUT_FILE_PATH = os.path.join(OUTPUT_DATA_DIR, FILE_NAME)
+    state_df.write.parquet(OUTPUT_FILE_PATH, mode="overwrite")
+
+    # stratification dimension table
+    _, stratification_tables, _ = zip(*stratification_tables_all_years)
+    stratification_df = reduce(DataFrame.unionByName, stratification_tables).dropDuplicates()
+    
+    # save to disk or s3 bucket
+    FILE_NAME = "Stratification.parquet"
+    OUTPUT_FILE_PATH = os.path.join(OUTPUT_DATA_DIR, FILE_NAME)
+    stratification_df.write.parquet(OUTPUT_FILE_PATH, mode="overwrite")
+
+    for population_table_name, population_table, population_year_range in population_tables_all_years:
+        indicator = population_year_range.replace("-", "_")
+        FILE_NAME = f"Population_{indicator}.parquet"
+        OUTPUT_FILE_PATH = os.path.join(OUTPUT_DATA_DIR, FILE_NAME)
+        population_table.write.parquet(OUTPUT_FILE_PATH, mode="overwrite")
+
+
+
 if __name__ == "__main__":
     # get year range and state from user input
     parser = ArgumentParser()
@@ -236,7 +327,7 @@ if __name__ == "__main__":
     year_range_list = args.year_range_list
 
     DATA_DIR = './data/population-data-raw'
-    EXCLUSIONS = ["us_populations_per_state_2001_to_2021.csv", "population-data.zip"]
+    EXCLUSIONS = ["us_population_per_state_2001_to_2021.csv", "population-data.zip"]
     files = list(filter(lambda file: not file in EXCLUSIONS, os.listdir(DATA_DIR)))
     cases = {
             "2000-2009": {
@@ -281,43 +372,31 @@ if __name__ == "__main__":
     # to collect and concat all the partitioned data into one single dataframe 
     # at your own risk/peril
     spark = SparkSession.builder\
-        .config("spark.jars.packages", "com.crealytics:spark-excel_2.12:3.5.1_0.20.4")\
         .config("spark.executor.memory", "2g")\
         .config("spark.executor.cores", "6")\
         .getOrCreate()
     
     conf_view = spark.sparkContext.getConf()
-    print(f"spark jars packages: {conf_view.get('spark.jars.packages')}")
     print(f"spark.executor.memory: {conf_view.get('spark.executor.memory')}")
     print(f"spark.executor.cores: {conf_view.get('spark.executor.cores')}")
-
-    # create output directory 
-    OUTPUT_DATA_DIR = "./data/population-data-transformed"
-    os.makedirs(OUTPUT_DATA_DIR, exist_ok=True)
     
     # get year range from system arguments sys.argv
-    state_populations_all_years = []
+    tables_all_years = []
 
     # loop through year_ranges
     for year_range in year_range_list:
         # concurrently process state populations by year range
-        state_populations = get_state_populations(
+        first_stage_state_population_df = get_state_populations(
             DATA_DIR, 
             spark, 
             cases[year_range]["cols_to_remove"], 
             cases[year_range]["populations"], 
             year_range,
-            callback_fn=process_population_by_sex_age_race_ho_table)
-        
-        state_populations.show()
-        
-        # collect state populations from all years using list
-        # there should be 240 rows per us state regardless of year range
-        # except for 2020-2023 which is 96 rows since this is only a span 
-        # of 4 years. So 240 * 51 states * 2 year ranges spanning 10 years
-        # + 96 * 51 states is 29376 rows all in all
-        # create output file path
-        indicator = year_range.replace("-", "_")
-        FILE_NAME = f"us_populations_per_state_by_sex_age_race_ho_{indicator}.parquet"
-        OUTPUT_FILE_PATH = os.path.join(OUTPUT_DATA_DIR, FILE_NAME)
-        state_populations.write.parquet(OUTPUT_FILE_PATH, mode="overwrite")
+            callback_fn=process_population_per_state_by_sex_age_race_ho_table)
+    
+        # pass first stage state population df to function
+        tables = normalize_population_per_state_by_sex_age_race_ho_table(first_stage_state_population_df, spark, year_range)
+        tables_all_years.extend(tables)
+
+    save_tables(tables_all_years)
+

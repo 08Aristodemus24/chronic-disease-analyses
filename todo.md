@@ -5,12 +5,14 @@
 * visualize the data using powerbi or something
 * use box plot to see interquartile ranges (get it from data-mining-hw repo)
 
-* add primary key to each table during transformation phase as this will be needed when we finally upload these tables to a data warehosue for cdi the pks will be topicid, questionid, and locationid
-* cdi fact table still contains id's that need to be dropped and retained at a separate dimension table as part of normalization process for later loading to warehouse 
+* <s>cdi fact table still contains id's that need to be dropped and retained at a separate dimension table as part of normalization process for later loading to warehouse </s>
 * break down us_populations_by_sex_age_race_ho table into fact table and dimension table by dropping the id's that are contained in this fact table and then retaining it in the dimension table as part of normalization process for later loading to warehouse 
-* union the stratification dimension table from cdi and us populations per state by sex age race ho tables 
+* union the stratification dimension table from cdi and us populations per state by sex age race ho tables
+* find soem way to unionize the dimension tables from each year produced by `normalize_population_per_state_by_sex_age_race_ho()` function except the `population_per_state_by_sex_age_race_ho` fact tables
 * <s>clean and transform cdi data using pyspark</s>
 * <s>we use pyspark for preprocessing the data to make sql queries</s>
+* with CDI data download zip file to local file system then delete
+* with population data download csv's directly to local file system to bypass census.gov security 
 
 * use selenium to automate download of us populations per state by sex age race ho csv's from `www.census.gov` 
 

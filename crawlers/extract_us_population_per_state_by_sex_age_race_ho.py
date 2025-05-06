@@ -18,51 +18,6 @@ import re
 import time
 import os
 
-
-def extract_populations(driver: webdriver.Chrome, file_path: str, start_year: int, end_year: int):
-    years = []
-    for year in list(range(start_year, end_year + 1)):
-        # visit page per year
-        print(f'processing year {year}')
-        driver.get(f'https://fred.stlouisfed.org/release/tables?rid=118&eid=259194&od={year}-01-01#')
-        
-        # sleep for a moment
-        time.sleep(5)
-
-        # extract all table rows in page
-        table_rows = driver.find_elements(by=By.CSS_SELECTOR, value="tr[data-tt-id]")
-
-        # concurrently extract all states populations
-        def helper(element):
-            state = element.find_element(by=By.CSS_SELECTOR, value='th.fred-rls-elm-nm-cntnr').text
-            state = state.strip()
-            population = element.find_element(by=By.CSS_SELECTOR, value='td.fred-rls-elm-vl-td').text
-            population = population.strip()
-
-            return state, population, year
-        
-        with ThreadPoolExecutor() as exe:
-            # state populations will be a dictionary
-            state_populations = list(exe.map(helper, table_rows))
-
-        # if csv file does not already exist yet create it 
-        headers = ['State', 'Population', 'Year']
-        if not os.path.exists(file_path):
-            with open(file_path, "w", newline="") as csv_file:
-                # identifying header
-                writer = csv.writer(csv_file)
-                writer.writerow(headers)
-                csv_file.close()
-
-        else:
-            # open an existing csv file
-            with open(file_path, "a", newline="") as csv_file:
-                csv_writer = csv.writer(csv_file)
-                csv_writer.writerows(state_populations)
-                csv_file.close()
-
-
-
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--start_year", type=int, help="starting year where the crawler should extract the populations")
