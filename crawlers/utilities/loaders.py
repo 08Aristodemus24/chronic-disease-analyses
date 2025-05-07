@@ -1,7 +1,7 @@
 import os
 import requests
 import zipfile
-import re
+import boto3
 
 from typing import Callable
 from boto3.s3.transfer import TransferConfig

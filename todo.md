@@ -11,10 +11,10 @@
 * find soem way to unionize the dimension tables from each year produced by `normalize_population_per_state_by_sex_age_race_ho()` function except the `population_per_state_by_sex_age_race_ho` fact tables
 * <s>clean and transform cdi data using pyspark</s>
 * <s>we use pyspark for preprocessing the data to make sql queries</s>
-* with CDI data download zip file to local file system then delete
-* with population data download csv's directly to local file system to bypass census.gov security 
-
-* use selenium to automate download of us populations per state by sex age race ho csv's from `www.census.gov` 
+* <s>with CDI data download zip file to local file system then delete</s>
+* <s>with population data download csv's directly to local file system to bypass census.gov security </s>
+* <s>use selenium to automate download of us populations per state by sex age race ho csv's from `www.census.gov` </s>
+* once normalization stage of cdi table is finished setup another bucket and bucket folder again to save these normalized tables, this goes the same for population fact tables
 
 * use selenium, docker, and airflow to automate extraction process and then use pyspark and databricks to transform extracted data and load the final data into a warehouse like databricks. All of this is orchestrated using airflow. 
 

@@ -1,6 +1,9 @@
 import os
+import boto3
 
-from pyspark.sql import Window
+from dotenv import load_dotenv
+from pathlib import Path
+
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.functions import (col,
     lower as sparkLower,
@@ -19,6 +22,8 @@ from pyspark.sql.functions import (col,
     concat,
     array,)
 from pyspark.sql import SparkSession
+from pyspark.conf import SparkConf
+from pyspark.context import SparkContext
 from pyspark.sql.types import StringType, ArrayType, StructField, StructType, FloatType, DoubleType, IntegerType
 
 
@@ -414,15 +419,58 @@ def save_tables(tables: dict, OUTPUT_DATA_DIR: str="./data/cdi-data-transformed"
         OUTPUT_FILE_PATH = os.path.join(OUTPUT_DATA_DIR, FILE_NAME)
         table.write.parquet(OUTPUT_FILE_PATH, mode="overwrite")
 
-
+# spark-submit --packages org.apache.hadoop:hadoop-aws:3.3.0,com.amazonaws:aws-java-sdk-bundle:1.11.563,org.apache.httpcomponents:httpcore:4.4.16 transform_cdi.py
 if __name__ == "__main__":
-    DATA_DIR = "./data/cdi-data-raw"
-    path = os.path.join(DATA_DIR, "U.S._Chronic_Disease_Indicators__CDI___2023_Release.csv")
+    # # local environment without cloud
+    # DATA_DIR = "./data/cdi-data-raw"
+    # path = os.path.join(DATA_DIR, "U.S._Chronic_Disease_Indicators__CDI___2023_Release.csv")
 
-    spark = SparkSession.builder.appName('test')\
-        .config("spark.driver.memory", "6g")\
-        .config("spark.sql.execution.arrow.maxRecordsPerBatch","100")\
+    # spark = SparkSession.builder.appName('test')\
+    #     .config("spark.driver.memory", "6g")\
+    #     .config("spark.sql.execution.arrow.maxRecordsPerBatch","100")\
+    #     .getOrCreate()
+
+    # cdi_df = spark.read.format("csv")\
+    #     .option("header", "true")\
+    #     .option("inferSchema", "true")\
+    #     .load(path)
+    
+    # # commence transformation and then normalization
+    # first_stage_cdi_df = process_cdi_table(cdi_df)
+    # tables = normalize_cdi_table(first_stage_cdi_df, spark)
+
+    # # save transformed and normalized dfs/tables to some 
+    # # lake like s3
+    # save_tables(tables)
+
+
+    # Build paths inside the project like this: BASE_DIR / 'subdir'.
+    # use this only in development
+    env_dir = Path('./').resolve()
+    load_dotenv(os.path.join(env_dir, '.env'))
+
+    # load env vars
+    AWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
+    AWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]
+    
+    spark_conf = SparkConf()
+    spark_conf.setAppName("test")
+    spark_conf.set("spark.driver.memory", "14g") 
+    spark_conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", "100")
+
+    spark_ctxt = SparkContext(conf=spark_conf)
+
+    hadoop_conf = spark_ctxt._jsc.hadoopConfiguration()
+    hadoop_conf.set("fs.s3a.access.key", AWS_ACCESS_KEY_ID)
+    hadoop_conf.set("fs.s3a.secret.key", AWS_SECRET_ACCESS_KEY)
+    hadoop_conf.set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+    hadoop_conf.set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
+
+    spark = SparkSession(spark_ctxt).builder\
         .getOrCreate()
+    
+    DATA_DIR = "s3a://chronic-disease-analyses-bucket/cdi-data-raw/"
+    path = os.path.join(DATA_DIR, "U.S._Chronic_Disease_Indicators__CDI_.csv")
 
     cdi_df = spark.read.format("csv")\
         .option("header", "true")\
@@ -432,7 +480,3 @@ if __name__ == "__main__":
     # commence transformation and then normalization
     first_stage_cdi_df = process_cdi_table(cdi_df)
     tables = normalize_cdi_table(first_stage_cdi_df, spark)
-
-    # save transformed and normalized dfs/tables to some 
-    # lake like s3
-    save_tables(tables)
