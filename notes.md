@@ -800,7 +800,25 @@ example 2:
 
 * always take note if you are assigning the right value to the `fs.s3a.access.key` and `fs.s3a.secret.key` keys as even interchanging your IAM user credentials will result in `The AWS Access Key Id you provided does not exist in our records` error. 
 
+* another error `java.lang.NoSuchMethodError: org.apache.hadoop.util.SemaphoredDelegatingExecutor.<init>` when writing parquet file to aws s3 via spark. using `hadoop-aws 3.2.2` might work. Solved since spark is 3.5.5, hadoop.dll and winutils.exe under hadoop 3.3.0, and jdk 17, version of compatible external jars for these versions are hadoop-aws 3.3.4, aws-java-sdk-bundle 1.11.563, and guava 27.0,
 
+* another error `Class org.apache.hadoop.fs.s3a.auth.IAMInstanceCredentialsProvider not found` may occur during spark-submit, which occurs mainly because of the external jar hadoop-aws package not being of a compatible version. This must be the same version or above the hadoop version our spark environment uses, in this case our hadoop had winutils.exe and hadoop.dll be under hadoop version 3.3.0 this means that when we spark-submit our hadoop-aws external jar package must also be 3.3.0 and above (note that 3.3.4 already works in order to avoid the above SemaphoredDelegatingExecutor when writing parquet to s3 using spark)
+
+* 
+Permissions: The error could be related to permissions. If your IAM policies or bucket policies have changed, or if the object's ACL has been modified, you might receive a NoSuchKey error instead of an Access Denied error. This is because S3 doesn't always distinguish between non-existent objects and objects you don't have permission to access.
+
+* `IOException: IO Error: Could not establish connection error for HTTP HEAD to 'https://chronic-disease-analyses-bucket/cdi-data-transformed/CDI.parquet/'` with status 1096710176. Is solved by adding `ENDPOINT` key to creating a `SECRETS` object in duckdb e.g. 
+```
+duckdb.sql(f"""
+    CREATE SECRET (
+        TYPE s3,
+        KEY_ID '{credentials["aws_access_key_id"]}',
+        SECRET '{credentials["aws_secret_access_key"]}',
+        REGION '{credentials["region_name"]}',
+        ENDPOINT 's3.{credentials["region_name"]}.amazonaws.com'
+    );
+""")
+```
 
 # Questions:
 * how to fill in missing values?
@@ -816,7 +834,8 @@ example 2:
 - https://stackoverflow.com/questions/42206440/java-lang-nosuchmethoderror-com-google-common-base-preconditions-checkargument
 - http://www.openkb.info/2022/07/spark-writing-to-s3-failed_19.html
 - https://abrkljac.medium.com/solving-the-nosuchmethoderror-exception-in-spark-minio-integration-8324f3d464e3
-* resolving `Class org.apache.hadoop.fs.s3a.auth.IAMInstanceCredentialsProvider not found` error: https://stackoverflow.com/questions/71546208/class-org-apache-hadoop-fs-s3a-auth-iaminstancecredentialsprovider-not-found-whe 
+* resolving `Class org.apache.hadoop.fs.s3a.auth.IAMInstanceCredentialsProvider not found` error: https://stackoverflow.com/questions/71546208/class-org-apache-hadoop-fs-s3a-auth-iaminstancecredentialsprovider-not-found-whe. 
+* connecting parquet file to powerbi: https://community.fabric.microsoft.com/t5/Desktop/How-to-read-a-directory-of-Parquet-files-in-power-Bi-ie-with/td-p/3009353
 
 # Problems to solve:
 1. I can't save year as 4 byte int for 200000+ rows since that would be a waste of space

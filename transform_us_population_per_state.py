@@ -14,12 +14,14 @@ def process_populations_table(df: pyspark.sql.dataframe.DataFrame):
 
     # remove . and , chars in population column and cast to long
     df = df.withColumn("Population", f.regexp_replace(df.Population, f.lit(r"[.,]"), f.lit("")).cast(LongType()))
-    df.show()
 
     # clear dataframe from memory
     df.unpersist()
 
     return df
+
+def save_table():
+    pass
 
 if __name__ == "__main__":
     DATA_DIR = "./data/population-data-raw"

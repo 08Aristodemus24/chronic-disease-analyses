@@ -14,7 +14,10 @@
 * <s>with CDI data download zip file to local file system then delete</s>
 * <s>with population data download csv's directly to local file system to bypass census.gov security </s>
 * <s>use selenium to automate download of us populations per state by sex age race ho csv's from `www.census.gov` </s>
-* once normalization stage of cdi table is finished setup another bucket and bucket folder again to save these normalized tables, this goes the same for population fact tables
+* <s>once normalization stage of cdi table is finished setup another bucket and bucket folder again to save these normalized tables, this goes the same for population fact tables</s>
+* there may be potential for error in creating buckets from extraction scripts like `extract_cdi.py`, `extract_us_population_per_state_by_sex_age_race_ho.py` and `extract_us_population_per_state.py`, because if we try to run these simultaneously or concurrently like in airflow it might result in conflicts, so separate creation of `cdi-data-raw`, `population-data-raw`, `population-data-transformed`, and `cdi-data-transformed` folders
+* load the parquet files in s3 to powerbi or to snowflake then to powerbi. A band-aid solution could be just to load the s3 parquets into duckdb and then download a duckdb connector for powerbi in order to connect to this OLAP datawarehouse.
+* draw diagram of raw cdi to first stage cdi to its normalized tables, this goes also for population data
 
 * use selenium, docker, and airflow to automate extraction process and then use pyspark and databricks to transform extracted data and load the final data into a warehouse like databricks. All of this is orchestrated using airflow. 
 

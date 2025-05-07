@@ -26,6 +26,8 @@ from pyspark.conf import SparkConf
 from pyspark.context import SparkContext
 from pyspark.sql.types import StringType, ArrayType, StructField, StructType, FloatType, DoubleType, IntegerType
 
+from utilities.loaders import create_bucket, create_bucket_folder
+
 
 def process_cdi_table(df: DataFrame) -> DataFrame:
     # Drop uneccessary columns
@@ -356,6 +358,7 @@ def process_cdi_table(df: DataFrame) -> DataFrame:
     eth_codes = sparkUpper(substring(col("Ethnicity"), 1, 5))
     strat_id = concat(origin_codes, lit("_"), sex_codes, lit("_"), eth_codes)
     df = df.withColumn("StratificationID", strat_id)
+    # df.write.csv("./data/cdi-data-transformed/CDI_first_stage.csv", mode="overwrite")
 
     return df
 
@@ -410,67 +413,27 @@ def normalize_cdi_table(df: DataFrame, session: SparkSession) -> list[DataFrame]
 
 
 def save_tables(tables: dict, OUTPUT_DATA_DIR: str="./data/cdi-data-transformed"):
-    # create output directory
-    os.makedirs(OUTPUT_DATA_DIR, exist_ok=True)
+    if not OUTPUT_DATA_DIR.startswith("s3a"):
+        # create output directory
+        os.makedirs(OUTPUT_DATA_DIR, exist_ok=True)
 
     # loop through each table and save as parquet 
     for name, table in tables.items():
         FILE_NAME = f"{name}.parquet"
         OUTPUT_FILE_PATH = os.path.join(OUTPUT_DATA_DIR, FILE_NAME)
         table.write.parquet(OUTPUT_FILE_PATH, mode="overwrite")
+        # table.write.csv(os.path.join(OUTPUT_DATA_DIR, f"{name}.csv"), mode="overwrite")
 
-# spark-submit --packages org.apache.hadoop:hadoop-aws:3.3.0,com.amazonaws:aws-java-sdk-bundle:1.11.563,org.apache.httpcomponents:httpcore:4.4.16 transform_cdi.py
+# spark-submit --packages org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.11.563,org.apache.httpcomponents:httpcore:4.4.16 transform_cdi.py
 if __name__ == "__main__":
-    # # local environment without cloud
-    # DATA_DIR = "./data/cdi-data-raw"
-    # path = os.path.join(DATA_DIR, "U.S._Chronic_Disease_Indicators__CDI___2023_Release.csv")
-
-    # spark = SparkSession.builder.appName('test')\
-    #     .config("spark.driver.memory", "6g")\
-    #     .config("spark.sql.execution.arrow.maxRecordsPerBatch","100")\
-    #     .getOrCreate()
-
-    # cdi_df = spark.read.format("csv")\
-    #     .option("header", "true")\
-    #     .option("inferSchema", "true")\
-    #     .load(path)
-    
-    # # commence transformation and then normalization
-    # first_stage_cdi_df = process_cdi_table(cdi_df)
-    # tables = normalize_cdi_table(first_stage_cdi_df, spark)
-
-    # # save transformed and normalized dfs/tables to some 
-    # # lake like s3
-    # save_tables(tables)
-
-
-    # Build paths inside the project like this: BASE_DIR / 'subdir'.
-    # use this only in development
-    env_dir = Path('./').resolve()
-    load_dotenv(os.path.join(env_dir, '.env'))
-
-    # load env vars
-    AWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
-    AWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]
-    
-    spark_conf = SparkConf()
-    spark_conf.setAppName("test")
-    spark_conf.set("spark.driver.memory", "14g") 
-    spark_conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", "100")
-
-    spark_ctxt = SparkContext(conf=spark_conf)
-
-    hadoop_conf = spark_ctxt._jsc.hadoopConfiguration()
-    hadoop_conf.set("fs.s3a.access.key", AWS_ACCESS_KEY_ID)
-    hadoop_conf.set("fs.s3a.secret.key", AWS_SECRET_ACCESS_KEY)
-    hadoop_conf.set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-    hadoop_conf.set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
-
-    spark = SparkSession(spark_ctxt).builder\
-        .getOrCreate()
-    
-    DATA_DIR = "s3a://chronic-disease-analyses-bucket/cdi-data-raw/"
+    # local environment without cloud
+    DATA_DIR = "./data/cdi-data-raw"
     path = os.path.join(DATA_DIR, "U.S._Chronic_Disease_Indicators__CDI_.csv")
+
+    spark = SparkSession.builder.appName('test')\
+        .config("spark.driver.memory", "6g")\
+        .config("spark.sql.execution.arrow.maxRecordsPerBatch","100")\
+        .getOrCreate()
 
     cdi_df = spark.read.format("csv")\
         .option("header", "true")\
@@ -480,3 +443,55 @@ if __name__ == "__main__":
     # commence transformation and then normalization
     first_stage_cdi_df = process_cdi_table(cdi_df)
     tables = normalize_cdi_table(first_stage_cdi_df, spark)
+
+    # save transformed and normalized dfs/tables to some 
+    # lake like s3
+    save_tables(tables)
+
+
+    # # Build paths inside the project like this: BASE_DIR / 'subdir'.
+    # # use this only in development
+    # env_dir = Path('./').resolve()
+    # load_dotenv(os.path.join(env_dir, '.env'))
+
+    # # load env vars
+    # credentials = {
+    #     "aws_access_key_id": os.environ["AWS_ACCESS_KEY_ID"],
+    #     "aws_secret_access_key": os.environ["AWS_SECRET_ACCESS_KEY"],
+    #     "region_name": os.environ["AWS_REGION_NAME"],
+    # }
+    
+    # spark_conf = SparkConf()
+    # spark_conf.setAppName("test")
+    # spark_conf.set("spark.driver.memory", "14g") 
+    # spark_conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", "100")
+
+    # spark_ctxt = SparkContext(conf=spark_conf)
+
+    # hadoop_conf = spark_ctxt._jsc.hadoopConfiguration()
+    # hadoop_conf.set("fs.s3a.access.key", credentials["aws_access_key_id"])
+    # hadoop_conf.set("fs.s3a.secret.key", credentials["aws_secret_access_key"])
+    # hadoop_conf.set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+    # hadoop_conf.set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
+
+    # spark = SparkSession(spark_ctxt).builder\
+    #     .getOrCreate()
+    
+    # BUCKET_NAME = "chronic-disease-analyses-bucket"
+    # INPUT_FOLDER_NAME = "cdi-data-raw/"
+    # INPUT_DATA_DIR = f"s3a://{BUCKET_NAME}/{INPUT_FOLDER_NAME}"
+    # INPUT_PATH = os.path.join(INPUT_DATA_DIR, "U.S._Chronic_Disease_Indicators__CDI_.csv")
+
+    # cdi_df = spark.read.format("csv")\
+    #     .option("header", "true")\
+    #     .option("inferSchema", "true")\
+    #     .load(INPUT_PATH)
+    
+    # # commence transformation and then normalization
+    # first_stage_cdi_df = process_cdi_table(cdi_df)
+    # tables = normalize_cdi_table(first_stage_cdi_df, spark)
+
+    # # create bucket and create bucket folder
+    # OUTPUT_FOLDER_NAME = "cdi-data-transformed/"
+    # OUTPUT_DATA_DIR = f"s3a://{BUCKET_NAME}/{OUTPUT_FOLDER_NAME}"
+    # save_tables(tables, OUTPUT_DATA_DIR=OUTPUT_DATA_DIR)

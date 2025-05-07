@@ -1,0 +1,192 @@
+ART1_1,ART,Arthritis among adults aged >= 18 years,Arthritis,18.0,Infinity
+ALC4_0,ALC,Binge drinking intensity among adults aged >= 18 years who binge drink,Alcohol,18.0,Infinity
+NPAW2_3,NPAW,Overweight or obesity among women aged 18-44 years,"Nutrition, Physical Activity, and Weight Status",18.0,44.0
+DIA7_0,DIA,Dilated eye examination among adults aged >= 18 years with diagnosed diabetes,Diabetes,18.0,Infinity
+ORH1_2,ORH,Dental visits among children and adolescents aged 1-17 years,Oral Health,1.0,17.0
+OLD3_1,OLD,Proportion of older adults aged >= 65 years who are up to date on a core set of clinical preventive services,Older Adults,65.0,Infinity
+NPAW4_1,NPAW,Median daily frequency of fruit consumption among high school students,"Nutrition, Physical Activity, and Weight Status",14.0,18.0
+OVC6_2,OVC,Self-rated health status among women aged 18-44 years,Overarching Conditions,18.0,44.0
+DIA11_3,DIA,Prevalence of depressive disorders among adults aged >= 18 years with diagnosed diabetes,Diabetes,18.0,Infinity
+OVC5_0,OVC,Premature mortality among adults aged 45-64 years,Overarching Conditions,45.0,64.0
+TOB1_1,TOB,Current cigarette smoking among youth,Tobacco,18.0,24.0
+OLD4_0,OLD,Prevalence of 2 or more chronic conditions among Medicare-enrolled persons aged >= 65 years,Older Adults,65.0,Infinity
+ALC5_2,ALC,Heavy drinking among women aged 18-44 years,Alcohol,18.0,44.0
+ART1_3,ART,Arthritis among adults aged >= 18 years who have diabetes,Arthritis,18.0,Infinity
+DIA13_2,DIA,Pneumococcal vaccination among noninstitutionalized adults aged >= 65 years with diagnosed diabetes,Diabetes,65.0,Infinity
+NPAW5_2,NPAW,Median daily frequency of vegetable consumption among adults aged >= 18 years,"Nutrition, Physical Activity, and Weight Status",18.0,Infinity
+TOB1_3,TOB,Current cigarette smoking among women aged 18-44 years,Tobacco,18.0,44.0
+CAN2_1,CAN,Papanicolaou smear use among adult women aged 21-65 years,Cancer,21.0,65.0
+COPD5_3,COPD,Hospitalization for chronic obstructive pulmonary disease as first-listed diagnosis among Medicare-eligible persons aged >= 65 years,Chronic Obstructive Pulmonary Disease,65.0,Infinity
+ALC7_0,ALC,Per capita alcohol consumption among persons aged >= 14 years,Alcohol,14.0,Infinity
+ART2_3,ART,Work limitation due to arthritis among adults aged 18-64 years who have doctor-diagnosed arthritis,Arthritis,18.0,64.0
+AST5_2,AST,Influenza vaccination among noninstitutionalized adults aged >= 65 years with asthma,Asthma,65.0,Infinity
+NPAW11_3,NPAW,Meeting aerobic physical activity guidelines for additional and more extensive health benefits among adults aged >= 18 years,"Nutrition, Physical Activity, and Weight Status",18.0,Infinity
+ORH1_1,ORH,Visits to dentist or dental clinic among adults aged >= 18 years,Oral Health,18.0,Infinity
+NPAW2_1,NPAW,Overweight or obesity among adults aged >= 18 years,"Nutrition, Physical Activity, and Weight Status",18.0,Infinity
+DIA2_2,DIA,Diabetes prevalence among women aged 18-44 years,Diabetes,18.0,44.0
+MTH1_0,MTH,Recent mentally unhealthy days among adults aged >= 18 years,Mental Health,18.0,Infinity
+AST6_2,AST,Pneumococcal vaccination among noninstitutionalized adults aged >= 65 years with asthma,Asthma,65.0,Infinity
+COPD1_1,COPD,Mortality with chronic obstructive pulmonary disease as underlying cause among adults aged >= 45 years,Chronic Obstructive Pulmonary Disease,45.0,Infinity
+COPD5_4,COPD,Hospitalization for chronic obstructive pulmonary disease as any diagnosis among Medicare-eligible persons aged >= 65 years,Chronic Obstructive Pulmonary Disease,65.0,Infinity
+ORH4_2,ORH,Six or more teeth lost among adults aged >= 65 years,Oral Health,65.0,Infinity
+NPAW12_2,NPAW,Soda consumption among high school students,"Nutrition, Physical Activity, and Weight Status",14.0,18.0
+CVD6_1,CVD,Awareness of high blood pressure among adults aged >= 18 years,Cardiovascular Disease,18.0,Infinity
+CKD3_0,CKD,Prevalence of chronic kidney disease among adults aged >= 18 years,Chronic Kidney Disease,18.0,Infinity
+NPAW4_2,NPAW,Median daily frequency of fruit consumption among adults aged >= 18 years,"Nutrition, Physical Activity, and Weight Status",18.0,Infinity
+ART2_1,ART,Activity limitation due to arthritis among adults aged >= 18 years who have doctor-diagnosed arthritis,Arthritis,18.0,Infinity
+ART4_0,ART,Fair or poor health among adults aged >= 18 years with arthritis,Arthritis,18.0,Infinity
+NPAW3_1,NPAW,Healthy weight among adults aged >= 18 years,"Nutrition, Physical Activity, and Weight Status",18.0,Infinity
+ALC2_3,ALC,Binge drinking prevalence among women aged 18-44 years,Alcohol,18.0,44.0
+ALC5_1,ALC,Heavy drinking among adults aged >= 18 years,Alcohol,18.0,Infinity
+DIA12_1,DIA,Influenza vaccination among noninstitutionalized adults aged 18-64 years with diagnosed diabetes,Diabetes,18.0,64.0
+OVC7_2,OVC,Recent activity limitation among adults aged >= 18 years,Overarching Conditions,18.0,Infinity
+OLD1_0,OLD,Hospitalization for hip fracture among Medicare-eligible persons aged >= 65 years,Older Adults,65.0,Infinity
+DIA13_1,DIA,Pneumococcal vaccination among noninstitutionalized adults aged 18-64 years with diagnosed diabetes,Diabetes,18.0,64.0
+AST1_2,AST,Asthma prevalence among women aged 18-44 years,Asthma,18.0,44.0
+CVD10_2,CVD,Pneumococcal vaccination among noninstitutionalized adults aged >= 65 years with a history of coronary heart disease,Cardiovascular Disease,65.0,Infinity
+OVC8_0,OVC,Prevalence of sufficient sleep among adults aged >= 18 years,Overarching Conditions,18.0,Infinity
+CVD2_0,CVD,Hospitalization for heart failure among Medicare-eligible persons aged >= 65 years,Cardiovascular Disease,65.0,Infinity
+CVD4_0,CVD,Cholesterol screening among adults aged >= 18 years,Cardiovascular Disease,18.0,Infinity
+CVD7_0,CVD,Taking medicine for high blood pressure control among adults aged >= 18 years with high blood pressure,Cardiovascular Disease,18.0,Infinity
+NPAW12_1,NPAW,Participation in daily school physical education classes among high school students,"Nutrition, Physical Activity, and Weight Status",14.0,18.0
+NPAW10_0,NPAW,No leisure-time physical activity among adults aged >= 18 years,"Nutrition, Physical Activity, and Weight Status",18.0,Infinity
+CVD5_0,CVD,High cholesterol prevalence among adults aged >= 18 years,Cardiovascular Disease,18.0,Infinity
+CAN2_2,CAN,Recent Papanicolaou smear use among women aged 21-44 years,Cancer,21.0,44.0
+DIA11_2,DIA,Prevalence of high blood pressure among adults aged >= 18 years with diagnosed diabetes,Diabetes,18.0,Infinity
+ART3_0,ART,Physical inactivity among adults aged >= 18 years with arthritis,Arthritis,18.0,Infinity
+AST1_1,AST,Current asthma prevalence among adults aged >= 18 years,Asthma,18.0,Infinity
+ART1_2,ART,Arthritis among adults aged >= 18 years who are obese,Arthritis,18.0,Infinity
+OVC6_1,OVC,Fair or poor self-rated health status among adults aged >= 18 years,Overarching Conditions,18.0,Infinity
+NPAW1_2,NPAW,Obesity among high school students,"Nutrition, Physical Activity, and Weight Status",14.0,18.0
+ART2_2,ART,Severe joint pain due to arthritis among adults aged >= 18 years who have doctor-diagnosed arthritis,Arthritis,18.0,Infinity
+DIA10_0,DIA,Adults with diagnosed diabetes aged >= 18 years who have taken a diabetes self-management course,Diabetes,18.0,Infinity
+NPAW20_0,NPAW,Television viewing among high school students,"Nutrition, Physical Activity, and Weight Status",14.0,18.0
+NPAW21_0,NPAW,Computer use among high school students,"Nutrition, Physical Activity, and Weight Status",14.0,18.0
+COPD1_2,COPD,Mortality with chronic obstructive pulmonary disease as underlying or contributing cause among adults aged >= 45 years,Chronic Obstructive Pulmonary Disease,45.0,Infinity
+NPAW2_2,NPAW,Overweight or obesity among high school students,"Nutrition, Physical Activity, and Weight Status",14.0,18.0
+DIA5_0,DIA,Foot examination among adults aged >= 18 years with diagnosed diabetes,Diabetes,18.0,Infinity
+DIA8_0,DIA,Visits to dentist or dental clinic among adults aged >= 18 years with diagnosed diabetes,Diabetes,18.0,Infinity
+ORH4_3,ORH,No tooth loss among adults aged 18-64 years,Oral Health,18.0,64.0
+CVD9_2,CVD,Influenza vaccination among noninstitutionalized adults aged >= 65 years with a history of coronary heart disease or stroke,Cardiovascular Disease,65.0,Infinity
+ART5_0,ART,Adults aged >= 18 years with arthritis who have taken a class to learn how to manage arthritis symptoms,Arthritis,18.0,Infinity
+CVD10_1,CVD,Pneumococcal vaccination among noninstitutionalized adults aged 18-64 years with a history of coronary heart disease,Cardiovascular Disease,18.0,64.0
+DIA12_2,DIA,Influenza vaccination among noninstitutionalized adults aged >= 65 years with diagnosed diabetes,Diabetes,65.0,Infinity
+NPAW13_1,NPAW,Secondary schools that allow community-sponsored use of physical activity facilities by youth outside of normal school hours,"Nutrition, Physical Activity, and Weight Status",18.0,24.0
+OVC1_1,OVC,Current lack of health insurance among adults aged 18-64 years,Overarching Conditions,18.0,64.0
+TOB1_2,TOB,Current smoking among adults aged >= 18 years,Tobacco,18.0,Infinity
+CAN1_0,CAN,Mammography use among women aged 50-74 years,Cancer,50.0,74.0
+NPAW1_1,NPAW,Obesity among adults aged >= 18 years,"Nutrition, Physical Activity, and Weight Status",18.0,Infinity
+TOB11_2,TOB,Pneumococcal vaccination among noninstitutionalized adults aged >= 65 years who smoke,Tobacco,65.0,Infinity
+ALC1_1,ALC,Alcohol use among youth,Alcohol,18.0,24.0
+CVD6_2,CVD,Awareness of high blood pressure among women aged 18-44 years,Cardiovascular Disease,18.0,44.0
+ORH4_1,ORH,All teeth lost among adults aged >= 65 years,Oral Health,65.0,Infinity
+DIA6_0,DIA,Glycosylated hemoglobin measurement among adults aged >= 18 years with diagnosed diabetes,Diabetes,18.0,Infinity
+OVC2_2,OVC,High school completion among women aged 18-44 years,Overarching Conditions,18.0,44.0
+NPAW11_2,NPAW,Meeting aerobic physical activity guidelines for substantial health benefits and for muscle-strengthening activity among adults aged >= 18 years,"Nutrition, Physical Activity, and Weight Status",18.0,Infinity
+ART1_4,ART,Arthritis among adults aged >= 18 years who have heart disease,Arthritis,18.0,Infinity
+NPAW3_2,NPAW,Healthy weight among high school students,"Nutrition, Physical Activity, and Weight Status",14.0,18.0
+NPAW5_1,NPAW,Median daily frequency of vegetable consumption among high school students,"Nutrition, Physical Activity, and Weight Status",14.0,18.0
+DIS1_0,DIS,Disability among adults aged >= 65 years,Disability,65.0,Infinity
+DIA11_1,DIA,Prevalence of high cholesterol among adults aged >= 18 years with diagnosed diabetes,Diabetes,18.0,Infinity
+IMM1_0,IMM,Influenza vaccination among noninstitutionalized adults aged >= 18 years,Immunization,18.0,Infinity
+COPD7_0,COPD,Influenza vaccination among noninstitutionalized adults aged >= 45 years with chronic obstructive pulmonary disease,Chronic Obstructive Pulmonary Disease,45.0,Infinity
+CVD9_1,CVD,Influenza vaccination among noninstitutionalized adults aged 18-64 years with a history of coronary heart disease or stroke,Cardiovascular Disease,18.0,64.0
+AST6_1,AST,Pneumococcal vaccination among noninstitutionalized adults aged 18-64 years with asthma,Asthma,18.0,64.0
+TOB2_2,TOB,Current smokeless tobacco use among adults aged >= 18 years,Tobacco,18.0,Infinity
+DIA2_1,DIA,Prevalence of diagnosed diabetes among adults aged >= 18 years,Diabetes,18.0,Infinity
+RPH1_0,RPH,Timeliness of routine health care checkup among women aged 18-44 years,Reproductive Health,18.0,44.0
+TOB2_1,TOB,Current smokeless tobacco use among youth,Tobacco,18.0,24.0
+ALC2_2,ALC,Binge drinking prevalence among adults aged >= 18 years,Alcohol,18.0,Infinity
+OVC1_2,OVC,Current health care coverage among women aged 18-44 years,Overarching Conditions,18.0,44.0
+OVC2_1,OVC,High school completion among adults aged 18-24 years,Overarching Conditions,18.0,24.0
+OLD3_2,OLD,Proportion of older adults aged 50-64 years who are up to date on a core set of clinical preventive services,Older Adults,50.0,64.0
+ALC3_0,ALC,Binge drinking frequency among adults aged >= 18 years who binge drink,Alcohol,18.0,Infinity
+MTH2_0,MTH,At least 14 recent mentally unhealthy days among women aged 18-44 years,Mental Health,18.0,44.0
+ORH2_1,ORH,Preventive dental visits among children and adolescents aged 1-17 years,Oral Health,1.0,17.0
+OVC7_1,OVC,Recent physically unhealthy days among adults aged >= 18 years,Overarching Conditions,18.0,Infinity
+ALC2_1,ALC,Binge drinking prevalence among youth,Alcohol,18.0,24.0
+TOB11_1,TOB,Pneumococcal vaccination among noninstitutionalized adults aged 18-64 years who smoke,Tobacco,18.0,64.0
+OVC3_2,OVC,Poverty among women aged 18-44 years,Overarching Conditions,18.0,44.0
+NPAW11_4,NPAW,Meeting aerobic physical activity guidelines among high school students,"Nutrition, Physical Activity, and Weight Status",14.0,18.0
+NPAW11_1,NPAW,Meeting aerobic physical activity guidelines for substantial health benefits among adults aged >= 18 years,"Nutrition, Physical Activity, and Weight Status",18.0,Infinity
+AST5_1,AST,Influenza vaccination among noninstitutionalized adults aged 18-64 years with asthma,Asthma,18.0,64.0
+COPD8_0,COPD,Pneumococcal vaccination among noninstitutionalized adults aged >= 45 years with chronic obstructive pulmonary disease,Chronic Obstructive Pulmonary Disease,45.0,Infinity
+CAN3_0,CAN,"Fecal occult blood test, sigmoidoscopy, or colonoscopy among adults aged 50-75 years",Cancer,50.0,75.0
+ALC8_0_3,ALC,Amount of alcohol excise tax by beverage type (distilled spirits),Alcohol,,
+CAN11_1,CAN,"Invasive cancer of the prostate, incidence",Cancer,,
+ALC8_0_2,ALC,Amount of alcohol excise tax by beverage type (wine),Alcohol,,
+NPAW15_0,NPAW,Infants breastfed at 6 months,"Nutrition, Physical Activity, and Weight Status",,
+OVC3_1,OVC,Poverty,Overarching Conditions,,
+DIA4_0,DIA,Amputation of a lower extremity attributable to diabetes,Diabetes,,
+AST4_1,AST,Asthma mortality rate,Asthma,,
+CKD1_0,CKD,Mortality with end-stage renal disease,Chronic Kidney Disease,,
+CVD3_2,CVD,Hospitalization for acute myocardial infarction,Cardiovascular Disease,,
+DIA9_0,DIA,Hospitalization with diabetes as a listed diagnosis,Diabetes,,
+NPAW8_0,NPAW,"Number of farmers markets per 100,000 residents","Nutrition, Physical Activity, and Weight Status",,
+CAN7_1,CAN,"Cancer of the colon and rectum (colorectal), incidence",Cancer,,
+COPD2_0,COPD,Prevalence of chronic obstructive pulmonary disease among adults >= 18,Chronic Obstructive Pulmonary Disease,,
+NPAW7_2,NPAW,Farmers markets that accept Supplemental Nutrition Assistance Program (SNAP) benefits,"Nutrition, Physical Activity, and Weight Status",,
+COPD3_0_1,COPD,Prevalence of current smoking among adults >= 45 years with diagnosed chronic obstructive pulmonary disease,Chronic Obstructive Pulmonary Disease,,
+CAN10_2,CAN,"Cancer of the oral cavity and pharynx, mortality",Cancer,,
+OVC4_1,OVC,Life expectancy at birth,Overarching Conditions,,
+CKD2_2,CKD,Incidence of treated end-stage renal disease attributed to diabetes,Chronic Kidney Disease,,
+CAN10_1,CAN,"Invasive cancer of the oral cavity or pharynx, incidence",Cancer,,
+COPD3_0,COPD,Prevalence of current smoking among adults >= 18 with diagnosed chronic obstructive pulmonary disease,Chronic Obstructive Pulmonary Disease,,
+COPD5_1,COPD,Hospitalization for chronic obstructive pulmonary disease as first-listed diagnosis,Chronic Obstructive Pulmonary Disease,,
+COPD5_2,COPD,Hospitalization for chronic obstructive pulmonary disease as any diagnosis,Chronic Obstructive Pulmonary Disease,,
+CAN5_2,CAN,"Cancer of the female breast, mortality",Cancer,,
+COPD6_2,COPD,Emergency department visit rate for chronic obstructive pulmonary disease as any diagnosis,Chronic Obstructive Pulmonary Disease,,
+ALC1_2,ALC,Alcohol use before pregnancy,Alcohol,,
+NPAW17_0,NPAW,Mean maternity practices in infant nutrition care (mPINC) score,"Nutrition, Physical Activity, and Weight Status",,
+MTH3_0,MTH,Postpartum depressive symptoms,Mental Health,,
+CAN9_2,CAN,"Melanoma, mortality",Cancer,,
+NPAW13_4,NPAW,Secondary schools that offer less healthy foods as competitive foods,"Nutrition, Physical Activity, and Weight Status",,
+TOB6_0,TOB,"Proportion of the population protected by a comprehensive smoke-free policy prohibiting smoking in all indoor areas of workplaces and public places, including restaurants and bars",Tobacco,,
+CAN11_2,CAN,"Cancer of the prostate, mortality",Cancer,,
+CKD2_1,CKD,Incidence of treated end-stage renal disease,Chronic Kidney Disease,,
+OVC1_3,OVC,Health insurance coverage before pregnancy,Overarching Conditions,,
+CAN4_1,CAN,"Invasive cancer (all sites combined), incidence",Cancer,,
+NPAW13_3,NPAW,Secondary schools that allow students to purchase sports drinks,"Nutrition, Physical Activity, and Weight Status",,
+DIA3_1,DIA,Prevalence of pre-pregnancy diabetes,Diabetes,,
+COPD4_0_1,COPD,Prevalence of activity limitation among adults >= 45 years with diagnosed chronic obstructive pulmonary disease,Chronic Obstructive Pulmonary Disease,,
+CVD1_3,CVD,Mortality from coronary heart disease,Cardiovascular Disease,,
+CVD3_1,CVD,Hospitalization for stroke,Cardiovascular Disease,,
+NPAW18_0,NPAW,Live births occurring at Baby Friendly Facilities,"Nutrition, Physical Activity, and Weight Status",,
+ALC8_0_1,ALC,Amount of alcohol excise tax by beverage type (beer),Alcohol,,
+DIA1_1,DIA,Mortality due to diabetes reported as any listed cause of death,Diabetes,,
+TOB3_0,TOB,Quit attempts in the past year among current smokers,Tobacco,,
+RPH2_0,RPH,Postpartum checkup,Reproductive Health,,
+CAN8_2,CAN,"Cancer of the lung and bronchus, mortality",Cancer,,
+TOB9_0,TOB,Secondary schools that have a comprehensive tobacco-free school policy in place,Tobacco,,
+CAN5_1,CAN,"Invasive cancer of the female breast, incidence",Cancer,,
+CAN8_1,CAN,"Cancer of the lung and bronchus, incidence",Cancer,,
+CVD1_1,CVD,Mortality from total cardiovascular diseases,Cardiovascular Disease,,
+NPAW6_0,NPAW,Census tracts with healthier food retailers within � mile of boundary,"Nutrition, Physical Activity, and Weight Status",,
+ORH3_0,ORH,Oral health services at Federally Qualified Health Centers,Oral Health,,
+AST3_1,AST,Hospitalizations for asthma,Asthma,,
+CAN7_2,CAN,"Cancer of the colon and rectum (colorectal), mortality",Cancer,,
+OVC4_2,OVC,Life expectancy at age 65 years,Overarching Conditions,,
+CAN9_1,CAN,"Invasive melanoma, incidence",Cancer,,
+CAN4_2,CAN,"Invasive cancer (all sites combined), mortality",Cancer,,
+COPD4_0,COPD,Prevalence of activity limitation among adults >= 18 with diagnosed chronic obstructive pulmonary disease,Chronic Obstructive Pulmonary Disease,,
+CVD1_5,CVD,Mortality from cerebrovascular disease (stroke),Cardiovascular Disease,,
+DIA1_2,DIA,Mortality with diabetic ketoacidosis reported as any listed cause of death,Diabetes,,
+ALC6_0,ALC,Chronic liver disease mortality,Alcohol,,
+TOB10_0,TOB,Sale of cigarette packs,Tobacco,,
+COPD2_0_1,COPD,Prevalence of chronic obstructive pulmonary disease among adults >= 45 years,Chronic Obstructive Pulmonary Disease,,
+TOB1_4,TOB,Cigarette smoking before pregnancy,Tobacco,,
+TOB8_0,TOB,Percent tobacco revenue to fund at CDC recommended level,Tobacco,,
+ORH5_0,ORH,Population served by community water systems that receive fluoridated drinking water,Oral Health,,
+CVD1_2,CVD,Mortality from diseases of the heart,Cardiovascular Disease,,
+AST2_1,AST,Emergency department visit rate for asthma,Asthma,,
+CAN6_1,CAN,"Invasive cancer of the cervix, incidence",Cancer,,
+NPAW16_0,NPAW,Receiving formula supplementation within the first 2 days of life among breastfed infants,"Nutrition, Physical Activity, and Weight Status",,
+RPH3_0,RPH,Folic acid supplementation,Reproductive Health,,
+NPAW13_2,NPAW,Secondary schools that allow students to purchase soda or fruit drinks,"Nutrition, Physical Activity, and Weight Status",,
+CAN6_2,CAN,"Cancer of the female cervix, mortality",Cancer,,
+NPAW7_1,NPAW,Farmers markets that accept Women and Infant Children (WIC) farmers market nutrition program coupons,"Nutrition, Physical Activity, and Weight Status",,
+DIA3_2,DIA,Prevalence of gestational diabetes,Diabetes,,
+CVD1_4,CVD,Mortality from heart failure,Cardiovascular Disease,,
+COPD6_1,COPD,Emergency department visit rate for chronic obstructive pulmonary disease as first-listed diagnosis,Chronic Obstructive Pulmonary Disease,,
+ORH2_2,ORH,Preventive dental care before pregnancy,Oral Health,,
+CVD8_0,CVD,Pre-pregnancy hypertension,Cardiovascular Disease,,

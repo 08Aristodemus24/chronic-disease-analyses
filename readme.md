@@ -86,3 +86,5 @@ My reasoning for all this unnecessary hard work? That I was going to use spark a
 But here it is now: basically right after saving the partitioned dataframes as .parquet files (which I researched was actually a format faster in reading and writing than .csv). I now loaded them to an in-process open source OLAP data warehouse called DuckDB which I recently also learned also was basically an equivalent of the OLTP DB sqlite. I figured also I couldn't pay for DWHs like snowflake or databricks so I thought of using free alternatives like this instead. 
 
 So now I ought to do some analytics on these tables using SQL and post here again hopefully with an initial dashboard using PowerBI. 
+
+

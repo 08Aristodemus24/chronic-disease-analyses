@@ -1,0 +1,11 @@
+Male,All,Both,B_M_ALL
+Both,White,Not Hispanic,NH_B_WHITE
+Both,Black,Not Hispanic,NH_B_BLACK
+Both,AIAN,Not Hispanic,NH_B_AIAN
+Both,Multiracial,Not Hispanic,NH_B_MULTI
+Both,NHPI,Not Hispanic,NH_B_NHPI
+Both,Other,Not Hispanic,NH_B_OTHER
+Female,All,Both,B_F_ALL
+Both,All,Hispanic,H_B_ALL
+Both,All,Both,B_B_ALL
+Both,Asian,Not Hispanic,NH_B_ASIAN
