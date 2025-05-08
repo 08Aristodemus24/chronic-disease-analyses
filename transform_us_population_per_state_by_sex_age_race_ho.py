@@ -88,6 +88,8 @@ def process_population_per_state_by_sex_age_race_ho_table(df: DataFrame,
         return float("-inf")
     old_non_year_cols = sorted(list(set(df.columns) - set(year_cols)), key=col_generalizer)
     new_non_year_cols = ['Age', 'State', 'Origin', 'Ethnicity', 'Sex']
+    print(old_non_year_cols)
+    print(new_non_year_cols)
 
     # create dictionary mapping the old col names ot new col names
     non_year_col_name_map = dict(zip(old_non_year_cols, new_non_year_cols))
@@ -217,7 +219,7 @@ def process_population_per_state_by_sex_age_race_ho_table(df: DataFrame,
     df = df.withColumn("Year", regexp_replace(col("Year"), r"[_]", "").cast(IntegerType()))
     df = df.withColumn("Population", col("Population").cast(LongType()))
     df = df.withColumn("Age", col("Age").cast(FloatType()))
-    df.write.csv("./data/population-data-transformed/Population_first_stage.csv", mode="overwrite")
+    # df.write.csv("./data/population-data-transformed/Population_first_stage.csv", mode="overwrite")
 
     return df
 
@@ -405,11 +407,11 @@ if __name__ == "__main__":
             year_range,
             callback_fn=process_population_per_state_by_sex_age_race_ho_table)
     
-        # pass first stage state population df to function
-        tables = normalize_population_per_state_by_sex_age_race_ho_table(first_stage_state_population_df, spark, year_range)
-        tables_all_years.extend(tables)
+        # # pass first stage state population df to function
+        # tables = normalize_population_per_state_by_sex_age_race_ho_table(first_stage_state_population_df, spark, year_range)
+        # tables_all_years.extend(tables)
 
-    save_tables(tables_all_years)
+    # save_tables(tables_all_years)
 
     # # Build paths inside the project like this: BASE_DIR / 'subdir'.
     # # use this only in development

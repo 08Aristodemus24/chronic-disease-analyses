@@ -87,4 +87,12 @@ But here it is now: basically right after saving the partitioned dataframes as .
 
 So now I ought to do some analytics on these tables using SQL and post here again hopefully with an initial dashboard using PowerBI. 
 
+* Day 5 of this data analytics project: https://github.com/08Aristodemus24/chronic-disease-analyses
 
+TLDR: finally managed to load the fact and dimension tables into an open source DWH using DuckDB, together with a schema detailed below of the relationship of the two chronic disease indicator (CDI) and population tables to their respective dimension tables
+
+After running through error after error in loading the extracted raw data to an s3 bucket, reading this raw data from s3 (using Apache Spark), and finally loading the transformed and normalized tables to the s3 bucket, I finally was able to read the final tables (which I saved as parquet files) to an open source OLAP DB like DuckDB and finally be able to start some sort of data analysis.
+
+I think this was yet by far the part where I learned the most especially when it came to using s3 as a data lake where I could dump the raw data and also the transformed data, since I ran through countless errors involving IAM permissions and especially policy errors involving the s3 bucket instance itself, which I never knew was completely separate from each other (this https://www.youtube.com/watch?v=gWAwqY76JQs video in particular helped a lot). 
+
+I also learned immensely from using external jar packages in Spark when submitting jobs, (talagang di basta basta ang mag-read and write from and to S3 with spark) as using the right version of the package had to be compatible with the other provided packages, and if not would result in an obscure error which I fortunately had managed to scour a solution all over the internet for in order to resolve. Case in point a `hadoop-aws:3.2.0` jar may not work with an `aws-sdk-sdk-bundle:1.12.367`, and a hadoop version you may currently have installed in your system may not work with `hadoop-aws:3.3.0`
