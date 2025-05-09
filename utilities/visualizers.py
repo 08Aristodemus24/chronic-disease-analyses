@@ -151,7 +151,7 @@ def view_feat_outliers(df: pd.DataFrame, num_cols: list | pd.Index, fig_dims: tu
 
         _95_p = np.quantile(df[col], 0.95)
         _05_p = np.quantile(df[col], 0.05)
-        print(f"{_95_p if col.lower() == "age" else ""}")
+        print(f"{_95_p if col.lower() == 'age' else ''}")
         lower_whisker = lower_bound[col]
         upper_whisker = upper_bound[col]
 

@@ -384,11 +384,11 @@ def normalize_cdi_table(df: DataFrame, session: SparkSession) -> list[DataFrame]
     # retain in location dimension table with location abbr as id
     df = df.drop("LocationID")
     df = df.withColumnRenamed("LocationAbbr", "LocationID")
-    location_df = df.select("LocationID", "LocationDesc").dropDuplicates()
+    location_df = df.select("LocationID", "LocationDesc", "Latitude", "Longitude").dropDuplicates()
 
     # drop location descriptions as we have already retained its 
     # corresponding id in the dimension table in the location df
-    df = df.drop("LocationDesc")
+    df = df.drop("LocationDesc", "Latitude", "Longitude")
 
     # remove topic
     # remove question
@@ -426,72 +426,72 @@ def save_tables(tables: dict, OUTPUT_DATA_DIR: str="./data/cdi-data-transformed"
 
 # spark-submit --packages org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.11.563,org.apache.httpcomponents:httpcore:4.4.16 transform_cdi.py
 if __name__ == "__main__":
-    # local environment without cloud
-    DATA_DIR = "./data/cdi-data-raw"
-    path = os.path.join(DATA_DIR, "U.S._Chronic_Disease_Indicators__CDI_.csv")
+    # # local environment without cloud
+    # DATA_DIR = "./data/cdi-data-raw"
+    # path = os.path.join(DATA_DIR, "U.S._Chronic_Disease_Indicators__CDI_.csv")
 
-    spark = SparkSession.builder.appName('test')\
-        .config("spark.driver.memory", "6g")\
-        .config("spark.sql.execution.arrow.maxRecordsPerBatch","100")\
-        .getOrCreate()
-
-    cdi_df = spark.read.format("csv")\
-        .option("header", "true")\
-        .option("inferSchema", "true")\
-        .load(path)
-    
-    # commence transformation and then normalization
-    first_stage_cdi_df = process_cdi_table(cdi_df)
-    tables = normalize_cdi_table(first_stage_cdi_df, spark)
-
-    # save transformed and normalized dfs/tables to some 
-    # lake like s3
-    save_tables(tables)
-
-
-    # # Build paths inside the project like this: BASE_DIR / 'subdir'.
-    # # use this only in development
-    # env_dir = Path('./').resolve()
-    # load_dotenv(os.path.join(env_dir, '.env'))
-
-    # # load env vars
-    # credentials = {
-    #     "aws_access_key_id": os.environ["AWS_ACCESS_KEY_ID"],
-    #     "aws_secret_access_key": os.environ["AWS_SECRET_ACCESS_KEY"],
-    #     "region_name": os.environ["AWS_REGION_NAME"],
-    # }
-    
-    # spark_conf = SparkConf()
-    # spark_conf.setAppName("test")
-    # spark_conf.set("spark.driver.memory", "14g") 
-    # spark_conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", "100")
-
-    # spark_ctxt = SparkContext(conf=spark_conf)
-
-    # hadoop_conf = spark_ctxt._jsc.hadoopConfiguration()
-    # hadoop_conf.set("fs.s3a.access.key", credentials["aws_access_key_id"])
-    # hadoop_conf.set("fs.s3a.secret.key", credentials["aws_secret_access_key"])
-    # hadoop_conf.set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-    # hadoop_conf.set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
-
-    # spark = SparkSession(spark_ctxt).builder\
+    # spark = SparkSession.builder.appName('test')\
+    #     .config("spark.driver.memory", "6g")\
+    #     .config("spark.sql.execution.arrow.maxRecordsPerBatch","100")\
     #     .getOrCreate()
-    
-    # BUCKET_NAME = "chronic-disease-analyses-bucket"
-    # INPUT_FOLDER_NAME = "cdi-data-raw/"
-    # INPUT_DATA_DIR = f"s3a://{BUCKET_NAME}/{INPUT_FOLDER_NAME}"
-    # INPUT_PATH = os.path.join(INPUT_DATA_DIR, "U.S._Chronic_Disease_Indicators__CDI_.csv")
 
     # cdi_df = spark.read.format("csv")\
     #     .option("header", "true")\
     #     .option("inferSchema", "true")\
-    #     .load(INPUT_PATH)
+    #     .load(path)
     
     # # commence transformation and then normalization
     # first_stage_cdi_df = process_cdi_table(cdi_df)
     # tables = normalize_cdi_table(first_stage_cdi_df, spark)
 
-    # # create bucket and create bucket folder
-    # OUTPUT_FOLDER_NAME = "cdi-data-transformed/"
-    # OUTPUT_DATA_DIR = f"s3a://{BUCKET_NAME}/{OUTPUT_FOLDER_NAME}"
-    # save_tables(tables, OUTPUT_DATA_DIR=OUTPUT_DATA_DIR)
+    # # save transformed and normalized dfs/tables to some 
+    # # lake like s3
+    # save_tables(tables)
+
+
+    # Build paths inside the project like this: BASE_DIR / 'subdir'.
+    # use this only in development
+    env_dir = Path('./').resolve()
+    load_dotenv(os.path.join(env_dir, '.env'))
+
+    # load env vars
+    credentials = {
+        "aws_access_key_id": os.environ["AWS_ACCESS_KEY_ID"],
+        "aws_secret_access_key": os.environ["AWS_SECRET_ACCESS_KEY"],
+        "region_name": os.environ["AWS_REGION_NAME"],
+    }
+    
+    spark_conf = SparkConf()
+    spark_conf.setAppName("test")
+    spark_conf.set("spark.driver.memory", "14g") 
+    spark_conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", "100")
+
+    spark_ctxt = SparkContext(conf=spark_conf)
+
+    hadoop_conf = spark_ctxt._jsc.hadoopConfiguration()
+    hadoop_conf.set("fs.s3a.access.key", credentials["aws_access_key_id"])
+    hadoop_conf.set("fs.s3a.secret.key", credentials["aws_secret_access_key"])
+    hadoop_conf.set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+    hadoop_conf.set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
+
+    spark = SparkSession(spark_ctxt).builder\
+        .getOrCreate()
+    
+    BUCKET_NAME = "chronic-disease-analyses-bucket"
+    INPUT_FOLDER_NAME = "cdi-data-raw/"
+    INPUT_DATA_DIR = f"s3a://{BUCKET_NAME}/{INPUT_FOLDER_NAME}"
+    INPUT_PATH = os.path.join(INPUT_DATA_DIR, "U.S._Chronic_Disease_Indicators__CDI_.csv")
+
+    cdi_df = spark.read.format("csv")\
+        .option("header", "true")\
+        .option("inferSchema", "true")\
+        .load(INPUT_PATH)
+    
+    # commence transformation and then normalization
+    first_stage_cdi_df = process_cdi_table(cdi_df)
+    tables = normalize_cdi_table(first_stage_cdi_df, spark)
+
+    # create bucket and create bucket folder
+    OUTPUT_FOLDER_NAME = "cdi-data-transformed/"
+    OUTPUT_DATA_DIR = f"s3a://{BUCKET_NAME}/{OUTPUT_FOLDER_NAME}"
+    save_tables(tables, OUTPUT_DATA_DIR=OUTPUT_DATA_DIR)

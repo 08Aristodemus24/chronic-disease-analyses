@@ -1,5 +1,32 @@
-
 # Insights:
+
+## Technologies
+### Data Lake:
+* S3
+* apache iceberg
+* Google cloud storage
+* Azure data lake storage
+
+### DWH:
+* MotherDuck/DuckDB
+
+* Clickhouse
+Apache druid
+* Snowflake
+* AWS redshift 
+* GCP big query
+* Azure synapse
+* Databricks
+
+### Data lake house:
+* Apache iceberg
+* Delta lake
+
+### Data processing (not pandas that's for kids):
+#### Batch processing:
+* Apache spark
+#### Stream processing: 
+* Apache kafka
 
 ## credit card data
 * meta data for `fraudTest.csv` and `fraudTrain.csv`
@@ -804,8 +831,22 @@ example 2:
 
 * another error `Class org.apache.hadoop.fs.s3a.auth.IAMInstanceCredentialsProvider not found` may occur during spark-submit, which occurs mainly because of the external jar hadoop-aws package not being of a compatible version. This must be the same version or above the hadoop version our spark environment uses, in this case our hadoop had winutils.exe and hadoop.dll be under hadoop version 3.3.0 this means that when we spark-submit our hadoop-aws external jar package must also be 3.3.0 and above (note that 3.3.4 already works in order to avoid the above SemaphoredDelegatingExecutor when writing parquet to s3 using spark)
 
-* 
-Permissions: The error could be related to permissions. If your IAM policies or bucket policies have changed, or if the object's ACL has been modified, you might receive a NoSuchKey error instead of an Access Denied error. This is because S3 doesn't always distinguish between non-existent objects and objects you don't have permission to access.
+* Permissions: The error could be related to permissions. If your IAM policies or bucket policies have changed, or if the object's ACL has been modified, you might receive a NoSuchKey error instead of an Access Denied error. This is because S3 doesn't always distinguish between non-existent objects and objects you don't have permission to access.
+```
+cdi_url = "s3://chronic-disease-analyses-bucket/cdi-data-transformed/CDI.parquet/"
+cdi_url
+
+# note that if we only specify a string instead of a list in read_parquet it must be enclosed in a quote or double quotes
+query = f"""
+    CREATE OR REPLACE TABLE CDI AS
+    SELECT *
+    FROM read_parquet('{cdi_url}', union_by_name=True, filename=False)
+"""
+
+duckdb.sql(query)
+```
+
+but the reason the above code could not work before is because we are reading a folder with the partitioned files inside since it was after all done by spark. The way we could read this in DuckDB is to use a glob expression `*` that reads anything and in particular `*.parquet` which reads anything ending in a `.parquet` file and then unionizing these parquet files by column name. So we have to actually read an object or a file in s3 which we can achieve by using `*.parquet`, in order to actually load the parquet files we have just dumped to s3 in OLAP DBs like DuckDB. So our url would be instead `"s3://chronic-disease-analyses-bucket/cdi-data-transformed/CDI.parquet/*.parquet"`
 
 * `IOException: IO Error: Could not establish connection error for HTTP HEAD to 'https://chronic-disease-analyses-bucket/cdi-data-transformed/CDI.parquet/'` with status 1096710176. Is solved by adding `ENDPOINT` key to creating a `SECRETS` object in duckdb e.g. 
 ```
@@ -819,6 +860,20 @@ duckdb.sql(f"""
     );
 """)
 ```
+
+* in order to use duckdb in powerbi we have to use its cloud based version motherduck which requires us to now create a motherduck account and then create an access token at https://app.motherduck.com/settings/tokens in order to connect to the data
+
+
+## Spark Optimization   
+* Say I have 24 gb ram installed and 16 gb is currently usable because of other background processes and I have 8 cores in the CPU. Rule is to leave out 1 gb and 1 core for hadoop distributed file system processes and OS daemon processes during spark submissions. So we would have 15 gb and 7 cores to work with
+
+When we define executors e.g. 1 then 15 gb and 7 would have to be divided by 1 since these spaces and cores will be used by an executor so it will be 15 gb and 7 cores to be used by one executor still
+
+When we want 5 executors our cores will have to be partitioned across all these executors and sicne the num of execs is an odd number some executors will have unequal amount of cores compared to other executors. In this case 15 gb and 7 both divided by 5 will yield 5 executors each having 1 1 1 2 and 2 cores respectively and 3 3 3 3 and 3 gb memory respectively. 
+
+Notice how our number of executors will always depend on the number of cores in our cpu, in that **we can always add any number of executors so long as we still have cores available but we cannot add any more number of cores than the amount our cpu has just because we want more executors**. 
+
+Thin executor with 15 gb memory and 7 cores means each executor uses 1 core at the most and 1 gb memory at the most resulting in 7 executors using only 1 core and each having only 1 gb memory. Notice again that our number of executors will always depend on the number of cores as these courses cores are distributed evenly across these executors and if there are more executors than there is cores to distribute then it is a violation of this rule
 
 # Questions:
 * how to fill in missing values?
