@@ -862,7 +862,15 @@ duckdb.sql(f"""
 ```
 
 * in order to use duckdb in powerbi we have to use its cloud based version motherduck which requires us to now create a motherduck account and then create an access token at https://app.motherduck.com/settings/tokens in order to connect to the data
+```
+con <- dbConnect(duckdb(), dbdir = "quack.duckdb", read_only = FALSE)
 
+My expectation would be an error with the second attempt, because duckdb only allows one write connection to avoid conflicts.
+
+It used to give you the The process cannot access the file because it is being used by another process. error posted above, but now in v0.10.1 it doesn't error (or give a warning) at all.
+```
+
+* solving powerbi `Error: File is already open in C:\Program Files\WindowsApps\Microsoft.MicrosoftPowerBIDesktop_2.142.1277.0_x64__8wekyb3d8bbwe\bin\Microsoft.Mashup.Container.NetFX45.exe` error: https://github.com/duckdb/duckdb-r/issues/56
 
 ## Spark Optimization   
 * Say I have 24 gb ram installed and 16 gb is currently usable because of other background processes and I have 8 cores in the CPU. Rule is to leave out 1 gb and 1 core for hadoop distributed file system processes and OS daemon processes during spark submissions. So we would have 15 gb and 7 cores to work with

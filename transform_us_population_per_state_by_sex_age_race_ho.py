@@ -201,7 +201,7 @@ def process_population_per_state_by_sex_age_race_ho_table(df: DataFrame,
     .when(col("State") == "North Carolina", "NC")\
     .when(col("State") == "New Jersey", "NJ")\
     .when(col("State") == "Oregon", "OR")\
-    .when(col("State") == "Massachusett", "MA")
+    .when(col("State") == "Massachusetts", "MA")
 
     df = df.withColumn("StateID", state_id_cases)
 
@@ -330,94 +330,7 @@ def save_tables(tables_all_years: list[tuple[str, DataFrame, str]], OUTPUT_DATA_
 
 # spark-submit --packages org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.11.563,org.apache.httpcomponents:httpcore:4.4.16 transform_us_population_per_state_by_sex_age_race_ho.py --year-range-list 2000-2009 2010-2019 2020-2023
 if __name__ == "__main__":
-    # run this only locally 
-    # get year range and state from user input
-    parser = ArgumentParser()
-    parser.add_argument("--year-range-list", type=str, default=["2000-2009"], nargs="+", help="represents the lists of year ranges that spark script would base on to transform excel files of these year ranges")
-    args = parser.parse_args()
-
-    # get arguments
-    year_range_list = args.year_range_list
-
-    DATA_DIR = './data/population-data-raw'
-    EXCLUSIONS = ["us_population_per_state_2001_to_2021.csv", "population-data.zip"]
-    files = list(filter(lambda file: not file in EXCLUSIONS, os.listdir(DATA_DIR)))
-    cases = {
-            "2000-2009": {
-                "cols_to_remove": [
-                    "SUMLEV",
-                    "REGION",
-                    "DIVISION",
-                    "STATE",
-                    "CENSUS2000POP",
-                    "ESTIMATESBASE2000",
-                    "POPESTIMATE42010",
-                    "POPESTIMATE72010"
-                 ],
-                "populations": list(filter(lambda file: "2000-2010" in file and "by_sex_age_race_ho" in file, files))
-            },
-            "2010-2019": {
-                "cols_to_remove": [
-                    "SUMLEV",
-                    "REGION",
-                    "DIVISION",
-                    "STATE",
-                    "CENSUS2010POP",
-                    "ESTIMATESBASE2010"
-                 ],
-                "populations": list(filter(lambda file: "2010-2019" in file and "by_sex_age_race_ho" in file, files))  
-            },
-            "2020-2023": {
-                "cols_to_remove": [
-                    "SUMLEV",
-                    "REGION",
-                    "DIVISION",
-                    "STATE",
-                    "ESTIMATESBASE2020"
-                 ],
-                "populations": list(filter(lambda file: "2020-2023" in file and "by_sex_age_race_ho" in file, files))  
-            }
-        }
-    
-    # create spark session
-    # default is 1g for spark.executor.memory and 1 for spark.executor.cores
-    # set spark.driver.memory only when you want to use broadcast joins or want
-    # to collect and concat all the partitioned data into one single dataframe 
-    # at your own risk/peril
-    spark = SparkSession.builder\
-        .config("spark.executor.memory", "2g")\
-        .config("spark.executor.cores", "6")\
-        .getOrCreate()
-    
-    conf_view = spark.sparkContext.getConf()
-    print(f"spark.executor.memory: {conf_view.get('spark.executor.memory')}")
-    print(f"spark.executor.cores: {conf_view.get('spark.executor.cores')}")
-    
-    # get year range from system arguments sys.argv
-    tables_all_years = []
-
-    # loop through year_ranges
-    for year_range in year_range_list:
-        # concurrently process state populations by year range
-        first_stage_state_population_df = get_state_populations(
-            DATA_DIR, 
-            spark, 
-            cases[year_range]["cols_to_remove"], 
-            cases[year_range]["populations"], 
-            year_range,
-            callback_fn=process_population_per_state_by_sex_age_race_ho_table)
-    
-        # # pass first stage state population df to function
-        # tables = normalize_population_per_state_by_sex_age_race_ho_table(first_stage_state_population_df, spark, year_range)
-        # tables_all_years.extend(tables)
-
-    # save_tables(tables_all_years)
-
-    # # Build paths inside the project like this: BASE_DIR / 'subdir'.
-    # # use this only in development
-    # env_dir = Path('./').resolve()
-    # load_dotenv(os.path.join(env_dir, '.env'))
-
+    # # run this only locally 
     # # get year range and state from user input
     # parser = ArgumentParser()
     # parser.add_argument("--year-range-list", type=str, default=["2000-2009"], nargs="+", help="represents the lists of year ranges that spark script would base on to transform excel files of these year ranges")
@@ -426,30 +339,9 @@ if __name__ == "__main__":
     # # get arguments
     # year_range_list = args.year_range_list
 
-    # # 
-    # BUCKET_NAME = "chronic-disease-analyses-bucket"
-    # INPUT_FOLDER_NAME = "population-data-raw/"
-    # INPUT_DATA_DIR = f"s3a://{BUCKET_NAME}/{INPUT_FOLDER_NAME}"
+    # DATA_DIR = './data/population-data-raw'
     # EXCLUSIONS = ["us_population_per_state_2001_to_2021.csv", "population-data.zip"]
-
-    # # load env vars
-    # credentials = {
-    #     "aws_access_key_id": os.environ["AWS_ACCESS_KEY_ID"],
-    #     "aws_secret_access_key": os.environ["AWS_SECRET_ACCESS_KEY"],
-    #     "region_name": os.environ["AWS_REGION_NAME"],
-    # }
-
-    # # define s3 client
-    # s3 = boto3.client("s3", **credentials)
-
-    # # list specified s3 bucket files here 
-    # response = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix=INPUT_FOLDER_NAME)
-    # files = [content["Key"].replace(INPUT_FOLDER_NAME, "") for content in response.get("Contents")]
-
-    # # ['us_populations_per_state_by_sex_age_race_ho_2000-2010.csv', 
-    # # 'us_populations_per_state_by_sex_age_race_ho_2010-2019.csv', 
-    # # 'us_populations_per_state_by_sex_age_race_ho_2020-2023.csv']
-    # files = list(filter(lambda file: file and (not file in EXCLUSIONS), files))
+    # files = list(filter(lambda file: not file in EXCLUSIONS, os.listdir(DATA_DIR)))
     # cases = {
     #         "2000-2009": {
     #             "cols_to_remove": [
@@ -485,26 +377,22 @@ if __name__ == "__main__":
     #              ],
     #             "populations": list(filter(lambda file: "2020-2023" in file and "by_sex_age_race_ho" in file, files))  
     #         }
-    #     }    
+    #     }
     
-    # spark_conf = SparkConf()
-    # spark_conf.setAppName("test")
-    # spark_conf.set("spark.driver.memory", "14g") 
-    # spark_conf.set("spark.executor.memory", "2g")
-    # spark_conf.set("spark.executor.cores", "6")
-    # spark_conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", "100")
-
-    # spark_ctxt = SparkContext(conf=spark_conf)
-
-    # hadoop_conf = spark_ctxt._jsc.hadoopConfiguration()
-    # hadoop_conf.set("fs.s3a.access.key", credentials["aws_access_key_id"])
-    # hadoop_conf.set("fs.s3a.secret.key", credentials["aws_secret_access_key"])
-    # hadoop_conf.set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-    # hadoop_conf.set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
-
-    # spark = SparkSession(spark_ctxt).builder\
+    # # create spark session
+    # # default is 1g for spark.executor.memory and 1 for spark.executor.cores
+    # # set spark.driver.memory only when you want to use broadcast joins or want
+    # # to collect and concat all the partitioned data into one single dataframe 
+    # # at your own risk/peril
+    # spark = SparkSession.builder\
+    #     .config("spark.executor.memory", "2g")\
+    #     .config("spark.executor.cores", "6")\
     #     .getOrCreate()
-
+    
+    # conf_view = spark.sparkContext.getConf()
+    # print(f"spark.executor.memory: {conf_view.get('spark.executor.memory')}")
+    # print(f"spark.executor.cores: {conf_view.get('spark.executor.cores')}")
+    
     # # get year range from system arguments sys.argv
     # tables_all_years = []
 
@@ -512,7 +400,7 @@ if __name__ == "__main__":
     # for year_range in year_range_list:
     #     # concurrently process state populations by year range
     #     first_stage_state_population_df = get_state_populations(
-    #         INPUT_DATA_DIR, 
+    #         DATA_DIR, 
     #         spark, 
     #         cases[year_range]["cols_to_remove"], 
     #         cases[year_range]["populations"], 
@@ -523,7 +411,119 @@ if __name__ == "__main__":
     #     tables = normalize_population_per_state_by_sex_age_race_ho_table(first_stage_state_population_df, spark, year_range)
     #     tables_all_years.extend(tables)
 
-    # # create bucket and create bucket folder
-    # OUTPUT_FOLDER_NAME = "population-data-transformed/"
-    # OUTPUT_DATA_DIR = f"s3a://{BUCKET_NAME}/{OUTPUT_FOLDER_NAME}"
-    # save_tables(tables_all_years, OUTPUT_DATA_DIR=OUTPUT_DATA_DIR)
+    # save_tables(tables_all_years)
+
+    # Build paths inside the project like this: BASE_DIR / 'subdir'.
+    # use this only in development
+    env_dir = Path('./').resolve()
+    load_dotenv(os.path.join(env_dir, '.env'))
+
+    # get year range and state from user input
+    parser = ArgumentParser()
+    parser.add_argument("--year-range-list", type=str, default=["2000-2009"], nargs="+", help="represents the lists of year ranges that spark script would base on to transform excel files of these year ranges")
+    args = parser.parse_args()
+
+    # get arguments
+    year_range_list = args.year_range_list
+
+    # 
+    BUCKET_NAME = "chronic-disease-analyses-bucket"
+    INPUT_FOLDER_NAME = "population-data-raw/"
+    INPUT_DATA_DIR = f"s3a://{BUCKET_NAME}/{INPUT_FOLDER_NAME}"
+    EXCLUSIONS = ["us_population_per_state_2001_to_2021.csv", "population-data.zip"]
+
+    # load env vars
+    credentials = {
+        "aws_access_key_id": os.environ["AWS_ACCESS_KEY_ID"],
+        "aws_secret_access_key": os.environ["AWS_SECRET_ACCESS_KEY"],
+        "region_name": os.environ["AWS_REGION_NAME"],
+    }
+
+    # define s3 client
+    s3 = boto3.client("s3", **credentials)
+
+    # list specified s3 bucket files here 
+    response = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix=INPUT_FOLDER_NAME)
+    files = [content["Key"].replace(INPUT_FOLDER_NAME, "") for content in response.get("Contents")]
+
+    # ['us_populations_per_state_by_sex_age_race_ho_2000-2010.csv', 
+    # 'us_populations_per_state_by_sex_age_race_ho_2010-2019.csv', 
+    # 'us_populations_per_state_by_sex_age_race_ho_2020-2023.csv']
+    files = list(filter(lambda file: file and (not file in EXCLUSIONS), files))
+    cases = {
+            "2000-2009": {
+                "cols_to_remove": [
+                    "SUMLEV",
+                    "REGION",
+                    "DIVISION",
+                    "STATE",
+                    "CENSUS2000POP",
+                    "ESTIMATESBASE2000",
+                    "POPESTIMATE42010",
+                    "POPESTIMATE72010"
+                 ],
+                "populations": list(filter(lambda file: "2000-2010" in file and "by_sex_age_race_ho" in file, files))
+            },
+            "2010-2019": {
+                "cols_to_remove": [
+                    "SUMLEV",
+                    "REGION",
+                    "DIVISION",
+                    "STATE",
+                    "CENSUS2010POP",
+                    "ESTIMATESBASE2010"
+                 ],
+                "populations": list(filter(lambda file: "2010-2019" in file and "by_sex_age_race_ho" in file, files))  
+            },
+            "2020-2023": {
+                "cols_to_remove": [
+                    "SUMLEV",
+                    "REGION",
+                    "DIVISION",
+                    "STATE",
+                    "ESTIMATESBASE2020"
+                 ],
+                "populations": list(filter(lambda file: "2020-2023" in file and "by_sex_age_race_ho" in file, files))  
+            }
+        }    
+    
+    spark_conf = SparkConf()
+    spark_conf.setAppName("test")
+    spark_conf.set("spark.driver.memory", "14g") 
+    spark_conf.set("spark.executor.memory", "2g")
+    spark_conf.set("spark.executor.cores", "6")
+    spark_conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", "100")
+
+    spark_ctxt = SparkContext(conf=spark_conf)
+
+    hadoop_conf = spark_ctxt._jsc.hadoopConfiguration()
+    hadoop_conf.set("fs.s3a.access.key", credentials["aws_access_key_id"])
+    hadoop_conf.set("fs.s3a.secret.key", credentials["aws_secret_access_key"])
+    hadoop_conf.set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+    hadoop_conf.set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
+
+    spark = SparkSession(spark_ctxt).builder\
+        .getOrCreate()
+
+    # get year range from system arguments sys.argv
+    tables_all_years = []
+
+    # loop through year_ranges
+    for year_range in year_range_list:
+        # concurrently process state populations by year range
+        first_stage_state_population_df = get_state_populations(
+            INPUT_DATA_DIR, 
+            spark, 
+            cases[year_range]["cols_to_remove"], 
+            cases[year_range]["populations"], 
+            year_range,
+            callback_fn=process_population_per_state_by_sex_age_race_ho_table)
+    
+        # pass first stage state population df to function
+        tables = normalize_population_per_state_by_sex_age_race_ho_table(first_stage_state_population_df, spark, year_range)
+        tables_all_years.extend(tables)
+
+    # create bucket and create bucket folder
+    OUTPUT_FOLDER_NAME = "population-data-transformed/"
+    OUTPUT_DATA_DIR = f"s3a://{BUCKET_NAME}/{OUTPUT_FOLDER_NAME}"
+    save_tables(tables_all_years, OUTPUT_DATA_DIR=OUTPUT_DATA_DIR)
