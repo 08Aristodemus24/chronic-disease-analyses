@@ -11,6 +11,7 @@ from pyspark.sql.functions import (col,
     split,
     rlike,
     substring,
+    row_number,
     initcap,
     regexp,
     regexp_extract_all,
@@ -21,7 +22,7 @@ from pyspark.sql.functions import (col,
     when,
     concat,
     array,)
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, Window
 from pyspark.conf import SparkConf
 from pyspark.context import SparkContext
 from pyspark.sql.types import StringType, ArrayType, StructField, StructType, FloatType, DoubleType, IntegerType
@@ -358,6 +359,13 @@ def process_cdi_table(df: DataFrame) -> DataFrame:
     eth_codes = sparkUpper(substring(col("Ethnicity"), 1, 5))
     strat_id = concat(origin_codes, lit("_"), sex_codes, lit("_"), eth_codes)
     df = df.withColumn("StratificationID", strat_id)
+
+    # we dont want to create row id numbers without ordering by a column
+    # but Window.orderBy() doesn't exactly work without raising an error
+    # so to bypass this we can specify a literal column with same values
+    window = Window.orderBy(lit("N/A"))
+    cdi_id = row_number().over(window)
+    df = df.withColumn("LogID", cdi_id)
     # df.write.csv("./data/cdi-data-transformed/CDI_first_stage.csv", mode="overwrite")
 
     return df

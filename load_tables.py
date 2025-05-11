@@ -1,7 +1,7 @@
-# Now that all necessary data have now been extracted, transformed
-# and dumped to parquet files we can start doing our analyses by 
-# reading these parquet files as tables with duckdb (an in process OLAP)
-# and then use these tables to make our transformations and draw insights
+# Now that all necessary data have now been extracted, 
+# transformed, dumped in a lake (AWS S3) as parquet files,
+# we can then load this in an in-process OLAP DB like duckdb
+# /motherduck 
 import duckdb
 import os
 from dotenv import load_dotenv
