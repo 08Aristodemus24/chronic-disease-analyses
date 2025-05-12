@@ -174,7 +174,7 @@ def process_cdi_table(df: DataFrame) -> DataFrame:
             # implying age range then question has no age range to extract
             # so return null values instead
             array(lit(None), lit(None))
-        )
+        )   
 
     # create a dataframe with column AgeBracket and 
     # select only the AgeBracket column

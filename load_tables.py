@@ -169,6 +169,25 @@ if __name__ == "__main__":
         SELECT *
         FROM PopulationStratification
     """)
+
+    # unionize stratification tables from both created tables
+    # and create new table from it
+    # WITH Stratification AS (
+    #     SELECT * FROM CDIStratification
+    #     UNION BY NAME
+    #     SELECT * FROM PopulationStratification
+    # )
+         
+    # SELECT * FROM Stratification
+    # GROUP BY ALL
+    query = """
+        CREATE OR REPLACE TABLE Stratification AS (
+            SELECT * FROM CDIStratification
+            UNION BY NAME
+            SELECT * FROM PopulationStratification
+        )
+    """
+    conn.sql(query)
     
     # close connection
     conn.close()

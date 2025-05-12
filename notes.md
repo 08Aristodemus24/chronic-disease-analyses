@@ -903,3 +903,11 @@ Thin executor with 15 gb memory and 7 cores means each executor uses 1 core at t
 # Problems to solve:
 1. I can't save year as 4 byte int for 200000+ rows since that would be a waste of space
 2. implement headless browsing of selenium to scrape population data transform the excel sheets and automatically in a data warehouse for data analysis 
+
+
+
+
+
+
+
+
