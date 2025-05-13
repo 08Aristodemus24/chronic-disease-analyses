@@ -7,9 +7,10 @@ from dotenv import load_dotenv
 from pathlib import Path
 from functools import reduce
 
-from pyspark import SparkConf
+from pyspark import SparkConf, StorageLevel
 from pyspark.sql.functions import (
     col,
+    sum as sparkSum,
     lower as sparkLower,
     upper as sparkUpper,
     regexp_replace,
@@ -118,36 +119,6 @@ def process_population_per_state_by_sex_age_race_ho_table(df: DataFrame,
     sex_cases = when(col("Sex") == 1, "Male")\
     .when(col("Sex") == 2, "Female")
     df = df.withColumn("Sex", sex_cases)
-    
-    # for origin and sex pick out the initial character of each word
-    # Not Hispanic -> NH
-    # Both -> B
-    # Hispanic -> H
-    # Male -> M
-    # Female -> F
-    # Both -> B
-    origin_codes = array_join(
-        regexp_extract_all(col("Origin"), lit(r"(\b[A-Za-z])"), 1),
-        ""
-    )
-    sex_codes = array_join(
-        regexp_extract_all(col("Sex"), lit(r"(\b[A-Za-z])"), 1),
-        ""
-    )
-
-    # for races pick out all characters that are at most 5 
-    # chars in length 
-    # Black -> BLACK
-    # AIAN -> AIAN
-    # Asian -> ASIAN
-    # WHITE -> WHITE
-    # NHPI -> NHPI
-    # Other -> OTHER
-    # Multiracial -> MULTI
-    # All -> ALL
-    eth_codes = sparkUpper(substring(col("Ethnicity"), 1, 5))
-    strat_id = concat(origin_codes, lit("_"), sex_codes, lit("_"), eth_codes)
-    df = df.withColumn("StratificationID", strat_id)
 
     # create id for States and permutations of origin, sex,
     # and ethnicity before unpivoting/melting df
@@ -202,8 +173,44 @@ def process_population_per_state_by_sex_age_race_ho_table(df: DataFrame,
     .when(col("State") == "New Jersey", "NJ")\
     .when(col("State") == "Oregon", "OR")\
     .when(col("State") == "Massachusetts", "MA")
-
     df = df.withColumn("StateID", state_id_cases)
+
+    # create dummy population values for "Other" ethnicity
+    # through aggregation of all other races and getting a 
+    # fraction of this value. We unionize this df to the
+    # original df
+    df_part = impute_values_for_dummy_rows(df, year_cols, 0.05)
+    df = df.unionByName(df_part)
+
+    # for origin and sex pick out the initial character of each word
+    # Not Hispanic -> NH
+    # Both -> B
+    # Hispanic -> H
+    # Male -> M
+    # Female -> F
+    # Both -> B
+    origin_codes = array_join(
+        regexp_extract_all(col("Origin"), lit(r"(\b[A-Za-z])"), 1),
+        ""
+    )
+    sex_codes = array_join(
+        regexp_extract_all(col("Sex"), lit(r"(\b[A-Za-z])"), 1),
+        ""
+    )
+
+    # for races pick out all characters that are at most 5 
+    # chars in length 
+    # Black -> BLACK
+    # AIAN -> AIAN
+    # Asian -> ASIAN
+    # WHITE -> WHITE
+    # NHPI -> NHPI
+    # Other -> OTHER
+    # Multiracial -> MULTI
+    # All -> ALL
+    eth_codes = sparkUpper(substring(col("Ethnicity"), 1, 5))
+    strat_id = concat(origin_codes, lit("_"), sex_codes, lit("_"), eth_codes)
+    df = df.withColumn("StratificationID", strat_id)
 
     # stack year columns with all ids being state, sex, age, 
     # ethnicity, and origin 
@@ -223,6 +230,96 @@ def process_population_per_state_by_sex_age_race_ho_table(df: DataFrame,
 
     return df
 
+def impute_values_for_dummy_rows(df: DataFrame, year_cols: list[str], frac: float):
+    """
+    we want to create rows that contain both male (1) and female
+    sexes (2), both hispanic (1) and not hispanic origin (2), but
+    just one ethnicity, and all ages 0 to 85, across all states, 
+    which will be done through aggregation of these columns disregarding
+    the ethnicities column as this will act as now our new population 
+    values for the other ethnicity
+    """
+
+    # this stores the large df into memory and disk so
+    # that its physical plan of creating it is not again
+    # repeated
+    df.persist(StorageLevel.MEMORY_AND_DISK_DESER)
+
+    # we would be making 17544 rows as we would filtering the 
+    # dataframe with... 
+    # sample_df = df.where(
+    #     ((col("Sex") == "Male") | (col("Sex") == "Female"))
+    #     & ((col("Origin") == "Not Hispanic") | (col("Origin") == "Hispanic"))
+    #     & (col("Ethnicity") == "White")
+    #     & col("Age").between(0, 85)
+    # )
+    # sample_df = sample_df.withColumn("Ethnicity", lit("Other"))
+    # since per gender, per origin, per state, per race, with all 
+    # ages there would be 86 rows and 86 * 2 genders * 2 origins 
+    # * 1 race * 51 states is 17544. When this is melted according
+    # to the years this would have now 17544 * 10 or 175440 rows
+    agg_df = df.groupBy(*["StateID", "State", "Sex", "Origin", "Age"]).sum(*year_cols).select("*")
+
+    # renames sum(_2000), sum(_2001), sum(_2002), ..., sum(_2009)
+    # to _2000, _2001, _2002, ..., 2009
+    agg_df = agg_df.withColumnsRenamed({f"sum({year_col})": year_col for year_col in year_cols})
+
+    # create the other ethnicity by replacing the
+    # current one
+    agg_df = agg_df.withColumn("Ethnicity", lit("Other"))
+
+    # get fraction of the summed population across all ethnicities
+    # and then casting to a long int
+    agg_df = agg_df.withColumns({year_col: (col(year_col) * frac).cast(LongType()) for year_col in year_cols })
+    agg_df.show()
+
+    # count of grouped df: 17544
+    # must result in 344 rows if 17544 / 51 since in a file
+    # there are 51 states from a certain year range 
+    print(f"count of grouped df: {agg_df.count()}")
+    df.unpersist()
+
+
+    # in this selection there are 172 rows in this category 
+    # of population in a single state, that's male, hispanic 
+    # or not hispanic, all ages from 0 to 85 inclusively in a
+    # single year, with 1 ethnicity. And if we do this for the
+    # female population also which would also have 172 rows
+    # count all in all would be 344. And we know 2064 if all
+    # ethnicities are included divided by 6 would be 344
+    # SELECT 
+    #     StateID, 
+    #     Sex, 
+    #     Origin, 
+    #     Ethnicity,
+    #     Age, 
+    #     Year
+    # FROM MergedPopulation
+    # WHERE (Sex = 'Male' OR Sex = 'Female') 
+    # AND (Origin = 'Hispanic' OR Origin = 'Not Hispanic') 
+    # AND (Ethnicity = 'White')
+    # AND (Age BETWEEN 0 AND 85)
+    # AND (State = 'Alabama')
+    # AND (Year = 2000)
+    # the idea is this is the dataframe we want to extract and just
+    # replace the ethnicity colum to a literal of "Other", and 
+    # so (344 * 51 states * 10) + (344 * 51 states * 10) + 
+    # (344 * 51 states * 4) years (since 0 to 23 inclusive is 24
+    # years) would be an added 421056 rows
+    # SELECT 
+    #     StateID, 
+    #     Sex, 
+    #     Origin, 
+    #     Ethnicity,
+    #     Age, 
+    #     Year
+    # FROM MergedPopulation
+    # WHERE (Sex = 'Male' OR Sex = 'Female') 
+    # AND (Origin = 'Hispanic' OR Origin = 'Not Hispanic') 
+    # AND (Ethnicity = 'White')
+    # AND (Age BETWEEN 0 AND 85)
+
+    return agg_df
 
 def normalize_population_per_state_by_sex_age_race_ho_table(df: DataFrame, session: SparkSession, year_range: str):
     """
@@ -232,14 +329,19 @@ def normalize_population_per_state_by_sex_age_race_ho_table(df: DataFrame, sessi
 
     # create state dimension table and then drop state column
     # and retain stateID as foreign key to state dim table
+    df.persist()
     state_df = df.select("State", "StateID").dropDuplicates()
     df = df.drop("State")
+    df.unpersist()
 
     # drop sex, ethnicity, and origin strat columns and retain
     # in separate dimension table like state table
+    df.persist()
     strat_df = df.select("Sex", "Ethnicity", "Origin", "StratificationID").dropDuplicates()
     df = df.drop("Sex", "Ethnicity", "Origin")
-    print(year_range)
+    df.unpersist()
+
+    # package the tables into their name, dataframe, and year ranges
     tables = list(zip(
         ["Population", "State", "Stratification"], 
         [df, state_df, strat_df], 
