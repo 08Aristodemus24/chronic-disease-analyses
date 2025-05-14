@@ -20,7 +20,29 @@
 * <s>once normalization stage of cdi table is finished setup another bucket and bucket folder again to save these normalized tables, this goes the same for population fact tables</s>
 * <s>draw diagram of raw cdi to first stage cdi to its normalized tables, this goes also for population data</s>
 * <s>because there aren't any populations for the 'Other' ethnicity we will have to figure out some way how to create dummy data for this ethnicity, maybe imputation through averaging by, sex, origin, not ethnicity, state, and age so that male, hispanic, alabama, with ages 0 can have its population be averaged adn then divided by 10 to get a fraction of this average ppoulation which can be used for our population value for the other ethnicity</s>
-* create the final calculated population based on data value type of CDI
+* <s>create the final calculated population based on data value type of CDI</s>
+* filter cdi table by each unique topic and under each unique topic see the unique questions, since these questions will resemble eaech other, figure out to add another transformation to generalize these questions 
+* and figiure out the questions that only really use the staet population by sex age ethnicity origin and only then will we calculate their tangible number of cases since other questions like adults with medicare aged 30+ isn't really tailored for hte populations we have or number of alcohol consumption is 3.6 since it only really focuses on the sex, age, race, origin of a demographic and not whether they have medicare etc.
+* what i'm thinking of in the future is if this is the case we must visualize it in powerbi like this
+```
+|- topic1
+    |- question1
+    |- question2
+    |- ...
+    |- questionn
+|- topic2
+    |- question1
+    |- question2
+    |- ...
+    |- questionn
+|- ...
+|- topic n
+    |- question1
+    |- question2
+    |- ...
+    |- questionn
+```
+and user would be able to view each topic and see what kinds of information or value each question holds in each us state
 
 # Data loading
 * <s>load the parquet files to snowflake or motherduck (for free trials and free tier). For motherduck load the s3 parquets into duckdb and then download a duckdb connector for powerbi in order to connect to this OLAP datawarehouse.</s>

@@ -109,10 +109,6 @@ def create_calculated_population(conn):
             SELECT 
                 LogID,
                 SUM(Population) AS Population
-                CASE
-                    WHEN DataValueType = '%' AND
-                    ELSE 
-                END
             FROM CDIWithPop
             GROUP BY LogID
             ORDER BY LogID ASC
@@ -122,7 +118,7 @@ def create_calculated_population(conn):
     # %, Prevalence
     # %, Percent
     # %, Age-adjusted Prevalence
-    
+
     conn.sql(query)
 
 def create_stratification(conn):

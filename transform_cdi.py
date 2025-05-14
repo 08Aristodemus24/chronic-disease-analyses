@@ -423,13 +423,15 @@ def normalize_cdi_table(df: DataFrame, session: SparkSession) -> list[DataFrame]
     # DATA VALUE TYPE TABLE
     # remove data value type
     # retain in data value type table with data value type id as id
+    df.persist()
     dvt_df = df.select("DataValueTypeID", "DataValueType").drop_duplicates()
+    df.unpersist()
     df = df.drop("DataValueType")
 
     # this will cover slowly changing dimension cases if a unique row in dimension
     # table is updated, if a unique row is added to dimension table or if another column
     # is added to dimension table
-    tables = dict(zip(["CDI", "Stratification", "Question", "TOPIC", "Location", "DataValueType"], [df, strat_df, question_df, topic_df, location_df, dvt_df]))
+    tables = dict(zip(["CDI", "Stratification", "Question", "Topic", "Location", "DataValueType"], [df, strat_df, question_df, topic_df, location_df, dvt_df]))
 
     # return all normalized tables
     return tables
