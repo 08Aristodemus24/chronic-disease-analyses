@@ -6,6 +6,10 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 def create_calculated_population(conn):
+    """
+    
+    """
+
     query = """
         CREATE OR REPLACE TABLE CalculatedPopulation AS (
             
@@ -105,11 +109,20 @@ def create_calculated_population(conn):
             SELECT 
                 LogID,
                 SUM(Population) AS Population
+                CASE
+                    WHEN DataValueType = '%' AND
+                    ELSE 
+                END
             FROM CDIWithPop
             GROUP BY LogID
             ORDER BY LogID ASC
         )
     """
+
+    # %, Prevalence
+    # %, Percent
+    # %, Age-adjusted Prevalence
+    
     conn.sql(query)
 
 def create_stratification(conn):

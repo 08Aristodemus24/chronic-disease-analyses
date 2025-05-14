@@ -378,33 +378,49 @@ def normalize_cdi_table(df: DataFrame, session: SparkSession) -> list[DataFrame]
     and placed also in a dimension table
     """
 
+    # STRATIFICATION TABLE
     # once Stratification1ID column is added select only the sex,
     # ethnicity, origin, and stratification1id columns and then drop
     # the duplicates so that all unique values are kept
+    df.persist()
     strat_df = df.select("Sex", "Ethnicity", "Origin", "StratificationID").dropDuplicates()
-    
+    df.unpersist()
+
     # drop the columns in the fact table that is already 
     # in the dimension table
     df = df.drop("Sex", "Ethnicity", "Origin")
 
+    # LOCATION TABLE
     # remove location desc
     # remove location abbr
     # retain in location dimension table with location abbr as id
     df = df.drop("LocationID")
     df = df.withColumnRenamed("LocationAbbr", "LocationID")
+
+    df.persist()
     location_df = df.select("LocationID", "LocationDesc", "Latitude", "Longitude").dropDuplicates()
+    df.unpersist()
 
     # drop location descriptions as we have already retained its 
     # corresponding id in the dimension table in the location df
     df = df.drop("LocationDesc", "Latitude", "Longitude")
 
+    # QUESTION TABLE
     # remove topic
     # remove question
     # remove topicid
     # retain in questions table with question id
+    df.persist()
     question_df = df.select("QuestionID", "TopicID", "Question", "Topic", "AgeStart", "AgeEnd").dropDuplicates()
+
+    # TOPIC TABLE
+    topic_df = question_df.select("TopicID", "Topic").dropDuplicates()
+    question_df = question_df.drop("Topic")
+    df.unpersist()
+
     df = df.drop("TopicID", "Question", "Topic", "AgeStart", "AgeEnd")
 
+    # DATA VALUE TYPE TABLE
     # remove data value type
     # retain in data value type table with data value type id as id
     dvt_df = df.select("DataValueTypeID", "DataValueType").drop_duplicates()
@@ -413,7 +429,7 @@ def normalize_cdi_table(df: DataFrame, session: SparkSession) -> list[DataFrame]
     # this will cover slowly changing dimension cases if a unique row in dimension
     # table is updated, if a unique row is added to dimension table or if another column
     # is added to dimension table
-    tables = dict(zip(["CDI", "Stratification", "Question", "Location", "DataValueType"], [df, strat_df, question_df, location_df, dvt_df]))
+    tables = dict(zip(["CDI", "Stratification", "Question", "TOPIC", "Location", "DataValueType"], [df, strat_df, question_df, topic_df, location_df, dvt_df]))
 
     # return all normalized tables
     return tables

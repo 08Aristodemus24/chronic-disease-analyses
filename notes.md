@@ -198,6 +198,298 @@ StratificationCategoryID3: ID representing the third category for stratification
 StratificationID3: ID representing the stratification value for category 3. Similarly, this column would contain the unique identifier for the third stratification value.
 ```
 
+#### we would have the following calculations for each unique pair of `datavalueunit` and `datavaluetype`
+the most important ones that maybe indicate chronic disease would be the ff. :
+* %, Prevalence e.g. `prevalence of gastrointestinal diabetes is 3.6%`
+question: `so if I have a question "prevalence of gastrointestinal diabetes", datavaluetype of prevalence, datavalueunit of %, and datavalue of 3.6 which when translated would be "prevalence of gastrointestinal diabetes is 3.6%". How can I then convert this to a tangible number given the population of let's say the state of arizona in 2015 which is 18003249`
+answer: $(data value / 100) * population = estimated cases$ 
+
+
+
+* %, Percent e.g. `Live births occurring at Baby Friendly Facilities is 3.6%`
+question: `so if I have a question "live births occuring at baby facilities", datavaluetype of percent, datavalueunit of %, and datavalue of 3.6 which when translated would be "live births occuring at baby facilities is 3.6%". How can I then convert this to a tangible number given the population of let's say the state of arizona in 2015 which is 18003249`
+answer: To convert this percentage into a tangible number, you need: Total live births in Arizona (2015), not the total population.
+
+Example: If Arizona had 85,000 live births in 2015, then: Births at facilities = 0.036 × 85,000 = 3,060 births. Births at facilities=0.036×85,000=3,060 births. Why not use total population? The metric is a % of births, not the general population. Most of the 18M people in Arizona (e.g., elderly, children) didn’t give birth
+
+
+
+* %, Age-adjusted Prevalence e.g. `Current smokeless tobacco use among adults aged >= 18 years is 3.6%` (ah okay so gets ko na pag age adjusted may age number sa question)
+question: `so if I have a question "Current smokeless tobacco use among adults aged >= 18 years", datavaluetype of age-adjusted prevalence, datavalueunit of %, and datavalue of 3.6 which when translated would be "Current smokeless tobacco use among adults aged >= 18 years is 3.6%". How can I then convert this to a tangible number given the population of let's say the state of arizona in 2015 which is 18003249`
+answer: Step 2: Isolate the Adult Population (18+)
+Since the metric applies only to adults (≥18 years), you need:
+
+Total adult population (not total state population). Example: If adults make up ~75% of Arizona's population (2015):
+
+Adult population = 0.75 × 18,003,249=13,502,437 adults. Adult population=0.75×18,003,249=13,502,437 adults.
+
+
+
+* %, Crude Prevalence e.g. `Individuals meeting aerobic physical activity guidelines for substantial health benefits among adults aged >= 18 years is 3.6%`
+question: `so if I have a question "Individuals meeting aerobic physical activity guidelines for substantial health benefits among adults aged >= 18", datavaluetype of crude prevalence, datavalueunit of %, and datavalue of 3.6 which when translated would be "prevalence of gastrointestinal diabetes is 3.6%". How can I then convert this to a tangible number given the population of let's say the state of arizona in 2015 adults aged 18 and above which is 18003249`
+
+The formula is straightforward:
+
+Number of Individuals (Cases) = (Prevalence Rate / 100) * Total Population
+
+Let's apply this to your example:
+
+Prevalence Rate: 3.6%
+Total Population (Arizona, 2015, adults aged 18 and above): 18,003,249
+Calculation:
+
+Number of Individuals = (3.6 / 100) * 18,003,249
+Number of Individuals = 0.036 * 18,003,249
+Number of Individuals = 648,116.964
+
+
+
+* Number, Median e.g. `Median daily frequency of fruit consumption among adults aged >= 18 years is 3.6`
+question: `so if I have a question "Median daily frequency of fruit consumption among adults aged >= 18 years", datavaluetype of number, datavalueunit of median, and datavalue of 3.6 which when translated would be "Median daily frequency of fruit consumption among adults aged >= 18 years is 3.6". How can I then convert this to a tangible number given the population of let's say the state of arizona in 2015 adulst aged 18 and above which is 150000 or does population have no effect in this?`
+
+You are absolutely correct! In the case of "Median daily frequency of fruit consumption," the population size does not directly convert the median value into a tangible number of individuals consuming fruit with that frequency.
+
+Here's why:
+
+Median Represents the Middle Value: The median is the middle value in a sorted dataset. In this context, a median of 3.6 means that if you lined up all the adults in Arizona (aged >= 18) according to their daily fruit consumption from lowest to highest, the person in the very middle would consume fruit approximately 3.6 times per day.
+It Doesn't Tell You How Many People Consume Exactly 3.6 Times: The median doesn't tell you how many individuals consume fruit exactly 3.6 times a day. It's a measure of central tendency. Some people will consume more, and some will consume less.
+No Direct Multiplication: Unlike prevalence (a proportion of the population affected by a condition), the median is a characteristic of the consumption behavior itself, not a count or a proportion of the population. Multiplying a median frequency by the total population wouldn't yield a meaningful number of individuals.
+What the Median of 3.6 Does Tell You:
+
+Approximately 50% of the adult population in Arizona (aged >= 18) consumes fruit 3.6 times per day or less.
+Approximately 50% of the adult population in Arizona (aged >= 18) consumes fruit 3.6 times per day or more.
+To get a tangible number related to fruit consumption frequency, you would need different types of data, such as:
+
+The distribution of fruit consumption: You would need to know how many people consume fruit 0 times a day, 1 time a day, 2 times a day, 3 times a day, 4 times a day, and so on. With this distribution, you could then count the number of people falling into specific frequency ranges.
+The percentage of the population consuming fruit at or above a certain frequency: For example, you might know that "20% of adults in Arizona consume fruit 5 or more times per day." Then you could multiply that percentage by the total population to get a tangible number.
+
+
+
+* Number, Age-adjusted Mean e.g. `Average binge drinking frequency among adults aged >= 18 yeras who binge drink is 3.6`
+question: `so if I have a question "Average binge drinking frequency among adults aged >= 18 yeras who binge drink", datavaluetype of number, datavalueunit of age-adjusted mean, and datavalue of 3.6 which when translated would be "Average binge drinking frequency among adults aged >= 18 yeras who binge drink is 3.6". How can I then convert this to a tangible number given the population of let's say the state of arizona in 2015 adulst aged 18 and above which is 150000 or does population have no effect in this?`
+
+
+
+* Number, Mean e.g. `Average recent physically unhealthy days among adults aged >= 18 years is 3.6`
+question: `so if I have a question "Average recent physically unhealthy days among adults aged >= 18 years", datavaluetype of number, datavalueunit of mean, and datavalue of 3.6 which when translated would be "Average recent physically unhealthy days among adults aged >= 18 years is 3.6". How can I then convert this to a tangible number given the population of let's say the state of arizona in 2015 adulst aged 18 and above which is 150000 or does population have no effect in this?`
+
+Here's the breakdown:
+
+Mean as the Total Divided by the Count: An average of 3.6 physically unhealthy days means that if you summed up the total number of physically unhealthy days reported by all 150,000 adults and then divided by 150,000, you would get 3.6.
+
+You Can Find the Total Number of Unhealthy Days: In this case, you can use the population to find the total number of physically unhealthy days experienced by the entire adult population.
+
+Total Unhealthy Days = Average Unhealthy Days * Total Population
+Total Unhealthy Days = 3.6 * 150,000
+Total Unhealthy Days = 540,000
+
+So, while you can't say that 540,000 individuals experienced 3.6 unhealthy days (because individuals experience whole numbers of days), you can say that the total burden of recent physically unhealthy days across the entire adult population of Arizona in 2015 was 540,000 days.
+
+Why You Still Can't Get the Number of Individuals at Exactly 3.6 Days:
+
+Average Represents a Distribution: The average is a summary statistic of a distribution. Some individuals will have had 0 unhealthy days, some 1, some 10, and so on. The average smooths out these individual differences.
+Fractional Averages: An average can be a fraction (like 3.6), but an individual can only experience a whole number of days.
+What the Average of 3.6 (Mean) Tells You:
+
+The central tendency of the number of recent physically unhealthy days for this population is 3.6 days.
+The total number of physically unhealthy days experienced by the entire population is estimated to be 540,000. This can be useful for understanding the overall health burden.
+In summary:
+
+Population does have an effect when you want to calculate the total number of events (in this case, unhealthy days) across the entire population, given the average rate.
+Population does not directly tell you the number of individuals who experienced that exact average number of days. To know that, you would need information about the distribution of physically unhealthy days within the population.
+
+
+
+* Number, Number e.g. `Mortality from cerebrovascular disease (stroke) is 2735`
+question: `how about if a question is "Mortality from disease (stroke)", and its datavalue 2735, and datavaluetype is number, and datavalueunit is number?`
+
+When you have a question like "Mortality from disease (stroke)" with a datavalue of 2735, a datavalueunit of "number", and a datavalueunit also as "number", the interpretation is relatively direct:
+
+Interpretation:
+
+The value 2735 represents the absolute number of deaths attributed to stroke within a specific population and time period.
+
+Population Effect:
+
+In this case, the datavalue itself is already a tangible number of individuals (the deceased). You do not need to multiply or divide this number by a broader population to understand its direct meaning.
+
+However, the context of the population is crucial for understanding the significance of this number:
+
+What is the population size? 2735 deaths from stroke in a population of 10,000 would be a very high mortality rate compared to 2735 deaths in a population of 1 million.
+What is the time period? 2735 deaths in one year is different from 2735 deaths over a decade.
+What is the geographic area? 2735 deaths in a small city has a different impact than 2735 deaths across an entire country.
+What are the age demographics? Stroke mortality is generally higher in older populations.
+Are there other relevant subgroups? Mortality rates might differ by sex, ethnicity, etc.
+To calculate a mortality rate, you would need the population size:
+
+Mortality Rate = (Number of Deaths / Total Population) * Multiplier (e.g., 100,000)
+
+For example, if the 2735 deaths occurred in the adult population of Arizona (1,500,000 in your earlier example), the crude mortality rate from stroke would be:
+
+Mortality Rate = (2735 / 1,500,000) * 100,000
+Mortality Rate ≈ 182.3 deaths per 100,000 adults
+
+This rate provides a better sense of the proportion of the population dying from stroke and allows for comparisons across different populations or time periods.
+
+In summary:
+
+The datavalue of 2735 directly tells you the number of deaths from stroke.
+The population size is needed to calculate a mortality rate, which helps in understanding the impact of stroke mortality within that population and for comparisons. Without knowing the population size, the absolute number alone gives you the count of deaths but not the relative frequency.
+
+
+
+* cases per 1,000, Age-adjusted Rate e.g. `age-adjusted rate of chronic liver disease mortality is 14.4 cases per 1000`
+question: `how about if a question is "age-adjusted rate of chronic liver disease mortality", and its datavalue 14.4, and datavaluetype is "age-adjusted rate", and datavalueunit is "cases per 1000"?`
+
+Age-Adjusted Rate: This means the mortality rate has been statistically adjusted to account for differences in the age distribution of the population being studied compared to a standard population. This allows for fairer comparisons of mortality rates between different groups or over time, as age is a significant factor in mortality.
+14.4: This is the age-adjusted mortality rate.
+Cases per 1000: This is the unit of the rate. It means that for every 1000 people in the standard population, 14.4 deaths are attributed to chronic liver disease, after accounting for age differences.
+Converting to a Tangible Number for a Specific Population (Arizona, 2015, Adults >= 18 - Let's assume a population of 1,500,000 for this example):
+
+To estimate the number of chronic liver disease deaths in the Arizona adult population in 2015, you would apply this age-adjusted rate to that population:
+
+Convert the rate to a proportion: 14.4 cases per 1000 is equal to 14.4 / 1000 = 0.0144.
+
+Multiply the proportion by the population size: 0.0144 * 1,500,000 = 21,600
+
+Therefore, based on an age-adjusted mortality rate of 14.4 cases per 1000 and an estimated adult population of 1,500,000 in Arizona in 2015, we would estimate approximately 21,600 deaths due to chronic liver disease in that population, after adjusting for age.
+
+Important Considerations:
+
+The "Standard Population": Remember that age-adjusted rates are specific to the standard population used for adjustment. If you were comparing this rate to another region or time period, it would be important to know if they used the same standard population for their calculations.
+Crude vs. Age-Adjusted: This is an age-adjusted rate. The actual (crude) mortality rate in Arizona's adult population might be higher or lower depending on the age distribution of that specific population compared to the standard population.
+Specificity of the Population: The accuracy of the estimated number of deaths depends on how well the age distribution of the Arizona adult population in 2015 aligns with the age distribution of the standard population used to calculate the 14.4 per 1000 rate.
+
+* cases per 10,000, Age-adjusted Rate e.g. `age-adjusted rate of hospitalization for chronic obstructive pulmonary disease as any diagnosis is 178.99 cases per 10000`
+question: `how about if a question is "age-adjusted rate of hospitalization for chronic obstructive pulmonary disease as any diagnosis", and its datavalue 178, and datavaluetype is "age-adjusted rate", and datavalueunit is "cases per 10000"?`
+
+Age-Adjusted Rate: As before, this mortality rate has been statistically adjusted to remove the effect of different age distributions between populations, allowing for more meaningful comparisons.
+178: This is the age-adjusted mortality rate.
+Cases per 10000: This is the unit of the rate. It means that for every 10,000 people in the standard population, 178 deaths are attributed to chronic liver disease, after accounting for age differences.
+Converting to a Tangible Number for a Specific Population (Arizona, 2015, Adults >= 18 - assuming a population of 1,500,000):
+
+To estimate the number of chronic liver disease deaths in the Arizona adult population in 2015 based on this rate:
+
+Convert the rate to a proportion: 178 cases per 10,000 is equal to 178 / 10,000 = 0.0178.
+
+Multiply the proportion by the population size: 0.0178 * 1,500,000 = 26,700
+
+Therefore, based on an age-adjusted mortality rate of 178 cases per 10,000 and an estimated adult population of 1,500,000 in Arizona in 2015, we would estimate approximately 26,700 deaths due to chronic liver disease in that population, after adjusting for age.
+
+Key Points to Remember:
+
+The Standard Population: The estimated number of deaths is still influenced by how well the age structure of the Arizona population aligns with the standard population used for the age adjustment.
+Rate per Different Unit: The key difference here is the unit ("per 10000" instead of "per 1000"). You need to adjust the conversion to a proportion accordingly.
+Direct Estimation: Age-adjusted rates are valuable for comparing mortality risks across populations, and by applying them to a specific population, you can get an estimate of the number of deaths expected in that population, considering its size.
+
+
+
+* cases per 100,000, Age-adjusted Rate e.g. `age-adjusted rate of mortality from total cardiovascular diseases is 206.5 cases per 100000`
+question: `how about if a question is "age-adjusted rate of chronic liver disease mortality", and its datavalue 206.5, and datavaluetype is "age-adjusted rate", and datavalueunit is "cases per 100000"?`
+
+Age-Adjusted Rate: As before, this mortality rate has been statistically adjusted to account for differences in the age distribution of the population being studied compared to a standard population.
+206.5: This is the age-adjusted mortality rate.
+Cases per 100000: This is the unit of the rate. It means that for every 100,000 people in the standard population, 206.5 deaths are attributed to chronic liver disease, after accounting for age differences.
+Converting to a Tangible Number for a Specific Population (Philippines, 2025, Adults >= 18 - Let's assume an estimated adult population of 70,000,000 for this example, considering the current time and location):
+
+To estimate the number of chronic liver disease deaths in the adult population of the Philippines in 2025 based on this rate:
+
+Convert the rate to a proportion: 206.5 cases per 100,000 is equal to 206.5 / 100,000 = 0.002065.
+
+Multiply the proportion by the population size: 0.002065 * 70,000,000 = 144,550
+
+Therefore, based on an age-adjusted mortality rate of 206.5 cases per 100,000 and an estimated adult population of 70,000,000 in the Philippines in 2025, we would estimate approximately 144,550 deaths due to chronic liver disease in that population, after adjusting for age.
+
+Key Points to Remember:
+
+The Standard Population: The estimated number of deaths is still influenced by how well the age structure of the Philippines' adult population in 2025 aligns with the standard population used for the age adjustment.
+Rate per Different Unit: The unit here is "per 100000". Make sure to adjust the conversion to a proportion accordingly.
+Direct Estimation: Age-adjusted rates provide a standardized measure of mortality risk, and by applying them to a specific population, you can estimate the expected number of deaths for that cause, considering the population size.
+
+
+
+* cases per 1,000,000, Age-adjusted Rate e.g. `age-adjusted rate of asthma mortality rate is 8.3 cases per 1000000`
+question: `how about if a question is "age-adjusted rate of chronic liver disease mortality", and its datavalue 8.3, and datavaluetype is "age-adjusted rate", and datavalueunit is "cases per 1000000"?`
+
+Age-Adjusted Rate: As before, this mortality rate has been statistically adjusted to remove the effect of different age distributions between populations, allowing for more meaningful comparisons.
+8.3: This is the age-adjusted mortality rate.
+Cases per 1000000: This is the unit of the rate. It means that for every 1,000,000 people in the standard population, 8.3 deaths are attributed to chronic liver disease, after accounting for age differences.
+Converting to a Tangible Number for a Specific Population (Philippines, 2025, Adults >= 18 - assuming an estimated adult population of 70,000,000):
+
+To estimate the number of chronic liver disease deaths in the adult population of the Philippines in 2025 based on this rate:
+
+Convert the rate to a proportion: 8.3 cases per 1,000,000 is equal to 8.3 / 1,000,000 = 0.0000083.
+
+Multiply the proportion by the population size: 0.0000083 * 70,000,000 = 581
+
+Therefore, based on an age-adjusted mortality rate of 8.3 cases per 1,000,000 and an estimated adult population of 70,000,000 in the Philippines in 2025, we would estimate approximately 581 deaths due to chronic liver disease in that population, after adjusting for age.
+
+Key Points to Remember:
+
+The Standard Population: The estimated number of deaths is still influenced by how well the age structure of the Philippines' adult population in 2025 aligns with the standard population used for the age adjustment.
+Rate per Different Unit: The unit here is "per 1,000,000". Make sure to adjust the conversion to a proportion accordingly.
+Direct Estimation: Age-adjusted rates provide a standardized measure of mortality risk, and by applying them to a specific population, you can estimate the expected number of deaths for that cause, considering the population size.
+
+
+
+* cases per 1,000, Crude Rate e.g. `crude rate of hospitalization for heart failure among medicare-eligible persons aged >= 65 years is 16.5 cases per 1000`
+question: `how about if a question is "crude rate of hospitalization for heart failure among medicare-eligible persons aged >= 65 years", and its datavalue 16.5, and datavaluetype is "crude rate", and datavalueunit is "cases per 1000"?`
+
+Okay, let's break down the interpretation of a crude rate with a unit of "cases per 1000".
+
+Interpretation:
+
+Crude Rate: This means the rate is calculated based on the total number of events (hospitalizations for heart failure) occurring within the entire population of interest (Medicare-eligible persons aged >= 65 years) without any adjustment for factors like age distribution within that specific population.
+16.5: This is the crude rate of hospitalization for heart failure.
+Cases per 1000: This is the unit of the rate. It means that for every 1000 Medicare-eligible persons aged 65 years or older in the population, there are 16.5 hospitalizations for heart failure.
+Converting to a Tangible Number for a Specific Population (Mandaluyong City, Metro Manila, Philippines, 2025 - We'll need to estimate the Medicare-eligible population aged >= 65 years):
+
+To estimate the number of hospitalizations for heart failure in the Medicare-eligible population aged 65 and above in Mandaluyong City in 2025, we need an estimate of that specific population.
+
+Let's make a hypothetical assumption: Suppose there are approximately 20,000 Medicare-eligible persons aged 65 years or older in Mandaluyong City in 2025.
+
+Now we can estimate the number of hospitalizations:
+
+Convert the rate to a proportion per individual: 16.5 cases per 1000 people is equal to 16.5 / 1000 = 0.0165 hospitalizations per person.
+
+Multiply the proportion by the specific population size: 0.0165 * 20,000 = 330
+
+Therefore, based on a crude hospitalization rate of 16.5 cases per 1000 Medicare-eligible persons aged >= 65 years and a hypothetical population of 20,000 individuals in that demographic in Mandaluyong City in 2025, we would estimate approximately 330 hospitalizations for heart failure in that group.
+
+Key Points to Remember:
+
+Crude Rate Specificity: This rate applies to the entire Medicare-eligible population aged 65 and above. It doesn't account for differences in risk factors or age within that broad group.
+Population Specificity: You must apply this rate to the specific population of interest (Medicare-eligible persons aged >= 65 in Mandaluyong) to get a tangible number for that location. Using the general adult population of Mandaluyong would be inaccurate as the rate is specific to the Medicare-eligible older adult group.
+Data Availability: The accuracy of your estimate heavily relies on having a reasonably accurate estimate of the Medicare-eligible population aged 65 and above in Mandaluyong City for the year 2025. This kind of specific demographic data might require local government or health authority statistics.
+
+* cases per 10,000, Crude Rate e.g. `crude rate of Emergency department visit rate for asthma is 132.33 cases per 10000`
+same idea as above i.e. (132.33 / 10000) * population of those had emergency department visits
+* cases per 100,000, Crude Rate e.g. `crude rate of mortality from total cardiovascular diseases is 53 cases per 100000`
+* cases per 1,000,000, Crude Rate e.g. `crude rate of asthma mortality rate is 9.3 cases per 1000000`
+
+* cases per 1,000,000, Adjusted by age, sex, race and ethnicity e.g. `cases per 1000000 of Incidence of treated end-stage renal disease attributed to diabetes adjusted by age, sex, race and ethnicity is 156.8`
+* cases per 1,000,000, Number e.g. `cases per 1000000 of Incidence of treated end-stage renal disease is 1125`
+
+*NOTE: annual is yearly*
+* cases per 100,000, Average Annual Age-adjusted Rate e.g. `Average yearly age-adjusted rate of Invasive cancer (all sites combined), mortality is 11.9 cases per 100000`
+same idea (11.9 / 100000) * population count = total cases in the population  
+
+* cases per 100,000, Average Annual Crude Rate e.g. `Average yearly Crude Rate of Invasive cancer of the female breast, incidence is 13.3 cases er 100000`
+
+* cases per 100,000, Number e.g. `mortality from heart failure is 3799 cases per 100000`
+* per 100,000 residents, Number e.g. `Number of farmers markets per 100,000 residents is 7.3`
+
+and other miscellaneous pairs would be:
+* gallons, Per capita alcohol consumption e.g. per capita alchol consumption aged >= 14 years is 2.1 gallons
+* pack sales per capita, Number e.g. sale of cigarette packs is 44.3 pack sales per capita
+* Years, Number e.g. Life expectancy at birth is 78.2 years
+* `$`, US Dollars e.g. Amount of alcohol excise tax by beverage type (wine) is 0.72$
+
+maybe the idea now is dahil maraming questions but of same topics we need to group them according to their topic ID
+and then group them  
+
+
+
 * As far as I know, in order to get myself acquainted and understand the data I need to first visualize and manipulate it as best I know how using pandas and python and matplotlib
 * the vague next step would now be to import the same now understood data to pgAdmin 4 so I can use pgsql to manipulate it and do data cleaning, preprocessing, cleaning, feature engineering there separately without python
 * I think I'll be using a series of selects and then once the final table is out I can then save it as a separate table as a .csv file
@@ -872,6 +1164,9 @@ It used to give you the The process cannot access the file because it is being u
 
 * solving powerbi `Error: File is already open in C:\Program Files\WindowsApps\Microsoft.MicrosoftPowerBIDesktop_2.142.1277.0_x64__8wekyb3d8bbwe\bin\Microsoft.Mashup.Container.NetFX45.exe` error: https://github.com/duckdb/duckdb-r/issues/56
 
+* 
+
+
 ## Spark Optimization   
 * Say I have 24 gb ram installed and 16 gb is currently usable because of other background processes and I have 8 cores in the CPU. Rule is to leave out 1 gb and 1 core for hadoop distributed file system processes and OS daemon processes during spark submissions. So we would have 15 gb and 7 cores to work with
 
@@ -882,6 +1177,10 @@ When we want 5 executors our cores will have to be partitioned across all these 
 Notice how our number of executors will always depend on the number of cores in our cpu, in that **we can always add any number of executors so long as we still have cores available but we cannot add any more number of cores than the amount our cpu has just because we want more executors**. 
 
 Thin executor with 15 gb memory and 7 cores means each executor uses 1 core at the most and 1 gb memory at the most resulting in 7 executors using only 1 core and each having only 1 gb memory. Notice again that our number of executors will always depend on the number of cores as these courses cores are distributed evenly across these executors and if there are more executors than there is cores to distribute then it is a violation of this rule
+
+* Spark physical plan. Physical plan is read bottom to up. Catalyst optimizer is divided into 3 parts which is what precede the physical plan of spark. 3 arts are unresolved/unoptimized logical plan and catalog (if data exists in the first place), logical plan, optimized logical plan respectively
+
+* https://medium.com/geekculture/pandas-vs-pyspark-fe110c266e5c 
 
 # Questions:
 * how to fill in missing values?
@@ -899,6 +1198,9 @@ Thin executor with 15 gb memory and 7 cores means each executor uses 1 core at t
 - https://abrkljac.medium.com/solving-the-nosuchmethoderror-exception-in-spark-minio-integration-8324f3d464e3
 * resolving `Class org.apache.hadoop.fs.s3a.auth.IAMInstanceCredentialsProvider not found` error: https://stackoverflow.com/questions/71546208/class-org-apache-hadoop-fs-s3a-auth-iaminstancecredentialsprovider-not-found-whe. 
 * connecting parquet file to powerbi: https://community.fabric.microsoft.com/t5/Desktop/How-to-read-a-directory-of-Parquet-files-in-power-Bi-ie-with/td-p/3009353
+* Describes how hadoop version meeds to be aligned with what is described in pom.xml file for a specific spark version: https://stackoverflow.com/questions/78269281/how-to-read-from-s3-on-pyspark-on-local
+* Because we are in windows installing hadoop is not enough as we need winutils and hadoopdll for hadoop to write and read files in our windows os as it is made specifically for Unix and posix systems: https://medium.com/@dhirajmishra57/installing-spark-3-5-on-windows-e9bd183f84b9. If we can do this we can install spark and setup a cluster on docker containers and Linux systems
+* Describes how hadoop version needs to be aligned with what is described in pom.xml file for a specific spark version in order to read a .csv file from an s3 bucket: https://stackoverflow.com/questions/78269281/how-to-read-from-s3-on-pyspark-on-local
 
 # Problems to solve:
 1. I can't save year as 4 byte int for 200000+ rows since that would be a waste of space
