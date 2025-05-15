@@ -1,5 +1,6 @@
 import os
 import re
+import duckdb
 
 from pyspark.sql import SparkSession
 from pyspark.sql.dataframe import DataFrame
@@ -58,3 +59,12 @@ def get_state_populations(
 
     return state_populations_df
     # return state_populations
+
+def get_flat_table_rows(query_result: list[tuple]):
+    flat_table_rows = [
+        row_value
+        for row_values in query_result
+        for row_value in row_values 
+    ]
+
+    return flat_table_rows

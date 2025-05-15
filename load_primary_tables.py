@@ -119,11 +119,14 @@ if __name__ == "__main__":
     """
     conn.sql(query)
 
-    conn.sql("""
+    #### Topic table
+    topic_url = "s3://chronic-disease-analyses-bucket/cdi-data-transformed/Topic.parquet/*.parquet"
+    query = f"""
+        CREATE OR REPLACE TABLE Topic AS
         SELECT *
-        FROM Question
-    """)
-
+        FROM read_parquet('{topic_url}', union_by_name=True, filename=False)
+    """
+    conn.sql(query)
 
     #### DataValueType table
     data_value_type_url = "s3://chronic-disease-analyses-bucket/cdi-data-transformed/DataValueType.parquet/*.parquet"
