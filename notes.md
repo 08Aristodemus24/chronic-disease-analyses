@@ -488,7 +488,45 @@ and other miscellaneous pairs would be:
 maybe the idea now is dahil maraming questions but of same topics we need to group them according to their topic ID
 and then group them  
 
+* following are the unique combinations fo datavalunit and datavaluetype and we will 
+```
+DataValueUnit, DataValue
+%, Prevalence
+%, Percent
+%, Age-adjusted Prevalence
+%, Crude Prevalence, 
 
+Number, Median
+Number, Age-adjusted Mean
+Number, Mean
+Number, Number
+
+These require the Population counts based on their stratification
+cases per 1,000, Age-adjusted Rate
+cases per 10,000, Age-adjusted Rate
+cases per 100,000, Age-adjusted Rate
+cases per 1,000,000, Age-adjusted Rate
+
+cases per 1,000, Crude Rate
+cases per 10,000, Crude Rate
+cases per 100,000, Crude Rate
+cases per 1,000,000, Crude Rate
+
+cases per 1,000,000, Adjusted by age, sex, race and ethnicity
+
+cases per 100,000, Average Annual Age-adjusted Rate
+
+cases per 100,000, Average Annual Crude Rate
+
+cases per 100,000, Number
+
+per 100,000 residents, Number
+
+gallons, Per capita alcohol consumption
+pack sales per capita, Number
+Years, Number
+`$`, US Dollars
+```
 
 * As far as I know, in order to get myself acquainted and understand the data I need to first visualize and manipulate it as best I know how using pandas and python and matplotlib
 * the vague next step would now be to import the same now understood data to pgAdmin 4 so I can use pgsql to manipulate it and do data cleaning, preprocessing, cleaning, feature engineering there separately without python

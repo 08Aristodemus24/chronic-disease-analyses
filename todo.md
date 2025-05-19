@@ -58,25 +58,16 @@ e.g. cancer among youth where AgeStart is 18, and AgeEnd is 24, where stratifica
 
 * Okay, with this sample of your CDI table, we can start brainstorming some interesting questions you can ask using SQL to analyze this healthcare data and potentially draw insights about these chronic disease indicators (in this case, "Alcohol use - Binge drinking prevalence among adults aged 18-24 years").
 
-Here are some questions you could explore with SQL queries:
-
-Basic Descriptive Analysis:
-
-What is the average binge drinking prevalence across all these records?
-
-SQL
+1. What is the average binge drinking prevalence across all these records?
 
 SELECT AVG(DataValue) AS AverageBingeDrinkingPrevalence
 FROM your_cdi_table;
 What is the range of binge drinking prevalence observed?
 
-SQL
-
 SELECT MIN(DataValue) AS MinPrevalence, MAX(DataValue) AS MaxPrevalence
 FROM your_cdi_table;
 How many records do we have for each state?
 
-SQL
 
 SELECT LocationID, COUNT(*) AS NumberOfRecords
 FROM your_cdi_table
@@ -84,16 +75,12 @@ GROUP BY LocationID
 ORDER BY NumberOfRecords DESC;
 What are the different years for which we have data?
 
-SQL
-
 SELECT DISTINCT YearStart
 FROM your_cdi_table
 ORDER BY YearStart;
 Comparative Analysis (across locations and time):
 
-What was the binge drinking prevalence in each state in 2015?
-
-SQL
+2. What was the binge drinking prevalence in each state in 2015?
 
 SELECT LocationID, DataValue
 FROM your_cdi_table
@@ -101,15 +88,11 @@ WHERE YearStart = 2015
 ORDER BY DataValue DESC;
 How has the binge drinking prevalence changed in Virginia over the years we have data for it?
 
-SQL
-
 SELECT YearStart, DataValue
 FROM your_cdi_table
 WHERE LocationID = 'Virginia'
 ORDER BY YearStart;
 Which state had the highest binge drinking prevalence in the latest year of data available?
-
-SQL
 
 SELECT LocationID, DataValue
 FROM your_cdi_table
@@ -118,9 +101,7 @@ ORDER BY DataValue DESC
 LIMIT 1;
 Analysis by Demographic Factors (in this limited sample, only Ethnicity is varying significantly):
 
-What is the average binge drinking prevalence for each reported ethnicity?
-
-SQL
+3. What is the average binge drinking prevalence for each reported ethnicity?
 
 SELECT Ethnicity, AVG(DataValue) AS AveragePrevalence
 FROM your_cdi_table
@@ -128,16 +109,13 @@ GROUP BY Ethnicity
 ORDER BY AveragePrevalence DESC;
 What is the range of binge drinking prevalence for each ethnicity?
 
-SQL
-
 SELECT Ethnicity, MIN(DataValue) AS MinPrevalence, MAX(DataValue) AS MaxPrevalence
 FROM your_cdi_table
 GROUP BY Ethnicity
 ORDER BY Ethnicity;
 Combining Factors (if your full dataset has more variation):
 
-What was the binge drinking prevalence for each ethnicity in Virginia in 2015?
-SQL
+4. What was the binge drinking prevalence for each ethnicity in Virginia in 2015?
 
 SELECT Ethnicity, DataValue
 FROM your_cdi_table
@@ -156,6 +134,13 @@ Execute these queries in your SQL environment (e.g., Spark SQL, PostgreSQL, MySQ
 Analyze the results. Look for patterns, significant differences, or trends.
 Formulate further questions based on your initial findings. For example, if you see a high prevalence in a particular state, you might want to investigate factors that could contribute to that.
 Remember that this sample data is limited. With your full dataset, you'll likely have more variation in Sex, and potentially other demographic columns if they were present in other CDI questions. This will allow you to ask even more nuanced questions about how binge drinking prevalence varies across different segments of the young adult population.
+
+* Thanks to power bi, we can group what important chronic disease indicators are:
+- alcohol use among youth, alcohol use during pregnancy 
+- because there are different questions like these datavaluetype may change, in this case the datavaluetype here implies an amount of measurement since amount of alcohol consumed is measured, and not for instance those who have alcoholic diseases e.g. chronic liver disease mortality
+- try to analyze alcohol topic first
+- how tangible nubmer of per capita alcohol consumption and binge drinkin frequency etc. can be calculated and what are thier corresponding datavaluetypes and datavalueunits respectively
+
 
 
 # to address in the future:
