@@ -221,7 +221,7 @@ Since the metric applies only to adults (≥18 years), you need:
 
 Total adult population (not total state population). Example: If adults make up ~75% of Arizona's population (2015):
 
-Adult population = 0.75 × 18,003,249=13,502,437 adults. Adult population=0.75×18,003,249=13,502,437 adults.
+Adult population = 0.75 × 18,003,249=13,502,437 adults.
 
 
 
@@ -266,7 +266,17 @@ The percentage of the population consuming fruit at or above a certain frequency
 
 
 * Number, Age-adjusted Mean e.g. `Average binge drinking frequency among adults aged >= 18 yeras who binge drink is 3.6`
-question: `so if I have a question "Average binge drinking frequency among adults aged >= 18 yeras who binge drink", datavaluetype of number, datavalueunit of age-adjusted mean, and datavalue of 3.6 which when translated would be "Average binge drinking frequency among adults aged >= 18 yeras who binge drink is 3.6". How can I then convert this to a tangible number given the population of let's say the state of arizona in 2015 adulst aged 18 and above which is 150000 or does population have no effect in this?`
+question: `so if I have a question "binge drinking frequency among adults aged >= 18 yeras who binge drink", datavaluetype of number, datavalueunit of age-adjusted mean, and datavalue of 3.6 which when translated would be "Average binge drinking frequency among adults aged >= 18 yeras who binge drink is 3.6". How can I then convert this to a tangible number given the population of let's say the state of arizona in 2015 adulst aged 18 and above which is 150000 or does population have no effect in this?`
+
+To get a tangible number, you would need additional information:
+
+Prevalence of Binge Drinking: You would need to know what percentage or the actual number of adults aged 18 and above in Arizona in 2015 were classified as binge drinkers.
+
+Example: If a study showed that 20% of the 150,000 adults in Arizona were binge drinkers, then the number of binge drinkers would be 0.20 * 150,000 = 30,000.
+Calculating Tangible Numbers with Prevalence:
+
+Number of Binge Drinkers: Once you have the prevalence, you can calculate the estimated number of individuals in the target demographic who engage in binge drinking (as shown in the example above).
+Total Binge Drinking Episodes: You could then estimate the total number of binge drinking episodes in that population by multiplying the number of binge drinkers by their average frequency: 30,000 binge drinkers * 3.6 episodes/period = 108,000 binge drinking episodes per period.
 
 
 
