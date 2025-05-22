@@ -1212,8 +1212,36 @@ It used to give you the The process cannot access the file because it is being u
 
 * solving powerbi `Error: File is already open in C:\Program Files\WindowsApps\Microsoft.MicrosoftPowerBIDesktop_2.142.1277.0_x64__8wekyb3d8bbwe\bin\Microsoft.Mashup.Container.NetFX45.exe` error: https://github.com/duckdb/duckdb-r/issues/56
 
-* 
+* There are three ways in which DAX formulas and expressions can be written in Power BI:
+- Calculated Tables - These calculations will add an additional table to the report based on a formula. 
+- Calculated Columns - These calculations will add an additional column to a table based on a formula. These columns are treated like any other field in the table. 
+- Measures - These calculations will add a summary or aggregated measure to a table based on a formula.
 
+To add any one of these types of calculations to a model, navigate to the Modeling tab of the ribbon. Here, you will find three choices for adding a new measure, calculated column, or table.
+
+So dito siya by clicking a table loaded in powerbi > going to ribbon and selecting table tools > selecting either new measure, new column, or new table. A measure basically calculates a scalar or single value from a column/s or table/s i.e. aggregating column A, aggregating column B and then combining these aggregated values to a single value
+
+* if we wanted to create a new table based on a DAX expression we would select a table temporarily > go to ribbon > create new table > in the bar we can expand it to write a longer query i.e.
+
+```
+TestTable = ADDCOLUMNS(
+	SUMMARIZE(
+		'chronic_disease_analyses_db   main   Population',
+		'chronic_disease_analyses_db   main   Population'[StateID],
+		'chronic_disease_analyses_db   main   Population'[Year],
+		"TotalStatePopulation", SUM('chronic_disease_analyses_db   main   Population'[Population])
+	),
+	"State", LOOKUPVALUE(
+		'chronic_disease_analyses_db   main   PopulationState'[State],
+		'chronic_disease_analyses_db   main   PopulationState'[StateID],
+		'chronic_disease_analyses_db   main   Population'[StateID]
+	)
+)
+```
+
+* In DAX, measures the output as always is a single, scalar value (e.g., a total sum, an average, a count, a percentage). It also automatically adapts its calculation based on the filters applied by slicers, rows in a table visual, columns in a bar chart, etc. Recall that a slicer from the list of visualizers powerbi has to offer is like a fully functional GUI for a WHERE clause in SQL, where we can filter our data in our tables to pick what unique data we want
+
+* you can fitler the table based on its columns to view only rows you want, but does not reflect the operation on the table itself. Just go to table view > select column > click down arrow next to it > select the unique values you only want to view 
 
 ## Spark Optimization   
 * Say I have 24 gb ram installed and 16 gb is currently usable because of other background processes and I have 8 cores in the CPU. Rule is to leave out 1 gb and 1 core for hadoop distributed file system processes and OS daemon processes during spark submissions. So we would have 15 gb and 7 cores to work with
@@ -1229,6 +1257,8 @@ Thin executor with 15 gb memory and 7 cores means each executor uses 1 core at t
 * Spark physical plan. Physical plan is read bottom to up. Catalyst optimizer is divided into 3 parts which is what precede the physical plan of spark. 3 arts are unresolved/unoptimized logical plan and catalog (if data exists in the first place), logical plan, optimized logical plan respectively
 
 * https://medium.com/geekculture/pandas-vs-pyspark-fe110c266e5c 
+
+
 
 # Questions:
 * how to fill in missing values?

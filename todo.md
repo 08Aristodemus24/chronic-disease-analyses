@@ -141,7 +141,108 @@ Remember that this sample data is limited. With your full dataset, you'll likely
 - try to analyze alcohol topic first
 - how tangible nubmer of per capita alcohol consumption and binge drinkin frequency etc. can be calculated and what are thier corresponding datavaluetypes and datavalueunits respectively
 
+* alternatively instead of creating the joined Population data and then calculating further the sum through aggregation of LogID in the CDI tables, in sql, we can do this in DAX, we just have to rewrite this query:
+```
+-- Creates a CTE that will join the necessary
+-- values from the dimension tables to the fact
+-- table
+WITH MergedCDI AS (
+    SELECT
+        c.LogID,
+        c.DataValueUnit,
+        c.DataValue,
+        c.YearStart, 
+        c.YearEnd,
+        cl.LocationID,
+        cl.LocationDesc, 
+        q.QuestionID,
+        q.AgeStart,
+        q.AgeEnd,
+        dvt.DataValueTypeID,
+        dvt.DataValueType,
+        s.StratificationID,
+        s.Sex,
+        s.Ethnicity,
+        s.Origin
+    FROM CDI c
+    LEFT JOIN CDILocation cl
+    ON c.LocationID = cl.LocationID
+    LEFT JOIN Question q
+    ON c.QuestionID = q.QuestionID
+    LEFT JOIN DataValueType dvt
+    ON c.DataValueTypeID = dvt.DataValueTypeID
+    LEFT JOIN Stratification s
+    ON c.StratificationID = s.StratificationID
+),
 
+-- joins necessary values to Population table 
+-- via primary keys of its dimension tables
+MergedPopulation AS (
+    SELECT
+        ps.StateID,
+        ps.State,
+        p.Age,
+        p.Year,
+        s.Sex,
+        s.Ethnicity,
+        s.Origin,
+        p.Population
+    FROM Population p
+    LEFT JOIN PopulationState ps
+    ON p.StateID = ps.StateID
+    LEFT JOIN Stratification s
+    ON p.StratificationID = s.StratificationID
+),
+
+-- performs an inner join on both CDI and Population
+-- tables based
+CDIWithPop AS (
+    SELECT 
+        mcdi.LogID AS LogID,
+        mcdi.DataValueUnit AS DataValueUnit,
+        mcdi.DataValue AS DataValue,
+        mcdi.YearStart AS YearStart, 
+        mcdi.YearEnd AS YearEnd,
+        mcdi.LocationID AS LocationID,
+        mcdi.LocationDesc AS LocationDesc, 
+        mcdi.QuestionID as QuestionID,
+        mcdi.AgeStart AS AgeStart,
+        mcdi.AgeEnd AS AgeEnd,
+        mcdi.DataValueTypeID AS DataValueTypeID,
+        mcdi.DataValueType AS DataValueType,
+        mcdi.StratificationID AS StratificationID,
+        mcdi.Sex AS Sex,
+        mcdi.Ethnicity AS Ethnicity,
+        mcdi.Origin AS Origin,
+    
+        mp.Population,
+        mp.State PState,
+        mp.Age AS PAge,
+        mp.Year AS PYear,
+        mp.Sex AS PSex,
+        mp.Ethnicity AS PEthnicity,
+        mp.Origin AS POrigin
+    FROM MergedPopulation mp
+    INNER JOIN MergedCDI mcdi
+    ON (mp.Year BETWEEN mcdi.YearStart AND mcdi.YearEnd) AND
+    (mp.StateID = mcdi.LocationID) AND
+    ((mp.Age BETWEEN mcdi.AgeStart AND (CASE WHEN mcdi.AgeEnd = 'infinity' THEN 85 ELSE mcdi.AgeEnd END)) OR (mcdi.AgeStart IS NULL AND mcdi.AgeEnd IS NULL)) AND
+    (mp.Sex = mcdi.Sex OR mcdi.Sex = 'Both') AND
+    (mp.Ethnicity = mcdi.Ethnicity OR mcdi.Ethnicity = 'All') AND
+    (mp.Origin = mcdi.Origin OR mcdi.Origin = 'Both')
+)
+
+-- aggregate final time based on LogID as this will be duplicated
+-- during prior join process so might as well join here rather than
+-- using state_id, yearstart, yearend, agestart, ageend sex, ethnicity
+-- and origin columns
+SELECT 
+    LogID,
+    SUM(Population) AS Population
+FROM CDIWithPop
+GROUP BY LogID
+ORDER BY LogID ASC
+```
 
 # to address in the future:
 * there may be potential for error in creating buckets from extraction scripts like `extract_cdi.py`, `extract_us_population_per_state_by_sex_age_race_ho.py` and `extract_us_population_per_state.py`, because if we try to run these simultaneously or concurrently like in airflow it might result in conflicts, so separate creation of `cdi-data-raw`, `population-data-raw`, `population-data-transformed`, and `cdi-data-transformed` folders
