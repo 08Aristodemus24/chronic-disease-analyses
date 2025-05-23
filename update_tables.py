@@ -5,14 +5,17 @@ import time
 from dotenv import load_dotenv
 from pathlib import Path
 
-def create_calculated_population(conn):
+def update_calculated_population(conn):
     """
     
     """
 
     query = """
-        CREATE OR REPLACE TABLE CalculatedPopulation AS (
-            
+        -- no condition needed to update rows as we are updating all 
+        -- rows from blank to the population values
+        UPDATE CDI
+        SET Population = CalculatedPopulation.Population
+        FROM (
             -- Creates a CTE that will join the necessary
             -- values from the dimension tables to the fact
             -- table
@@ -44,7 +47,7 @@ def create_calculated_population(conn):
                 LEFT JOIN Stratification s
                 ON c.StratificationID = s.StratificationID
             ),
-
+            
             -- joins necessary values to Population table 
             -- via primary keys of its dimension tables
             MergedPopulation AS (
@@ -63,35 +66,35 @@ def create_calculated_population(conn):
                 LEFT JOIN Stratification s
                 ON p.StratificationID = s.StratificationID
             ),
-
+            
             -- performs an inner join on both CDI and Population
             -- tables based
             CDIWithPop AS (
                 SELECT 
                     mcdi.LogID AS LogID,
-                    mcdi.DataValueUnit AS DataValueUnit,
-                    mcdi.DataValue AS DataValue,
-                    mcdi.YearStart AS YearStart, 
-                    mcdi.YearEnd AS YearEnd,
-                    mcdi.LocationID AS LocationID,
-                    mcdi.LocationDesc AS LocationDesc, 
-                    mcdi.QuestionID as QuestionID,
-                    mcdi.AgeStart AS AgeStart,
-                    mcdi.AgeEnd AS AgeEnd,
-                    mcdi.DataValueTypeID AS DataValueTypeID,
-                    mcdi.DataValueType AS DataValueType,
-                    mcdi.StratificationID AS StratificationID,
-                    mcdi.Sex AS Sex,
-                    mcdi.Ethnicity AS Ethnicity,
-                    mcdi.Origin AS Origin,
+                    -- mcdi.DataValueUnit AS DataValueUnit,
+                    -- mcdi.DataValue AS DataValue,
+                    -- mcdi.YearStart AS YearStart, 
+                    -- mcdi.YearEnd AS YearEnd,
+                    -- mcdi.LocationID AS LocationID,
+                    -- mcdi.LocationDesc AS LocationDesc, 
+                    -- mcdi.QuestionID as QuestionID,
+                    -- mcdi.AgeStart AS AgeStart,
+                    -- mcdi.AgeEnd AS AgeEnd,
+                    -- mcdi.DataValueTypeID AS DataValueTypeID,
+                    -- mcdi.DataValueType AS DataValueType,
+                    -- mcdi.StratificationID AS StratificationID,
+                    -- mcdi.Sex AS Sex,
+                    -- mcdi.Ethnicity AS Ethnicity,
+                    -- mcdi.Origin AS Origin,
                 
-                    mp.Population,
-                    mp.State PState,
-                    mp.Age AS PAge,
-                    mp.Year AS PYear,
-                    mp.Sex AS PSex,
-                    mp.Ethnicity AS PEthnicity,
-                    mp.Origin AS POrigin
+                    SUM(mp.Population) AS Population
+                    -- mp.State PState,
+                    -- mp.Age AS PAge,
+                    -- mp.Year AS PYear,
+                    -- mp.Sex AS PSex,
+                    -- mp.Ethnicity AS PEthnicity,
+                    -- mp.Origin AS POrigin
                 FROM MergedPopulation mp
                 INNER JOIN MergedCDI mcdi
                 ON (mp.Year BETWEEN mcdi.YearStart AND mcdi.YearEnd) AND
@@ -100,19 +103,16 @@ def create_calculated_population(conn):
                 (mp.Sex = mcdi.Sex OR mcdi.Sex = 'Both') AND
                 (mp.Ethnicity = mcdi.Ethnicity OR mcdi.Ethnicity = 'All') AND
                 (mp.Origin = mcdi.Origin OR mcdi.Origin = 'Both')
+                GROUP BY LogID
+                ORDER BY LogID ASC
             )
 
-            -- aggregate final time based on LogID as this will be duplicated
-            -- during prior join process so might as well join here rather than
-            -- using state_id, yearstart, yearend, agestart, ageend sex, ethnicity
-            -- and origin columns
-            SELECT 
-                LogID,
-                SUM(Population) AS Population
+            -- return all columns from resulting CTE in
+            -- subquery
+            SELECT *
             FROM CDIWithPop
-            GROUP BY LogID
-            ORDER BY LogID ASC
-        )
+        ) AS CalculatedPopulation
+        WHERE CDI.LogID = CalculatedPopulation.LogID
     """
 
     # %, Prevalence
@@ -121,14 +121,25 @@ def create_calculated_population(conn):
 
     conn.sql(query)
 
+def add_calculated_population(conn):
+    """
+    adds a blank column for CDI table to be later populated
+    during update query
+    """
+
+    conn.sql("""
+        -- adds a new column to the cdi table to be populated
+        -- later on with values from update query
+        ALTER TABLE CDI
+        ADD COLUMN IF NOT EXISTS Population BIGINT
+    """)
+    
+
 def create_stratification(conn):
-    # unionize stratification tables from both created tables
-    # and create new table from it
-    # WITH Stratification AS (
-    #     SELECT * FROM CDIStratification
-    #     UNION BY NAME
-    #     SELECT * FROM PopulationStratification
-    # )
+    """
+    unionize stratification tables from both created tables
+    and create new table from it
+    """
          
     # SELECT * FROM Stratification
     # GROUP BY ALL
@@ -188,9 +199,20 @@ if __name__ == "__main__":
     print("running next query in 5 seconds\n")
     time.sleep(5)
 
-    # calculatedpopulation table depends on stratification
-    # table being created this is why the create_stratification
-    # is ran first
-    print("Creating CalculatedPopulation table...")
-    create_calculated_population(conn)
-    print("Created CalculatedPopulation table.\n")
+    # add population column to cdi table to be imputed
+    # later with population values during update
+    print("Adding column to CDI table...")
+    add_calculated_population(conn)
+    print("Added column to CDI table.\n")
+
+    # give 5 second delay
+    print("running next query in 5 seconds\n")
+    time.sleep(5)
+
+    # calculated population column depends on stratification
+    # table being created and a column being added to CDI
+    # this is why the create_stratification and 
+    # add_calculated_population is ran first
+    print("Updating column in CDI table...")
+    update_calculated_population(conn)
+    print("Updated column in CDI table.")
