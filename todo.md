@@ -135,6 +135,10 @@ Analyze the results. Look for patterns, significant differences, or trends.
 Formulate further questions based on your initial findings. For example, if you see a high prevalence in a particular state, you might want to investigate factors that could contribute to that.
 Remember that this sample data is limited. With your full dataset, you'll likely have more variation in Sex, and potentially other demographic columns if they were present in other CDI questions. This will allow you to ask even more nuanced questions about how binge drinking prevalence varies across different segments of the young adult population.
 
+1. What is the prevalence of alcohol use among youth (male and female) in listed year ranges?
+
+
+
 * Thanks to power bi, we can group what important chronic disease indicators are:
 - alcohol use among youth, alcohol use during pregnancy 
 - because there are different questions like these datavaluetype may change, in this case the datavaluetype here implies an amount of measurement since amount of alcohol consumed is measured, and not for instance those who have alcoholic diseases e.g. chronic liver disease mortality
