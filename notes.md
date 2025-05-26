@@ -1243,6 +1243,10 @@ TestTable = ADDCOLUMNS(
 
 * you can fitler the table based on its columns to view only rows you want, but does not reflect the operation on the table itself. Just go to table view > select column > click down arrow next to it > select the unique values you only want to view 
 
+* to use a map in powerbi that uses a gradient map we need to go to settings and
+
+
+
 ## Spark Optimization   
 * Say I have 24 gb ram installed and 16 gb is currently usable because of other background processes and I have 8 cores in the CPU. Rule is to leave out 1 gb and 1 core for hadoop distributed file system processes and OS daemon processes during spark submissions. So we would have 15 gb and 7 cores to work with
 
@@ -1279,6 +1283,9 @@ Thin executor with 15 gb memory and 7 cores means each executor uses 1 core at t
 * Describes how hadoop version meeds to be aligned with what is described in pom.xml file for a specific spark version: https://stackoverflow.com/questions/78269281/how-to-read-from-s3-on-pyspark-on-local
 * Because we are in windows installing hadoop is not enough as we need winutils and hadoopdll for hadoop to write and read files in our windows os as it is made specifically for Unix and posix systems: https://medium.com/@dhirajmishra57/installing-spark-3-5-on-windows-e9bd183f84b9. If we can do this we can install spark and setup a cluster on docker containers and Linux systems
 * Describes how hadoop version needs to be aligned with what is described in pom.xml file for a specific spark version in order to read a .csv file from an s3 bucket: https://stackoverflow.com/questions/78269281/how-to-read-from-s3-on-pyspark-on-local
+* for color picking and picking the middle gradient of two colors: https://meyerweb.com/eric/tools/color-blend/#00FFAE:4B0069:10:hex
+* for creating custom maps in powerbi that have other countries and their states, other than the pre built ones in powerbi like US, UK, italy, etc.: https://simplemaps.com/gis/country/us
+* for exporting the downloaded geojson map from https://simplemaps.com/gis/country/us to topojson so that it can be used in powerbi: https://mapshaper.org/
 
 # Problems to solve:
 1. I can't save year as 4 byte int for 200000+ rows since that would be a waste of space
