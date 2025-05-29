@@ -60,11 +60,15 @@ e.g. cancer among youth where AgeStart is 18, and AgeEnd is 24, where stratifica
 
 <s>1. What is the prevalence of alcohol use among youth (male and female) in listed year ranges?</s>
 
-2. What is the average binge drinking prevalence among adults aged >= 18?
+<s>2. What is the average binge drinking prevalence among adults aged >= 18?</s>
 
-3. What was the binge drinking prevalence in each state in 2015?
+3. What is the average binge drinking prevalence for each reported ethnicity?
 
-4. What is the average binge drinking prevalence for each reported ethnicity?
+* because there are 10 years worth of data and 51 states for each of those 10 years we can use a slicer again to filter by state
+
+we can also group the binge drinking freq and intensity table into male and female populations 
+
+but my question is how do we use a slicer in pandas or in sql?
 
 
 
