@@ -1286,10 +1286,13 @@ Thin executor with 15 gb memory and 7 cores means each executor uses 1 core at t
 * for color picking and picking the middle gradient of two colors: https://meyerweb.com/eric/tools/color-blend/#00FFAE:4B0069:10:hex
 * for creating custom maps in powerbi that have other countries and their states, other than the pre built ones in powerbi like US, UK, italy, etc.: https://simplemaps.com/gis/country/us
 * for exporting the downloaded geojson map from https://simplemaps.com/gis/country/us to topojson so that it can be used in powerbi: https://mapshaper.org/
+* Joining tables in DAX powerbi with multiple conditions: https://stackoverflow.com/questions/41846571/how-to-joint-two-tables-in-dax-using-custom-condition 
+
 
 # Problems to solve:
 1. I can't save year as 4 byte int for 200000+ rows since that would be a waste of space
 2. implement headless browsing of selenium to scrape population data transform the excel sheets and automatically in a data warehouse for data analysis 
+3. joining tables in dax powerbi with multiple conditions
 
 
 
