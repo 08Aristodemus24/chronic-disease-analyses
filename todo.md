@@ -181,6 +181,314 @@ GROUP BY LogID
 ORDER BY LogID ASC
 ```
 
+* there are other binge drinking prevalence from other demographics that I need to somehow analyze
+- binge drinking among women aged 18-44 years
+- binge drinking prevalencec among youth
+- heavy drinking among adults aged >= 18 years
+- heavy drinking among women aged 18-44 years
+
+what we can do is generalize the slicer to not only the binge drinking among adults aged >= 18 years but also to those women aged 18-44 years, and the youth, making sure that when either these 3 are selected the title also changes and whatever ethnicity or stratification we pick the line graphs also reflect that e.g. when B_M_ALL is chosen show this line graph, when NH_B_WHITE, and NH_B_BLACK is chosen show the different lines and also reflect in the title
+
+
+* what I want to do is see the correlation if there is any the binge drinking frequency and intensity of those who binge drink and chronic liver disease mortality, if there is a positive correlation or not (which spoiler there is since it is an established fact in medical science)
+
+To assess the correlation between binge drinking frequency/intensity and chronic liver disease mortality, you'll primarily use DAX measures and Power BI visuals. You'll need to:
+
+Identify the relevant CDI QuestionIDs for liver disease mortality and the other specified drinking behaviors.
+Create DAX measures to pull these data points, ensuring proper filtering for demographics (women 18-44, youth, etc.).
+Combine the data in a meaningful way for visualization.
+Choose the right visuals to display correlation.
+Let's break down the steps:
+
+Step 1: Identify Relevant QuestionIDs from your CDI Data
+First, you need to know the exact QuestionID values for the indicators you want to analyze. Based on the CDI (Chronic Disease Indicators) dataset structure, here are some common ones or those you'd need to find in your specific dataset:
+
+Chronic Liver Disease Mortality:
+
+Look for terms like "Chronic Liver Disease and Cirrhosis mortality" or similar. A common QuestionID might be CLD1_0 or something similar (you'll need to confirm this from your data's QuestionID column). It's typically a rate (e.g., deaths per 100,000 population).
+Binge Drinking Prevalence (General Adults):
+
+You already have ALC2_2 ("Binge drinking prevalence among adults").
+Binge Drinking Frequency (among those who binge drink):
+
+This is often a mean number of binge drinking episodes. Look for ALC3_0 (as you've already used for AlcFreqDataValue).
+Binge Drinking Intensity (among those who binge drink):
+
+This is often a mean number of drinks per binge episode. Look for ALC4_0 (as you've already used for AlcIntDataValue).
+Specific Demographics:
+
+Binge drinking among women aged 18-44 years: You'll need to find the QuestionID that specifies this group AND the StratificationID for "Females, 18-44 years".
+Binge drinking prevalence among youth: Look for QuestionIDs related to "youth" or "high school students" (e.g., ALC1_2 might be "Current alcohol use among high school students"). The StratificationID would likely be "Overall" or specific age groups for youth.
+Heavy drinking among adults aged >= 18 years: Look for QuestionID like ALC5_0 ("Heavy drinking prevalence among adults").
+Heavy drinking among women aged 18-44 years: Similar to binge drinking for women, find the QuestionID for heavy drinking combined with the StratificationID for "Females, 18-44 years".
+Action: Go to your data view in Power BI for the CDI table and filter the QuestionID and StratificationID columns to identify the exact values for each of these specific indicators.
+
+Step 2: Create DAX Measures for Each Indicator
+You'll create a separate measure for each indicator you want to analyze. These measures will aggregate the DataValue based on the specific QuestionID, StratificationID, and possibly DataValueTypeID.
+
+Assuming TotalEvents is a Calculated Column in your CDI table (as previously discussed), you can use it. If you need the raw DataValue for rates, use that.
+
+Here are examples. Replace placeholder QuestionID and StratificationID with your actual findings from Step 1.
+
+
+
+Step 3: Combine Data for Correlation Analysis
+For correlation, you ideally need the corresponding data points for each LocationID, YearStart, YearEnd (and StratificationID if you're analyzing at that granular level).
+
+Since all your data comes from the CDI table, the shared columns (LocationID, YearStart, YearEnd, StratificationID) act as your natural join keys.
+
+Option A: Using the BingeDrinkingIntFreq Calculated Table (Recommended if it works)
+
+If your BingeDrinkingIntFreq calculated table (the one we've been refining in DAX) successfully captures all the necessary columns (BingeDrinkingPopInt, BingeDrinkingPopFreq, AvgAlcPrevDataValue, LocationID, YearStart, etc.), then you can directly use this table.
+
+This table will contain the core drinking metrics, and you just need to bring in the LiverDiseaseMortalityRate.
+
+Approach: You would then use ADDCOLUMNS to add the LiverDiseaseMortalityRate to your BingeDrinkingIntFreqTable as another column, again using a CALCULATE(AVERAGE(...), FILTER(ALL(CDI), ...)) pattern to pull the mortality rate for the corresponding LocationID, YearStart, etc.
+
+
+
+
+You're moving into the realm of advanced analytics and correlation in Power BI, which is exciting! This is definitely achievable.
+
+To assess the correlation between binge drinking frequency/intensity and chronic liver disease mortality, you'll primarily use DAX measures and Power BI visuals. You'll need to:
+
+Identify the relevant CDI QuestionIDs for liver disease mortality and the other specified drinking behaviors.
+Create DAX measures to pull these data points, ensuring proper filtering for demographics (women 18-44, youth, etc.).
+Combine the data in a meaningful way for visualization.
+Choose the right visuals to display correlation.
+Let's break down the steps:
+
+Step 1: Identify Relevant QuestionIDs from your CDI Data
+First, you need to know the exact QuestionID values for the indicators you want to analyze. Based on the CDI (Chronic Disease Indicators) dataset structure, here are some common ones or those you'd need to find in your specific dataset:
+
+Chronic Liver Disease Mortality:
+
+Look for terms like "Chronic Liver Disease and Cirrhosis mortality" or similar. A common QuestionID might be CLD1_0 or something similar (you'll need to confirm this from your data's QuestionID column). It's typically a rate (e.g., deaths per 100,000 population).
+Binge Drinking Prevalence (General Adults):
+
+You already have ALC2_2 ("Binge drinking prevalence among adults").
+Binge Drinking Frequency (among those who binge drink):
+
+This is often a mean number of binge drinking episodes. Look for ALC3_0 (as you've already used for AlcFreqDataValue).
+Binge Drinking Intensity (among those who binge drink):
+
+This is often a mean number of drinks per binge episode. Look for ALC4_0 (as you've already used for AlcIntDataValue).
+Specific Demographics:
+
+Binge drinking among women aged 18-44 years: You'll need to find the QuestionID that specifies this group AND the StratificationID for "Females, 18-44 years".
+Binge drinking prevalence among youth: Look for QuestionIDs related to "youth" or "high school students" (e.g., ALC1_2 might be "Current alcohol use among high school students"). The StratificationID would likely be "Overall" or specific age groups for youth.
+Heavy drinking among adults aged >= 18 years: Look for QuestionID like ALC5_0 ("Heavy drinking prevalence among adults").
+Heavy drinking among women aged 18-44 years: Similar to binge drinking for women, find the QuestionID for heavy drinking combined with the StratificationID for "Females, 18-44 years".
+Action: Go to your data view in Power BI for the CDI table and filter the QuestionID and StratificationID columns to identify the exact values for each of these specific indicators.
+
+Step 2: Create DAX Measures for Each Indicator
+You'll create a separate measure for each indicator you want to analyze. These measures will aggregate the DataValue based on the specific QuestionID, StratificationID, and possibly DataValueTypeID.
+
+Assuming TotalEvents is a Calculated Column in your CDI table (as previously discussed), you can use it. If you need the raw DataValue for rates, use that.
+
+Here are examples. Replace placeholder QuestionID and StratificationID with your actual findings from Step 1.
+
+
+```
+-- Liver Disease Mortality Rate
+LiverDiseaseMortalityRate =
+CALCULATE(
+    AVERAGE('chronic_disease_analyses_db main CDI'[DataValue]), -- Or SUM, depending on if DataValue is a rate or raw count
+    FILTER(
+        ALL('chronic_disease_analyses_db main CDI'),
+        'chronic_disease_analyses_db main CDI'[QuestionID] = "CLD1_0" -- Replace with actual CLD Mortality QuestionID
+        // Add any specific StratificationID if needed for overall mortality
+    )
+)
+
+-- Binge Drinking Prevalence (General Adults - ALC2_2 is already this)
+BingeDrinkingPrevalence_Adults =
+CALCULATE(
+    AVERAGE('chronic_disease_analyses_db main CDI'[DataValue]),
+    FILTER(
+        ALL('chronic_disease_analyses_db main CDI'),
+        'chronic_disease_analyses_db main CDI'[QuestionID] = "ALC2_2" &&
+        ('chronic_disease_analyses_db main CDI'[StratificationID] = "B_F_ALL" || 'chronic_disease_analyses_db main CDI'[StratificationID] = "B_M_ALL")
+    )
+)
+
+-- Binge Drinking Frequency (Adults who binge drink - ALC3_0)
+BingeDrinkingFrequency_Adults =
+CALCULATE(
+    AVERAGE('chronic_disease_analyses_db main CDI'[DataValue]),
+    FILTER(
+        ALL('chronic_disease_analyses_db main CDI'),
+        'chronic_disease_analyses_db main CDI'[QuestionID] = "ALC3_0" &&
+        ('chronic_disease_analyses_db main CDI'[StratificationID] = "B_F_ALL" || 'chronic_disease_analyses_db main CDI'[StratificationID] = "B_M_ALL")
+    )
+)
+
+-- Binge Drinking Intensity (Adults who binge drink - ALC4_0)
+BingeDrinkingIntensity_Adults =
+CALCULATE(
+    AVERAGE('chronic_disease_analyses_db main CDI'[DataValue]),
+    FILTER(
+        ALL('chronic_disease_analyses_db main CDI'),
+        'chronic_disease_analyses_db main CDI'[QuestionID] = "ALC4_0" &&
+        ('chronic_disease_analyses_db main CDI'[StratificationID] = "B_F_ALL" || 'chronic_disease_analyses_db main CDI'[StratificationID] = "B_M_ALL")
+    )
+)
+
+-- Binge Drinking Prevalence (Women 18-44)
+BingeDrinkingPrev_Women18_44 =
+CALCULATE(
+    AVERAGE('chronic_disease_analyses_db main CDI'[DataValue]),
+    FILTER(
+        ALL('chronic_disease_analyses_db main CDI'),
+        'chronic_disease_analyses_db main CDI'[QuestionID] = "YOUR_BINGE_DRINK_QID_FOR_WOMEN" && -- Find this QID
+        'chronic_disease_analyses_db main CDI'[StratificationID] = "B_F_18_44" -- Confirm this StratificationID
+    )
+)
+
+-- Binge Drinking Prevalence (Youth)
+BingeDrinkingPrev_Youth =
+CALCULATE(
+    AVERAGE('chronic_disease_analyses_db main CDI'[DataValue]),
+    FILTER(
+        ALL('chronic_disease_analyses_db main CDI'),
+        'chronic_disease_analyses_db main CDI'[QuestionID] = "ALC1_2" && -- Example Youth QID
+        'chronic_disease_analyses_db main CDI'[StratificationID] = "OVERALL" -- Or specific youth age group stratification
+    )
+)
+
+-- Heavy Drinking Prevalence (Adults >= 18)
+HeavyDrinkingPrev_Adults =
+CALCULATE(
+    AVERAGE('chronic_disease_analyses_db main CDI'[DataValue]),
+    FILTER(
+        ALL('chronic_disease_analyses_db main CDI'),
+        'chronic_disease_analyses_db main CDI'[QuestionID] = "ALC5_0" && -- Example Heavy Drinking QID
+        ('chronic_disease_analyses_db main CDI'[StratificationID] = "B_F_ALL" || 'chronic_disease_analyses_db main CDI'[StratificationID] = "B_M_ALL")
+    )
+)
+
+-- Heavy Drinking Prevalence (Women 18-44)
+HeavyDrinkingPrev_Women18_44 =
+CALCULATE(
+    AVERAGE('chronic_disease_analyses_db main CDI'[DataValue]),
+    FILTER(
+        ALL('chronic_disease_analyses_db main CDI'),
+        'chronic_disease_analyses_db main CDI'[QuestionID] = "YOUR_HEAVY_DRINK_QID_FOR_WOMEN" && -- Find this QID
+        'chronic_disease_analyses_db main CDI'[StratificationID] = "B_F_18_44" -- Confirm this StratificationID
+    )
+)
+```
+
+Important Note: The AVERAGE aggregation in these measures assumes you want the average value across any filters applied in your visual (e.g., if you show by LocationID and YearStart, you'll get the average for that specific location and year). If you need the TotalEvents calculation for each row before aggregation, you'd involve your TotalEvents calculated column.
+
+Step 3: Combine Data for Correlation Analysis
+For correlation, you ideally need the corresponding data points for each LocationID, YearStart, YearEnd (and StratificationID if you're analyzing at that granular level).
+
+Since all your data comes from the CDI table, the shared columns (LocationID, YearStart, YearEnd, StratificationID) act as your natural join keys.
+
+Option A: Using the BingeDrinkingIntFreq Calculated Table (Recommended if it works)
+
+If your BingeDrinkingIntFreq calculated table (the one we've been refining in DAX) successfully captures all the necessary columns (BingeDrinkingPopInt, BingeDrinkingPopFreq, AvgAlcPrevDataValue, LocationID, YearStart, etc.), then you can directly use this table.
+
+This table will contain the core drinking metrics, and you just need to bring in the LiverDiseaseMortalityRate.
+
+Approach: You would then use ADDCOLUMNS to add the LiverDiseaseMortalityRate to your BingeDrinkingIntFreqTable as another column, again using a CALCULATE(AVERAGE(...), FILTER(ALL(CDI), ...)) pattern to pull the mortality rate for the corresponding LocationID, YearStart, etc.
+
+```
+-- Building upon your previous BingeDrinkingIntFreq calculated table
+BingeDrinkingIntFreq_WithMortality =
+VAR ALC2_2_Filtered = ... -- Your existing ALC2_2_Filtered
+VAR JoinedWithALC4_0 = ... -- Your existing JoinedWithALC4_0
+VAR JoinedWithALC3_0 = ... -- Your existing JoinedWithALC3_0
+VAR PreCalculatedFinal = ... -- Your existing PreCalculatedFinal
+
+RETURN
+    ADDCOLUMNS(
+        SUMMARIZECOLUMNS ( -- The result of your previous BingeDrinkingIntFreq table
+            PreCalculatedFinal[LocationID],
+            PreCalculatedFinal[StratificationID],
+            PreCalculatedFinal[YearEnd],
+            PreCalculatedFinal[YearStart],
+            PreCalculatedFinal[QuestionID],
+            PreCalculatedFinal[AlcIntID],
+            PreCalculatedFinal[AlcFreqID],
+            "LogID", MAXX(PreCalculatedFinal, PreCalculatedFinal[LogID]),
+            "AvgAlcPrevDataValue", AVERAGE(PreCalculatedFinal[DataValue]),
+            "AvgAlcIntDataValue", AVERAGE(PreCalculatedFinal[AlcIntDataValue]),
+            "AvgAlcFreqDataValue", AVERAGE(PreCalculatedFinal[AlcFreqDataValue]),
+            "AvgBingeDrinkingPopInt", AVERAGE(PreCalculatedFinal[BingeDrinkingPopInt]),
+            "AvgBingeDrinkingPopFreq", AVERAGE(PreCalculatedFinal[BingeDrinkingPopFreq]),
+            "AvgBingeDrinkingPopulation", AVERAGE(PreCalculatedFinal[BingeDrinkingPopulation])
+        ),
+        "LiverDiseaseMortality",
+            VAR _currentLoc = [LocationID]
+            VAR _currentStrat = [StratificationID] // You might need to adjust stratification for mortality
+            VAR _currentYS = [YearStart]
+            VAR _currentYE = [YearEnd]
+            RETURN
+                CALCULATE(
+                    AVERAGE('chronic_disease_analyses_db main CDI'[DataValue]),
+                    ALL('chronic_disease_analyses_db main CDI'),
+                    'chronic_disease_analyses_db main CDI'[QuestionID] = "CLD1_0", -- Replace with actual CLD Mortality QID
+                    'chronic_disease_analyses_db main CDI'[LocationID] = _currentLoc,
+                    'chronic_disease_analyses_db main CDI'[YearStart] = _currentYS,
+                    'chronic_disease_analyses_db main CDI'[YearEnd] = _currentYE
+                    // You might need to explicitly set a common stratification for mortality,
+                    // e.g., 'chronic_disease_analyses_db main CDI'[StratificationID] = "OVERALL"
+                )
+    )
+```
+
+Important: For the LiverDiseaseMortality part, pay close attention to StratificationID. If liver disease mortality data is typically "Overall" for a location/year, and your binge drinking data is specific to "B_F_ALL" / "B_M_ALL", you'll need to decide how to align them. You might need to pull the mortality data using StratificationID = "OVERALL" or calculate an average across stratifications if applicable.
+
+Step 4: Visualize for Correlation
+Once you have your calculated table (or measures that can be put in a visual context together), you can start visualizing.
+
+Scatter Plot: This is the most common and effective way to show correlation.
+
+Drag a Scatter Plot visual onto your report page.
+Place AvgBingeDrinkingPopInt (or AvgBingeDrinkingPopFreq) on the X-axis.
+Place LiverDiseaseMortality on the Y-axis.
+Place LocationID and/or YearStart on the Details field. This will create individual points for each location/year, allowing you to see the scatter.
+Add a Trend Line: In the Visualizations pane, under "Analytics" (the magnifying glass icon), you can add a "Trend line." This will help you visually confirm the positive correlation.
+Interpretation: If the points cluster around an upward-sloping line, it indicates a positive correlation.
+Correlation Coefficient (Optional, but more robust):
+While Power BI visuals help, you can also calculate the Pearson correlation coefficient directly in DAX for a more precise numerical measure.
+
+```
+Correlation_BingeInt_Mortality =
+VAR SummaryTable =
+    SUMMARIZECOLUMNS (
+        'chronic_disease_analyses_db main CDI'[LocationID],
+        'chronic_disease_analyses_db main CDI'[YearStart],
+        "BingeInt", [BingeDrinkingIntensity_Adults], -- Using the measure for overall adults
+        "Mortality", [LiverDiseaseMortalityRate] -- Using the measure
+    )
+RETURN
+    CORRELATIONX(
+        FILTER(
+            SummaryTable,
+            NOT ISBLANK([BingeInt]) && NOT ISBLANK([Mortality])
+        ),
+        [BingeInt],
+        [Mortality]
+    )
+```
+You would create separate Correlation_... measures for each pair you want to analyze (e.g., BingeDrinkingFrequency vs. Mortality, BingeDrinkingPopInt vs. Mortality).
+CORRELATIONX iterates over a table. SUMMARIZECOLUMNS creates a temporary table with the relevant granularities (LocationID, YearStart) and the measures evaluated in that context.
+FILTER(..., NOT ISBLANK(...)) is important to exclude data points where one or both measures might be blank, which would skew the correlation.
+Interpretation: A value closer to +1 indicates a strong positive correlation.
+Step 5: Analyzing Specific Demographics
+To analyze correlations for specific demographics (women 18-44, youth, heavy drinkers):
+
+Use the specific measures you created in Step 2.
+Create separate scatter plots (e.g., BingeDrinkingPrev_Women18_44 vs. LiverDiseaseMortalityRate).
+Consider StratificationID in your visuals: If you want to see how different stratifications relate to mortality, you can put StratificationID on the "Legend" or "Small Multiples" well of your scatter plot. However, keep in mind that liver disease mortality itself might not always be available at every specific demographic stratification in your CDI data; it's often reported for broader groups (e.g., "Overall" or "Age-adjusted"). You'll need to align the granularity.
+
+
+
+and if per capita consumption also has influence on chronic liver disease mortality
+
 # to address in the future:
 * there may be potential for error in creating buckets from extraction scripts like `extract_cdi.py`, `extract_us_population_per_state_by_sex_age_race_ho.py` and `extract_us_population_per_state.py`, because if we try to run these simultaneously or concurrently like in airflow it might result in conflicts, so separate creation of `cdi-data-raw`, `population-data-raw`, `population-data-transformed`, and `cdi-data-transformed` folders
 * use selenium, docker, and airflow to automate extraction process and then use pyspark and databricks to transform extracted data and load the final data into a warehouse like databricks. All of this is orchestrated using airflow. 
