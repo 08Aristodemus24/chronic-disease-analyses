@@ -1247,6 +1247,8 @@ TestTable = ADDCOLUMNS(
 
 * to publish report to powerbi services we go to home in ribbon and click publish, sign in with our microsoft email, then choose our workspace, 
 
+* go to file tab in workspace under your published report > embed report > publish to web. This will provide you with the `iframe` html element which embeds your published report which you can use in any html web page, or web app like react or svelte. But since this is only a dashboard a simple html file will do. We create one named index in our current projects directory in our local machine, then go to vercel and add new project. There will be no used preset to use for this deployment like svelte, react, etc. but only other, or no preset. Vercel will automatically detect the html we want to render through its file name, named `index` we just need to specify in our deployment settings where this file lives. Once deployed we will see our dashboard publicly.
+
 ## Spark Optimization   
 * Say I have 24 gb ram installed and 16 gb is currently usable because of other background processes and I have 8 cores in the CPU. Rule is to leave out 1 gb and 1 core for hadoop distributed file system processes and OS daemon processes during spark submissions. So we would have 15 gb and 7 cores to work with
 
