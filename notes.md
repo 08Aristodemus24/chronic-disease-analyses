@@ -1245,7 +1245,7 @@ TestTable = ADDCOLUMNS(
 
 * to use a map in powerbi that uses a gradient map we need to go to settings and
 
-
+* to publish report to powerbi services we go to home in ribbon and click publish, sign in with our microsoft email, then choose our workspace, 
 
 ## Spark Optimization   
 * Say I have 24 gb ram installed and 16 gb is currently usable because of other background processes and I have 8 cores in the CPU. Rule is to leave out 1 gb and 1 core for hadoop distributed file system processes and OS daemon processes during spark submissions. So we would have 15 gb and 7 cores to work with
