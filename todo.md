@@ -182,7 +182,7 @@ ORDER BY LogID ASC
 ```
 
 * there are other binge drinking prevalence from other demographics that I need to somehow analyze
-- binge drinking among women aged 18-44 years
+- binge drinking among women aged 18-44 years   
 - binge drinking prevalencec among youth
 - heavy drinking among adults aged >= 18 years
 - heavy drinking among women aged 18-44 years
