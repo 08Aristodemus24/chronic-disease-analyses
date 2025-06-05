@@ -502,3 +502,37 @@ and if per capita consumption also has influence on chronic liver disease mortal
 - learning to finally implement read and write operations using spark to aws s3
 - the process of normalization for faster querying
 - weaving every process of extraction and transformation and loading using orchestration tools like airflow 
+
+- report colors
+canvas bg:
+#010A13
+
+
+#0d1a28
+
+
+B_B_ALL: #04D98B
+B_F_ALL: #4097B9
+B_M_ALL: #153F61
+H_B_ALL: #39ab97
+NH_B_AIAN: #0d655f
+NH_B_ASIAN: #5D8099
+NH_B_BLACK: #124040
+NH_B_MULTI: #848c93
+NH_B_NHPI: #6d8a9d
+NH_B_OTHER: #4c535e
+NH_B_WHITE: #022829
+
+
+highest value of map: #124554
+
+#237676
+
+letter color:
+#A7AEB6
+
+button fill:
+#022829
+
+letter color if on bright bg:
+#1A1A1A
