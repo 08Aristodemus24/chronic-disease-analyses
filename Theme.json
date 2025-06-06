@@ -1,0 +1,17 @@
+﻿{
+    "name": "cdi_theme",
+    "textClasses": {
+        "label": {
+            "fontFace": "Artifakt Element"
+        }, 
+        "callout": {
+            "fontFace": "Artifakt Element"
+        }, 
+        "title": {
+            "fontFace": "Artifakt Element"
+        },
+        "header": {
+            "fontFace": "Artifakt Element"
+        }
+    }
+}
