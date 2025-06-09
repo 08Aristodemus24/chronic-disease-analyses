@@ -538,3 +538,24 @@ button fill:
 
 letter color if on bright bg:
 #1A1A1A
+
+# peer feedback:
+* in terms sa composition ng dashboard, hindi aligned yung mga tiles
+* then text is small
+* then too dark, maybe naka-dark mode?
+* then lacks contex
+* ano yung yung dark green, and ano yung light green sa US map
+* and for me, as much as possible, I would avoid numbers kasi kaya ka nag-data-data viz to represent a story and give more context sa numbers
+* the slicer buttons are too thick so I need to make them responsive such that if user filters and isa nalang natira na button then this single button must be of the right size or responsive
+* wala din kasing title yung dashboard
+* I can say na hindi cohesive yung mga graphs to tell a story
+* gawin drop down ang CDI questions since the slicer takes up too much space
+* sayang yung space to explain or add annotations
+* then make it lighter kasi hindi mabasa yung text
+* nasa taas yung pinakamahalaga
+* isipin mo sa dyaryo may pinaka headline then may picture na tells about the hot news for today
+* sa Data Story Telling, may mga concepts na tinuturo about psychology ng mata on getting the attention. Sa Dashboards, same din
+* Yung mga important should be in bigger chunkcs
+* then yung less important or supporting details, maliliit
+* So dashboard mo, pinakamalaki yung line graph. Bakit sya yung pinaka malaki? kasi syan yung pinakaimportante? kasi sya yung nagssabi na dapat ko itong tignan kasi it concerns me?
+* and rule of thumb ko dyan is, dapat ko muna mapakita yung mga important insight, then secondary yung aesthetics
