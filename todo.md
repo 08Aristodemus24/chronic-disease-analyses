@@ -489,6 +489,8 @@ Consider StratificationID in your visuals: If you want to see how different stra
 
 and if per capita consumption also has influence on chronic liver disease mortality
 
+4. 
+
 # to address in the future:
 * there may be potential for error in creating buckets from extraction scripts like `extract_cdi.py`, `extract_us_population_per_state_by_sex_age_race_ho.py` and `extract_us_population_per_state.py`, because if we try to run these simultaneously or concurrently like in airflow it might result in conflicts, so separate creation of `cdi-data-raw`, `population-data-raw`, `population-data-transformed`, and `cdi-data-transformed` folders
 * use selenium, docker, and airflow to automate extraction process and then use pyspark and databricks to transform extracted data and load the final data into a warehouse like databricks. All of this is orchestrated using airflow. 
@@ -541,9 +543,9 @@ letter color if on bright bg:
 
 # peer feedback:
 * in terms sa composition ng dashboard, hindi aligned yung mga tiles
-* then text is small
-* then too dark, maybe naka-dark mode?
-* then lacks contex
+* then text is small. Enlarge font size
+* <s>then too dark, maybe naka-dark mode?</s>
+* <s>then lacks contex, particularly the stratification ids. Need some way to translate B_B_ALL, B_M_ALL, B_F_ALL, etc. to understandable values</s>
 * ano yung yung dark green, and ano yung light green sa US map
 * and for me, as much as possible, I would avoid numbers kasi kaya ka nag-data-data viz to represent a story and give more context sa numbers
 * the slicer buttons are too thick so I need to make them responsive such that if user filters and isa nalang natira na button then this single button must be of the right size or responsive

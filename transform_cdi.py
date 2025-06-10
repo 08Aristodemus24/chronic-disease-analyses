@@ -283,12 +283,12 @@ def process_cdi_table(df: DataFrame) -> DataFrame:
             strat_col[0] == "american indian or alaska native",
             # | Sex | Ethnicity | Origin |
             # | Both | AIAN | Non Hispanic |
-            array(lit("Both"), lit("AIAN"), lit("Not Hispanic"))
+            array(lit("Both"), lit("AIAN"), lit("Non Hispanic"))
         ).when(
             strat_col[0] == "asian or pacific islander",
             # | Sex | Ethnicity | Origin |
             # | Both | NHPI | Non Hispanic |
-            array(lit("Both"), lit("NHPI"), lit("Not Hispanic"))
+            array(lit("Both"), lit("NHPI"), lit("Non Hispanic"))
         ).when(
             rlike(strat_col[0], lit(r"(asian|black|white|other|multiracial)")),
             # | Sex | Ethnicity | Origin |
@@ -297,7 +297,7 @@ def process_cdi_table(df: DataFrame) -> DataFrame:
             # | Both | asian | Non Hispanic |
             # | Both | other | Non Hispanic |
             # | Both | multiracial | Non Hispanic |
-            array(lit("Both"), initcap(strat_col[0]), lit("Not Hispanic"))
+            array(lit("Both"), initcap(strat_col[0]), lit("Non Hispanic"))
         ).when(
             rlike(strat_col[0], lit(r"(male|female)")),
             # | Sex | Ethnicity | Origin |
