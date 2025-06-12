@@ -58,17 +58,7 @@ e.g. cancer among youth where AgeStart is 18, and AgeEnd is 24, where stratifica
 
 * Okay, with this sample of your CDI table, we can start brainstorming some interesting questions you can ask using SQL to analyze this healthcare data and potentially draw insights about these chronic disease indicators (in this case, "Alcohol use - Binge drinking prevalence among adults aged 18-24 years").
 
-<s>1. What is the prevalence of alcohol use among youth (male and female) in listed year ranges?</s>
 
-<s>2. What is the average binge drinking prevalence among adults aged >= 18?</s>
-
-3. What is the average binge drinking prevalence for each reported ethnicity?
-
-* because there are 10 years worth of data and 51 states for each of those 10 years we can use a slicer again to filter by state
-
-we can also group the binge drinking freq and intensity table into male and female populations 
-
-but my question is how do we use a slicer in pandas or in sql?
 
 
 
@@ -489,7 +479,17 @@ Consider StratificationID in your visuals: If you want to see how different stra
 
 and if per capita consumption also has influence on chronic liver disease mortality
 
-4. 
+1. what are the most and least common chronic disease indicator categories?
+what I want to do is instaed of using the same CDI table I want to make a calculated table for each graph namely the top 5 most common categories of chronic disease indicators in the US in all states and stratifications, years, questions, and data value types
+2. what is the trend of chronic disease indicator categories across all years
+3. in the 5 most common chronic disease indicator categories which question
+
+4. What is the prevalence of alcohol use among youth (male and female) in listed year ranges?
+5. What is the average binge drinking prevalence among adults aged >= 18?
+6. What is the average binge drinking prevalence for each reported ethnicity?
+
+* because there are 10 years worth of data and 51 states for each of those 10 years we can use a slicer again to filter by state
+
 
 # to address in the future:
 * there may be potential for error in creating buckets from extraction scripts like `extract_cdi.py`, `extract_us_population_per_state_by_sex_age_race_ho.py` and `extract_us_population_per_state.py`, because if we try to run these simultaneously or concurrently like in airflow it might result in conflicts, so separate creation of `cdi-data-raw`, `population-data-raw`, `population-data-transformed`, and `cdi-data-transformed` folders
