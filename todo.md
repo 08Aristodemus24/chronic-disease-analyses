@@ -481,6 +481,7 @@ and if per capita consumption also has influence on chronic liver disease mortal
 
 1. what are the most and least common chronic disease indicator categories?
 what I want to do is instaed of using the same CDI table I want to make a calculated table for each graph namely the top 5 most common categories of chronic disease indicators in the US in all states and stratifications, years, questions, and data value types
+
 2. what is the trend of chronic disease indicator categories across all years
 3. in the 5 most common chronic disease indicator categories which question
 
