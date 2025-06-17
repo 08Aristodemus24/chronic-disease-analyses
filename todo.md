@@ -479,15 +479,19 @@ Consider StratificationID in your visuals: If you want to see how different stra
 
 and if per capita consumption also has influence on chronic liver disease mortality
 
-1. what are the most and least common chronic disease indicator categories?
+1. what are the most and least common chronic disease indicator categories based on average population?
 what I want to do is instaed of using the same CDI table I want to make a calculated table for each graph namely the top 5 most common categories of chronic disease indicators in the US in all states and stratifications, years, questions, and data value types
 
-2. what is the trend of chronic disease indicator categories across all years
-3. in the 5 most common chronic disease indicator categories which question
+the most common were those relating to reproductive health, oral health, arthritis, diabetes, and immunization
+the least common were those relating to chronic kidney disease, cancer, older adults, disability, mental heatlh
 
-4. What is the prevalence of alcohol use among youth (male and female) in listed year ranges?
-5. What is the average binge drinking prevalence among adults aged >= 18?
-6. What is the average binge drinking prevalence for each reported ethnicity?
+2. in the 5 most and least common chronic disease indicator categories which question has the most avergae and total occurences? E.g. 
+3. in these questions what are the top and bottom 5 states 
+4. in these questions what is the trend across all years in the top and bottom 5 states
+
+5. What is the prevalence of alcohol use among youth (male and female) in listed year ranges?
+6. What is the average binge drinking prevalence among adults aged >= 18?
+7. What is the average binge drinking prevalence for each reported ethnicity?
 
 * because there are 10 years worth of data and 51 states for each of those 10 years we can use a slicer again to filter by state
 
