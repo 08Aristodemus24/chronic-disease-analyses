@@ -1249,6 +1249,86 @@ TestTable = ADDCOLUMNS(
 
 * go to file tab in workspace under your published report > embed report > publish to web. This will provide you with the `iframe` html element which embeds your published report which you can use in any html web page, or web app like react or svelte. But since this is only a dashboard a simple html file will do. We create one named index in our current projects directory in our local machine, then go to vercel and add new project. There will be no used preset to use for this deployment like svelte, react, etc. but only other, or no preset. Vercel will automatically detect the html we want to render through its file name, named `index` we just need to specify in our deployment settings where this file lives. Once deployed we will see our dashboard publicly.
 
+* we can actually get the median, mode, kurtosis, entropy with DuckDB's built in functions
+```
+CREATE TEMPORARY SEQUENCE IF NOT EXISTS id_sequence START 1;
+  
+-- Create the transactions table
+CREATE TEMPORARY TABLE IF NOT EXISTS transactions (
+    transaction_id INT DEFAULT nextval('id_sequence') PRIMARY KEY,
+    user_id INT NOT NULL,
+    transaction_date DATE NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL
+);
+
+-- Insert sample data
+INSERT INTO transactions (user_id, transaction_date, amount) VALUES
+(101, '2024-01-01', 10.50),
+(101, '2024-01-02', 15.00),
+(101, '2024-01-03', 20.00),
+(101, '2024-01-05', 12.75), -- Gap on Jan 4
+(101, '2024-01-06', 18.20),
+(101, '2024-01-07', 25.00),
+(101, '2024-01-08', 30.00),
+(101, '2024-01-09', 11.00),
+(101, '2024-01-12', 14.50), -- Another gap
+(101, '2024-01-13', 22.00),
+(101, '2024-01-14', 16.80),
+(102, '2024-01-01', 5.00),
+(102, '2024-01-03', 7.50),
+(102, '2024-01-04', 12.00),
+(102, '2024-01-08', 9.00),
+(102, '2024-01-09', 11.20),
+(102, '2024-01-10', 8.00);
+```
+
+```
+SELECT MEDIAN(amount) as median FROM transactions
+```
+
+as opposed to using when in using other SQL flavors
+
+```
+SELECT PERCENTILE(amount, 0.5) AS median
+```
+
+```
+SELECT 
+  *,
+  AVG(amount) OVER(
+    PARTITION BY user_id 
+    ORDER BY transaction_date ASC 
+    ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
+  ) AS ma_7,
+  MEDIAN(amount) OVER(
+    PARTITION BY user_id 
+    ORDER BY transaction_date ASC 
+    ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
+  ) AS mm_7
+FROM transactions
+```
+
+```
+transaction_id	user_id	transaction_date	amount	ma_7	mm_7
+12	102	2024-01-01	5.00	5.0	5.00
+13	102	2024-01-03	7.50	6.25	6.25
+14	102	2024-01-04	12.00	8.166666666666666	7.50
+15	102	2024-01-08	9.00	8.375	8.25
+16	102	2024-01-09	11.20	8.94	9.00
+17	102	2024-01-10	8.00	8.783333333333333	8.50
+1	101	2024-01-01	10.50	10.5	10.50
+2	101	2024-01-02	15.00	12.75	12.75
+3	101	2024-01-03	20.00	15.166666666666666	15.00
+4	101	2024-01-05	12.75	14.5625	13.87
+5	101	2024-01-06	18.20	15.29	15.00
+6	101	2024-01-07	25.00	16.908333333333335	16.60
+7	101	2024-01-08	30.00	18.77857142857143	18.20
+8	101	2024-01-09	11.00	18.85	18.20
+9	101	2024-01-12	14.50	18.77857142857143	18.20
+10	101	2024-01-13	22.00	19.064285714285713	18.20
+11	101	2024-01-14	16.80	19.642857142857142	18.20
+```
+
 ## Spark Optimization   
 * Say I have 24 gb ram installed and 16 gb is currently usable because of other background processes and I have 8 cores in the CPU. Rule is to leave out 1 gb and 1 core for hadoop distributed file system processes and OS daemon processes during spark submissions. So we would have 15 gb and 7 cores to work with
 
@@ -1289,7 +1369,7 @@ Thin executor with 15 gb memory and 7 cores means each executor uses 1 core at t
 * for creating custom maps in powerbi that have other countries and their states, other than the pre built ones in powerbi like US, UK, italy, etc.: https://simplemaps.com/gis/country/us
 * for exporting the downloaded geojson map from https://simplemaps.com/gis/country/us to topojson so that it can be used in powerbi: https://mapshaper.org/
 * Joining tables in DAX powerbi with multiple conditions: https://stackoverflow.com/questions/41846571/how-to-joint-two-tables-in-dax-using-custom-condition 
-
+* being able to use selected value in slicer to make a dynamic table: https://community.fabric.microsoft.com/t5/Desktop/Create-Dynamic-Tables-based-on-slicer-from-the-same-data-set-and/td-p/2003909
 
 # Problems to solve:
 1. I can't save year as 4 byte int for 200000+ rows since that would be a waste of space
