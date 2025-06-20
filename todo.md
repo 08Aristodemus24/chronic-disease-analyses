@@ -500,6 +500,9 @@ the least common were those relating to chronic kidney disease, cancer, older ad
 * there may be potential for error in creating buckets from extraction scripts like `extract_cdi.py`, `extract_us_population_per_state_by_sex_age_race_ho.py` and `extract_us_population_per_state.py`, because if we try to run these simultaneously or concurrently like in airflow it might result in conflicts, so separate creation of `cdi-data-raw`, `population-data-raw`, `population-data-transformed`, and `cdi-data-transformed` folders
 * use selenium, docker, and airflow to automate extraction process and then use pyspark and databricks to transform extracted data and load the final data into a warehouse like databricks. All of this is orchestrated using airflow. 
 * document everything
+- write write up on updates of data analytics projects
+- compile write ups and pictures involved in linked in posts in a single read me file
+
 - from automating the extraction of data
 - your thought process of loading the raw data locally
 - your thought process of getting extra population data 
@@ -566,3 +569,4 @@ letter color if on bright bg:
 * then yung less important or supporting details, maliliit
 * So dashboard mo, pinakamalaki yung line graph. Bakit sya yung pinaka malaki? kasi syan yung pinakaimportante? kasi sya yung nagssabi na dapat ko itong tignan kasi it concerns me?
 * and rule of thumb ko dyan is, dapat ko muna mapakita yung mga important insight, then secondary yung aesthetics
+
