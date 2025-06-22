@@ -225,6 +225,7 @@ preqrequisites:
   networks:
     - michael
 ```
+
 - add networks to both x-spark-common and x-airflow-common with any values that's same for both
 - delete airflow-worker, redis, and flower services
 - add spark-master and spark-worker services and add the ff. respectively:
@@ -332,6 +333,9 @@ ENV PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin
 customizing python version of airflow image: https://airflow.apache.org/docs/docker-stack/build.html#base-images
 https://stackoverflow.com/questions/76699047/can-i-set-up-an-airflow-docker-container-with-python-3-11-using-docker-compose
 https://github.com/apache/airflow/discussions/36074
+
+* maybe we don't need to use spark
+once we have installed spark via downloading the tar.gz file and the extracting its components and setting the SPARK_HOME env variable
 
 # to address in the future:
 * there may be potential for error in creating buckets from extraction scripts like `extract_cdi.py`, `extract_us_population_per_state_by_sex_age_race_ho.py` and `extract_us_population_per_state.py`, because if we try to run these simultaneously or concurrently like in airflow it might result in conflicts, so separate creation of `cdi-data-raw`, `population-data-raw`, `population-data-transformed`, and `cdi-data-transformed` folders

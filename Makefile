@@ -13,7 +13,7 @@ do-sleep:
 # that will setup our airflow connections in the container from our 
 # local machine  
 setup-conn:
-	docker exec usd-php-ml-pipeline-airflow-webserver-1 python /opt/airflow/include/scripts/setup_conn.py
+	docker exec chronic-disease-analyses-airflow-apiserver-1 python /opt/airflow/include/scripts/setup_conn.py
 
 up: start-containers do-sleep setup-conn
 
@@ -21,6 +21,6 @@ down:
 	docker compose down
 
 sh:
-	docker exec -it usd-php-ml-pipeline-airflow-webserver-1 bash
+	docker exec -it chronic-disease-analyses-airflow-apiserver-1 bash
 
 restart: down up
