@@ -106,17 +106,29 @@ if __name__ == "__main__":
     # # use this only in development
     # env_dir = Path('./').resolve()
     # load_dotenv(os.path.join(env_dir, '.env'))
+    
+    ABS_DATA_DIR_PATH = "\\opt\\airflow\\dags\\operators\\data\\population-data-raw"
+    # ABS_DATA_DIR_PATH = "C:\\Users\\LARRY\\Documents\\Scripts\\data-engineering-path\\chronic-disease-analyses\\dags\\data\\population-data-raw\\"
+    DATA_DIR = "./data/population-data-raw"
+    os.makedirs(DATA_DIR, exist_ok=True)
 
     # setting these options will not open a browser explicitly
     # and runs the scraping job in the background, 
     # disables development shared memory usage
     chrome_options = ChromeOptions()
+    prefs = {
+        "download.default_directory": ABS_DATA_DIR_PATH,    
+    }
+    chrome_options.add_experimental_option("prefs", prefs)
+    chrome_options.add_experimental_option('detach', True)
+
+    # arguments
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--disable-dev-shm-usage")
     
     # initialize driver
-    chrome_options.add_experimental_option('detach', True)
+    
     service = ChromeService(executable_path=ChromeDriverManager().install())
     print("test ;ine")
 
@@ -127,22 +139,21 @@ if __name__ == "__main__":
     # | 2001 | Alabama | 4,480.089 |
     # | 2001 | Alaska | 642.337 |
     # ```
-    DATA_DIR = "./data/population-data-raw"
-    os.makedirs(DATA_DIR, exist_ok=True)
 
     links = ["https://www.census.gov/programs-surveys/popest/technical-documentation/research/evaluation-estimates/2010-evaluation-estimates.html",
     "https://www.census.gov/data/tables/time-series/demo/popest/2010s-state-detail.html", 
     "https://www.census.gov/data/tables/time-series/demo/popest/2020s-state-detail.html"]
+
     xpaths = [
         "/html/body/div[3]/div/div/div[8]/div/div[18]/div/ul/li[4]/a",
-        "/html/body/div[3]/div/div/div[8]/div/div[18]/div/ul/li/a",
+        "/html/body/div[3]/div/div/div[8]/div/div[16]/div/ul/li/a",
         "/html/body/div[3]/div/div/div[8]/div/div[19]/div/div/div/div/ul/li/a"
         # "/html/body/div[3]/div/div/div[8]/div/div[19]/div/div/div/div/ul/li/a"
     ]
     links_xpaths = zip(links, xpaths)
 
     # extract populations given the year ranges
-    relocated_file_paths = extract_populations(links_xpaths, service, chrome_options)
+    relocated_file_paths = extract_populations(links_xpaths, service, chrome_options, downloads_dir=DATA_DIR)
 
     # create s3 client and pass credentials to create bucket
     credentials = {
@@ -154,11 +165,11 @@ if __name__ == "__main__":
     # define s3 client
     s3 = boto3.client("s3", **credentials)
 
-    relocated_file_paths = [
-        ("./data/population-data-raw/us_populations_per_state_by_sex_age_race_ho_2000-2010.csv", "us_populations_per_state_by_sex_age_race_ho_2000-2010.csv"),
-        ("./data/population-data-raw/us_populations_per_state_by_sex_age_race_ho_2010-2019.csv", "us_populations_per_state_by_sex_age_race_ho_2010-2019.csv"),
-        ("./data/population-data-raw/us_populations_per_state_by_sex_age_race_ho_2020-2023.csv", "us_populations_per_state_by_sex_age_race_ho_2020-2023.csv")
-    ]
+    # relocated_file_paths = [
+    #     ("./data/population-data-raw/us_populations_per_state_by_sex_age_race_ho_2000-2010.csv", "us_populations_per_state_by_sex_age_race_ho_2000-2010.csv"),
+    #     ("./data/population-data-raw/us_populations_per_state_by_sex_age_race_ho_2010-2019.csv", "us_populations_per_state_by_sex_age_race_ho_2010-2019.csv"),
+    #     ("./data/population-data-raw/us_populations_per_state_by_sex_age_race_ho_2020-2023.csv", "us_populations_per_state_by_sex_age_race_ho_2020-2023.csv")
+    # ]
 
     # create bucket and then bucket folder
     BUCKET_NAME = "chronic-disease-analyses-bucket"
@@ -169,5 +180,5 @@ if __name__ == "__main__":
         s3,  
         local_file_paths=relocated_file_paths,
         s3_bucket_name=BUCKET_NAME,
-        s3_folder_name=FOLDER_NAME, 
+        s3_folder_name=FOLDER_NAME,     
         callback_fn=upload_file_to_s3)

@@ -2063,6 +2063,9 @@ Once installed when you check where it has been installed by navigating to /usr/
 
 note that when using this selenium script this will by default be located in the /root/Downloads/ directory but in order toeven access this or navigate to it, it requires us to be the root user. To switch to root user in interactive mode in docker command line we `docker exec -it --user root <container name e.g. chronic-disease-analyses-airflow-apiserver-1> bash`
 
+* however switching to the root user is not enough as we need to work with the airflow user itself which does not have access to the /root/Downloads/ directory
+
+
 # Questions:
 * how to fill in missing values?
 * how to drop undesired values based on a filter?

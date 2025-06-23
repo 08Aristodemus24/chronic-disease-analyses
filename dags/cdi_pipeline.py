@@ -53,4 +53,4 @@ with DAG(
         bash_command=f"python {AIRFLOW_HOME}/operators/extract_us_population_per_state_by_sex_age_race_ho.py"
     )
 
-    extract_populations
+    extract_populations 
