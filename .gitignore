@@ -9,3 +9,4 @@
 # airflow
 /logs/
 /config/
+/dags/data/

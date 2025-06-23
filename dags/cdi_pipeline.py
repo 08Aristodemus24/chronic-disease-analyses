@@ -14,32 +14,17 @@ from airflow.operators.python import PythonOperator
 from airflow.models import Variable, Connection 
 from airflow.configuration import conf
 
-
 # go to this site if you want to use cron instead of datetime to set schedule_interval
 # https://crontab.guru/#00_12_*_*_Sun
 
 
 
-def get_env_vars(ti):
-    """
-    push api key to xcom so that pull_forex_data can access
-    this xcom
-    """
-    api_key = conf.get('secrets', 'polygon_api_key')
-
-    ti.xcom_push(key="api_key", value=api_key)
 
 # get airflow folder
 AIRFLOW_HOME = conf.get('core', 'dags_folder')
 
 # base dir would be /opt/***/ or /opt/airflow
 BASE_DIR = Path(AIRFLOW_HOME).resolve().parent
-
-# data dir once joined with base dir would be /opt/airflow/include/data/
-DATA_DIR = os.path.join(BASE_DIR, 'include/data')
-
-# bucket name
-BUCKET_NAME = "usd-php-ml-pipeline-bucket"
 
 default_args = {
     'owner': 'mikhail',
@@ -48,67 +33,24 @@ default_args = {
 }
 
 with DAG(
-    dag_id="forex_ml_pipeline",
+    dag_id="cdi_pipeline",
     default_args=default_args,
-    description="pull forex of usd to php data from last january 1 2024 up to january 2025 in intervals of 4 hours",
+    description="extract transfrom load chronic disease indicator data and population data from source to duckdb",
     start_date=dt.datetime(2024, 1, 1, 12),
 
     # runs every sunday at 12:00 
-    schedule_interval="00 12 * * Sun",
+    schedule="00 12 * * Sun",
     catchup=False
 ) as dag:
     
-    get_env_vars_task = PythonOperator(
-        task_id="get_env_vars",
-        python_callable=get_env_vars
+    extract_cdi = BashOperator(
+        task_id="extract_cdi",
+        bash_command=f"python {AIRFLOW_HOME}/operators/extract_cdi.py -L https://www.kaggle.com/api/v1/datasets/download/payamamanat/us-chronic-disease-indicators-cdi-2023"
     )
 
-    create_s3_bucket_task = PythonOperator(
-        task_id='create_s3_bucket',
-        python_callable=create_s3_bucket,
-        op_kwargs={
-            'region': 'us-east-2',
-            'bucket_name': BUCKET_NAME,
-        }
-    )
-    
-    pull_forex_data_task = PythonOperator(
-        task_id='pull_forex_data',
-        # python_callable=test_pull_forex_data,
-        python_callable=pull_forex_data,
-        op_kwargs={
-            "start_date": "january 1 2023",
-            "end_date": "january 1 2025",
-            "forex_ticker": "C:USDPHP",
-            "multiplier": 4,
-            "timespan": "hour",
-            "formatter": reformat_date,
-            "bucket_name": BUCKET_NAME,
-            "save_path": DATA_DIR
-        }
+    extract_populations = BashOperator(
+        task_id="extract_populations",
+        bash_command=f"python {AIRFLOW_HOME}/operators/extract_us_population_per_state_by_sex_age_race_ho.py"
     )
 
-    move_raw_forex_task = PythonOperator(
-        task_id='move_raw_forex',
-        python_callable=move_raw_forex,
-        op_kwargs={
-            'region': 'us-east-2',
-            'bucket_name': BUCKET_NAME,
-            'filepath': "{{ti.xcom_pull(key='file_path', task_ids='pull_forex_data')}}",
-            'destination': "raw/{{ti.xcom_pull(key='file_name', task_ids='pull_forex_data')}}",    
-        }
-    )
-    
-    transform_forex_data_task = SparkSubmitOperator(
-        task_id='transform_forex_data',
-        conn_id='my_spark_conn',
-        application='./dags/operators/transform_forex_data.py',
-
-        # pass argument vector to spark submit job operator since
-        # it is a file that runs like a script
-        application_args=["{{ti.xcom_pull(key='s3_raw_uri', task_ids='move_raw_forex')}}"],
-        # application_args=["{{ti.xcom_pull(key='file_path', task_ids='pull_forex_data')}}"],
-        verbose=True
-    )
-    
-    [get_env_vars_task, create_s3_bucket_task] >> pull_forex_data_task >> move_raw_forex_task >> transform_forex_data_task
+    extract_populations

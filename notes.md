@@ -1764,6 +1764,7 @@ exec "airflow" "${@}"
 ```
 
 * this is the binary files that the /usr/bin folder contaisn so we can run our apt-get, apt, python3, chmod, chown, commands
+```
 airflow@58b02296185b:/usr/bin$ ls
  X11                                  ischroot                           prtstat
 '['                                   isql                               ps
@@ -2028,6 +2029,39 @@ AIRFLOW__CORE__FERNET_KEY=
 /usr/bin
 /sbin
 /bin
+
+* solving the `ValueError: The value api_auth/jwt_secret must be set!`. This is because in the docker-compose file the environment variables in the `x-airflow-common`, `AIRFLOW__API_AUTH__JWT_SECRET` is not defined, and because `airflow.cfg` is basically the `.env` file used by the `docker-compose.yaml` file which contains `jwt_secret` variable to use this variable in the `docker-compose.yaml` file we have to use `AIRFLOW__API_AUTH__JWT_SECRET`: https://github.com/apache/airflow/issues/50538
+
+we can generate one and set the env variable explicitly in the `docker-compose.yaml` file using `openssl rand -base64 16` which generates `<some key>` then we can use this to assign it to the explicitly dfined `AIRFLOW__API_AUTH__JWT_SECRET` env variable in the `docker-compose.yaml` file
+
+* you can try to see the values of the `airflow.cfg` file by `airflow config get-value <section e.g. core, secrets, api, etc.> <variable name e.g. load_examples, jwt_secret, aws_secret_access_key_id>`
+
+* to fix this selenium.common.exceptions.WebDriverException: Message: unknown error: cannot find Chrome binary occuring in the docker container when I run `python ./operators/extract_us_population_per_state_by_sex_age_race_ho.py` 
+
+we will need to install chrome from https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb using wget and unzip which we will also need to install as dependencies first. E.g. after `apt-get install -y wget unzip` we run `wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb`, once downloaded in the current working directory it will be in the form of `google-chrome-stable_current_amd64.deb` but is actually a folder as the real installer is inside. So we will run `apt install -y ./google-chrome-stable_current_amd64.deb`
+
+it will prompt you (or not if you don't use the -y flag) with The following additional packages will be installed:
+```
+  cpp cpp-12 fonts-liberation libauthen-sasl-perl libclone-perl libcolord2 libdata-dump-perl libegl-mesa0 libegl1
+  libencode-locale-perl libepoxy0 libfile-basedir-perl libfile-desktopentry-perl libfile-listing-perl
+  libfile-mimeinfo-perl libfont-afm-perl libgbm1 libgles2 libgtk-3-0 libgtk-3-bin libgtk-3-common libhtml-form-perl
+  libhtml-format-perl libhtml-parser-perl libhtml-tagset-perl libhtml-tree-perl libhttp-cookies-perl
+  libhttp-daemon-perl libhttp-date-perl libhttp-message-perl libhttp-negotiate-perl libio-html-perl
+  libio-socket-ssl-perl libio-stringy-perl libipc-system-simple-perl libisl23 liblwp-mediatypes-perl
+  liblwp-protocol-https-perl libmailtools-perl libmpc3 libmpfr6 libnet-dbus-perl libnet-http-perl libnet-smtp-ssl-perl
+  libnet-ssleay-perl libregexp-ipv6-perl libtext-iconv-perl libtie-ixhash-perl libtimedate-perl libtry-tiny-perl
+  liburi-perl libvulkan1 libwayland-client0 libwayland-cursor0 libwayland-egl1 libwayland-server0 libwww-perl
+  libwww-robotrules-perl libx11-protocol-perl libxkbcommon0 libxml-parser-perl libxml-twig-perl
+  libxml-xpathengine-perl mesa-vulkan-drivers perl-openssl-defaults x11-xserver-utils xdg-utils xkb-data zutty
+```
+
+once done we just do "cleanup" and removing the installer itself since it has already been installed in the docker container by running the remove command `rm` e.g. `rm google-chrome-stable_current_amd64.deb`
+
+these are actually the dependencies that chrome needs in order to run in linux
+
+Once installed when you check where it has been installed by navigating to /usr/bin/ directory where google-chrome, google-chrome-stable are the installed binary files. Because this is the bin folder which is added to the docker containers PATH user or system/root environment variable we can always run chrome related commands,in this case that will be selenium doing it in the background
+
+note that when using this selenium script this will by default be located in the /root/Downloads/ directory but in order toeven access this or navigate to it, it requires us to be the root user. To switch to root user in interactive mode in docker command line we `docker exec -it --user root <container name e.g. chronic-disease-analyses-airflow-apiserver-1> bash`
 
 # Questions:
 * how to fill in missing values?
