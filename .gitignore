@@ -2,4 +2,10 @@
 /sql scripts/test.sql
 /.env
 
+# notebooks
 /chronic_disease_modelling.ipynb
+/population_modelling.ipynb
+
+# airflow
+/logs/
+/config/

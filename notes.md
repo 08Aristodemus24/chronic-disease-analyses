@@ -1459,6 +1459,576 @@ RUN export MY_TEMP_VAR="some_value" && \
 In this case, MY_TEMP_VAR is only needed by the configure script within that single RUN instruction, and its persistence isn't required. But for JAVA_HOME and SPARK_HOME, which are fundamental for the application's runtime, ENV is the definitive solution.
 
 
+*  this is what the entrypoint file made during docker compose up fo airflow contains
+```
+airflow@58b02296185b:/$ cat entrypoint
+#!/usr/bin/env bash
+AIRFLOW_COMMAND="${1:-}"
+
+set -euo pipefail
+
+LD_PRELOAD="/usr/lib/$(uname -m)-linux-gnu/libstdc++.so.6"
+export LD_PRELOAD
+
+function run_check_with_retries {
+    local cmd
+    cmd="${1}"
+    local countdown
+    countdown="${CONNECTION_CHECK_MAX_COUNT}"
+
+    while true
+    do
+        set +e
+        local last_check_result
+        local res
+        last_check_result=$(eval "${cmd} 2>&1")
+        res=$?
+        set -e
+        if [[ ${res} == 0 ]]; then
+            echo
+            break
+        else
+            echo -n "."
+            countdown=$((countdown-1))
+        fi
+        if [[ ${countdown} == 0 ]]; then
+            echo
+            echo "ERROR! Maximum number of retries (${CONNECTION_CHECK_MAX_COUNT}) reached."
+            echo
+            echo "Last check result:"
+            echo "$ ${cmd}"
+            echo "${last_check_result}"
+            echo
+            exit 1
+        else
+            sleep "${CONNECTION_CHECK_SLEEP_TIME}"
+        fi
+    done
+}
+
+function run_nc() {
+    # Checks if it is possible to connect to the host using netcat.
+    #
+    # We want to avoid misleading messages and perform only forward lookup of the service IP address.
+    # Netcat when run without -n performs both forward and reverse lookup and fails if the reverse
+    # lookup name does not match the original name even if the host is reachable via IP. This happens
+    # randomly with docker-compose in GitHub Actions.
+    # Since we are not using reverse lookup elsewhere, we can perform forward lookup in python
+    # And use the IP in NC and add '-n' switch to disable any DNS use.
+    # Even if this message might be harmless, it might hide the real reason for the problem
+    # Which is the long time needed to start some services, seeing this message might be totally misleading
+    # when you try to analyse the problem, that's why it's best to avoid it,
+    local host="${1}"
+    local port="${2}"
+    local ip
+    ip=$(python -c "import socket; print(socket.gethostbyname('${host}'))")
+    nc -zvvn "${ip}" "${port}"
+}
+
+
+function wait_for_connection {
+    # Waits for Connection to the backend specified via URL passed as first parameter
+    # Detects backend type depending on the URL schema and assigns
+    # default port numbers if not specified in the URL.
+    # Then it loops until connection to the host/port specified can be established
+    # It tries `CONNECTION_CHECK_MAX_COUNT` times and sleeps `CONNECTION_CHECK_SLEEP_TIME` between checks
+    local connection_url
+    connection_url="${1}"
+    local detected_backend
+    detected_backend=$(python -c "from urllib.parse import urlsplit; import sys; print(urlsplit(sys.argv[1]).scheme)" "${connection_url}")
+    local detected_host
+    detected_host=$(python -c "from urllib.parse import urlsplit; import sys; print(urlsplit(sys.argv[1]).hostname or '')" "${connection_url}")
+    local detected_port
+    detected_port=$(python -c "from urllib.parse import urlsplit; import sys; print(urlsplit(sys.argv[1]).port or '')" "${connection_url}")
+
+    echo BACKEND="${BACKEND:=${detected_backend}}"
+    readonly BACKEND
+
+    if [[ -z "${detected_port=}" ]]; then
+        if [[ ${BACKEND} == "postgres"* ]]; then
+            detected_port=5432
+        elif [[ ${BACKEND} == "mysql"* ]]; then
+            detected_port=3306
+        elif [[ ${BACKEND} == "mssql"* ]]; then
+            detected_port=1433
+        elif [[ ${BACKEND} == "redis"* ]]; then
+            detected_port=6379
+        elif [[ ${BACKEND} == "amqp"* ]]; then
+            detected_port=5672
+        fi
+    fi
+
+    detected_host=${detected_host:="localhost"}
+
+    # Allow the DB parameters to be overridden by environment variable
+    echo DB_HOST="${DB_HOST:=${detected_host}}"
+    readonly DB_HOST
+
+    echo DB_PORT="${DB_PORT:=${detected_port}}"
+    readonly DB_PORT
+    if [[ -n "${DB_HOST=}" ]] && [[ -n "${DB_PORT=}" ]]; then
+        run_check_with_retries "run_nc ${DB_HOST@Q} ${DB_PORT@Q}"
+    else
+        >&2 echo "The connection details to the broker could not be determined. Connectivity checks were skipped."
+    fi
+}
+
+function create_www_user() {
+    local local_password=""
+    # Warning: command environment variables (*_CMD) have priority over usual configuration variables
+    # for configuration parameters that require sensitive information. This is the case for the SQL database
+    # and the broker backend in this entrypoint script.
+    if [[ -n "${_AIRFLOW_WWW_USER_PASSWORD_CMD=}" ]]; then
+        local_password=$(eval "${_AIRFLOW_WWW_USER_PASSWORD_CMD}")
+        unset _AIRFLOW_WWW_USER_PASSWORD_CMD
+    elif [[ -n "${_AIRFLOW_WWW_USER_PASSWORD=}" ]]; then
+        local_password="${_AIRFLOW_WWW_USER_PASSWORD}"
+        unset _AIRFLOW_WWW_USER_PASSWORD
+    fi
+    if [[ -z ${local_password} ]]; then
+        echo
+        echo "ERROR! Airflow Admin password not set via _AIRFLOW_WWW_USER_PASSWORD or _AIRFLOW_WWW_USER_PASSWORD_CMD variables!"
+        echo
+        exit 1
+    fi
+
+    if airflow config get-value core auth_manager | grep -q "FabAuthManager"; then
+        airflow users create \
+           --username "${_AIRFLOW_WWW_USER_USERNAME="admin"}" \
+           --firstname "${_AIRFLOW_WWW_USER_FIRSTNAME="Airflow"}" \
+           --lastname "${_AIRFLOW_WWW_USER_LASTNAME="Admin"}" \
+           --email "${_AIRFLOW_WWW_USER_EMAIL="airflowadmin@example.com"}" \
+           --role "${_AIRFLOW_WWW_USER_ROLE="Admin"}" \
+           --password "${local_password}" || true
+    else
+        echo "Skipping user creation as auth manager different from Fab is used"
+    fi
+}
+
+function create_system_user_if_missing() {
+    # This is needed in case of OpenShift-compatible container execution. In case of OpenShift random
+    # User id is used when starting the image, however group 0 is kept as the user group. Our production
+    # Image is OpenShift compatible, so all permissions on all folders are set so that 0 group can exercise
+    # the same privileges as the default "airflow" user, this code checks if the user is already
+    # present in /etc/passwd and will create the system user dynamically, including setting its
+    # HOME directory to the /home/airflow so that (for example) the ${HOME}/.local folder where airflow is
+    # Installed can be automatically added to PYTHONPATH
+    if ! whoami &> /dev/null; then
+      if [[ -w /etc/passwd ]]; then
+        echo "${USER_NAME:-default}:x:$(id -u):0:${USER_NAME:-default} user:${AIRFLOW_USER_HOME_DIR}:/sbin/nologin" \
+            >> /etc/passwd
+      fi
+      export HOME="${AIRFLOW_USER_HOME_DIR}"
+    fi
+}
+
+function set_pythonpath_for_root_user() {
+    # Airflow is installed as a local user application which means that if the container is running as root
+    # the application is not available. because Python then only load system-wide applications.
+    # Now also adds applications installed as local user "airflow".
+    if [[ $UID == "0" ]]; then
+        local python_major_minor
+        python_major_minor=$(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+        export PYTHONPATH="${AIRFLOW_USER_HOME_DIR}/.local/lib/python${python_major_minor}/site-packages:${PYTHONPATH:-}"
+        >&2 echo "The container is run as root user. For security, consider using a regular user account."
+    fi
+}
+
+function wait_for_airflow_db() {
+    # Wait for the command to run successfully to validate the database connection.
+    run_check_with_retries "airflow db check"
+}
+
+function migrate_db() {
+    # Runs airflow db migrate
+    airflow db migrate || true
+}
+
+function wait_for_celery_broker() {
+    # Verifies connection to Celery Broker
+    local executor
+    executor="$(airflow config get-value core executor)"
+    if [[ "${executor}" == "CeleryExecutor" ]]; then
+        local connection_url
+        connection_url="$(airflow config get-value celery broker_url)"
+        wait_for_connection "${connection_url}"
+    fi
+}
+
+function exec_to_bash_or_python_command_if_specified() {
+    # If one of the commands: 'bash', 'python' is used, either run appropriate
+    # command with exec
+    if [[ ${AIRFLOW_COMMAND} == "bash" ]]; then
+       shift
+       exec "/bin/bash" "${@}"
+    elif [[ ${AIRFLOW_COMMAND} == "python" ]]; then
+       shift
+       exec "python" "${@}"
+    fi
+}
+
+function check_uid_gid() {
+    if [[ $(id -g) == "0" ]]; then
+        return
+    fi
+    if [[ $(id -u) == "50000" ]]; then
+        >&2 echo
+        >&2 echo "WARNING! You should run the image with GID (Group ID) set to 0"
+        >&2 echo "         even if you use 'airflow' user (UID=50000)"
+        >&2 echo
+        >&2 echo " You started the image with UID=$(id -u) and GID=$(id -g)"
+        >&2 echo
+        >&2 echo " This is to make sure you can run the image with an arbitrary UID in the future."
+        >&2 echo
+        >&2 echo " See more about it in the Airflow's docker image documentation"
+        >&2 echo "     http://airflow.apache.org/docs/docker-stack/entrypoint"
+        >&2 echo
+        # We still allow the image to run with `airflow` user.
+        return
+    else
+        >&2 echo
+        >&2 echo "ERROR! You should run the image with GID=0"
+        >&2 echo
+        >&2 echo " You started the image with UID=$(id -u) and GID=$(id -g)"
+        >&2 echo
+        >&2 echo "The image should always be run with GID (Group ID) set to 0 regardless of the UID used."
+        >&2 echo " This is to make sure you can run the image with an arbitrary UID."
+        >&2 echo
+        >&2 echo " See more about it in the Airflow's docker image documentation"
+        >&2 echo "     http://airflow.apache.org/docs/docker-stack/entrypoint"
+        # This will not work so we fail hard
+        exit 1
+    fi
+}
+
+unset PIP_USER
+
+check_uid_gid
+
+umask 0002
+
+CONNECTION_CHECK_MAX_COUNT=${CONNECTION_CHECK_MAX_COUNT:=20}
+readonly CONNECTION_CHECK_MAX_COUNT
+
+CONNECTION_CHECK_SLEEP_TIME=${CONNECTION_CHECK_SLEEP_TIME:=3}
+readonly CONNECTION_CHECK_SLEEP_TIME
+
+create_system_user_if_missing
+set_pythonpath_for_root_user
+if [[ "${CONNECTION_CHECK_MAX_COUNT}" -gt "0" ]]; then
+    wait_for_airflow_db
+fi
+
+if [[ -n "${_AIRFLOW_DB_UPGRADE=}" ]] || [[ -n "${_AIRFLOW_DB_MIGRATE=}" ]] ; then
+    migrate_db
+fi
+
+if [[ -n "${_AIRFLOW_DB_UPGRADE=}" ]] ; then
+    >&2 echo "WARNING: Environment variable '_AIRFLOW_DB_UPGRADE' is deprecated please use '_AIRFLOW_DB_MIGRATE' instead"
+fi
+
+if [[ -n "${_AIRFLOW_WWW_USER_CREATE=}" ]] ; then
+    create_www_user
+fi
+
+if [[ -n "${_PIP_ADDITIONAL_REQUIREMENTS=}" ]] ; then
+    >&2 echo
+    >&2 echo "!!!!!  Installing additional requirements: '${_PIP_ADDITIONAL_REQUIREMENTS}' !!!!!!!!!!!!"
+    >&2 echo
+    >&2 echo "WARNING: This is a development/test feature only. NEVER use it in production!"
+    >&2 echo "         Instead, build a custom image as described in"
+    >&2 echo
+    >&2 echo "         https://airflow.apache.org/docs/docker-stack/build.html"
+    >&2 echo
+    >&2 echo "         Adding requirements at container startup is fragile and is done every time"
+    >&2 echo "         the container starts, so it is only useful for testing and trying out"
+    >&2 echo "         of adding dependencies."
+    >&2 echo
+    pip install --root-user-action ignore ${_PIP_ADDITIONAL_REQUIREMENTS}
+fi
+
+
+exec_to_bash_or_python_command_if_specified "${@}"
+
+if [[ ${AIRFLOW_COMMAND} == "airflow" ]]; then
+   AIRFLOW_COMMAND="${2:-}"
+   shift
+fi
+
+if [[ ${AIRFLOW_COMMAND} =~ ^(scheduler|celery)$ ]] \
+    && [[ "${CONNECTION_CHECK_MAX_COUNT}" -gt "0" ]]; then
+    wait_for_celery_broker
+fi
+
+exec "airflow" "${@}"
+```
+
+* this is the binary files that the /usr/bin folder contaisn so we can run our apt-get, apt, python3, chmod, chown, commands
+airflow@58b02296185b:/usr/bin$ ls
+ X11                                  ischroot                           prtstat
+'['                                   isql                               ps
+ addpart                              iusql                              pslog
+ ant                                  jar                                psql
+ appres                               jarsigner                          pstree
+ apt                                  java                               pstree.x11
+ apt-cache                            javac                              ptar
+ apt-cdrom                            javadoc                            ptardiff
+ apt-config                           javap                              ptargrep
+ apt-extracttemplates                 jcmd                               ptx
+ apt-ftparchive                       jconsole                           pwd
+ apt-get                              jdb                                pwdx
+ apt-key                              jdeprscan                          py3clean
+ apt-mark                             jdeps                              py3compile
+ apt-sortpkgs                         jexec                              py3versions
+ arch                                 jfr                                pydoc3
+ awk                                  jhsdb                              pydoc3.11
+ b2sum                                jimage                             pygettext3
+ base32                               jinfo                              pygettext3.11
+ base64                               jlink                              python3
+ basename                             jmap                               python3.11
+ basenc                               jmod                               rbash
+ bash                                 join                               readlink
+ bashbug                              journalctl                         realpath
+ bsqldb                               jpackage                           reindexdb
+ bsqlodbc                             jps                                rename.ul
+ busctl                               jrunscript                         renice
+ c_rehash                             jshell                             replace
+ captoinfo                            json_pp                            reset
+ cat                                  jstack                             resizepart
+ chage                                jstat                              resolve_stack_dump
+ chattr                               jstatd                             rev
+ chcon                                k5srvutil                          rgrep
+ chfn                                 kadmin                             rm
+ chgrp                                kbxutil                            rmdir
+ chmod                                kdestroy                           rmiregistry
+ choom                                kernel-install                     rrsync
+ chown                                keytool                            rsync
+ chrt                                 kill                               rsync-ssl
+ chsh                                 killall                            run-parts
+ cksum                                kinit                              runcon
+ clear                                klist                              sasl-sample-client
+ clear_console                        kpasswd                            saslfinger
+ clusterdb                            ksu                                savelog
+ cmp                                  kswitch                            scp
+ comm                                 ktutil                             script
+ corelist                             kvno                               scriptlive
+ cp                                   last                               scriptreplay
+ cpan                                 lastb                              sdiff
+ cpan5.36-x86_64-linux-gnu            lastlog                            sed
+ createdb                             ld.so                              select-editor
+ createlang                           ldapadd                            sensible-browser
+ createuser                           ldapcompare                        sensible-editor
+ csplit                               ldapdelete                         sensible-pager
+ curl                                 ldapexop                           seq
+ cut                                  ldapmodify                         serialver
+ cvtsudoers                           ldapmodrdn                         setarch
+ dash                                 ldappasswd                         setpriv
+ datacopy                             ldapsearch                         setsid
+ date                                 ldapurl                            setterm
+ db5.3_archive                        ldapwhoami                         sftp
+ db5.3_checkpoint                     ldd                                sg
+ db5.3_deadlock                       libnetcfg                          sh
+ db5.3_dump                           link                               sha1sum
+ db5.3_hotbackup                      linux32                            sha224sum
+ db5.3_load                           linux64                            sha256sum
+ db5.3_log_verify                     listres                            sha384sum
+ db5.3_printlog                       ln                                 sha512sum
+ db5.3_recover                        locale                             shasum
+ db5.3_replicate                      localectl                          shred
+ db5.3_stat                           localedef                          shuf
+ db5.3_upgrade                        logger                             skill
+ db5.3_verify                         login                              slabtop
+ db_archive                           loginctl                           sleep
+ db_checkpoint                        logname                            slogin
+ db_deadlock                          ls                                 snice
+ db_dump                              lsattr                             sort
+ db_hotbackup                         lsb_release                        splain
+ db_load                              lsblk                              split
+ db_log_verify                        lscpu                              sqlite3
+ db_printlog                          lsfd                               ssh
+ db_recover                           lsipc                              ssh-add
+ db_replicate                         lsirq                              ssh-agent
+ db_stat                              lslocks                            ssh-argv0
+ db_upgrade                           lslogins                           ssh-copy-id
+ db_verify                            lsmem                              ssh-keygen
+ dbus-cleanup-sockets                 lsns                               ssh-keyscan
+ dbus-daemon                          lspgpot                            stat
+ dbus-monitor                         luit                               stdbuf
+ dbus-run-session                     mariadb                            streamzip
+ dbus-send                            mariadb-access                     stty
+ dbus-update-activation-environment   mariadb-admin                      su
+ dbus-uuidgen                         mariadb-analyze                    sudo
+ dd                                   mariadb-binlog                     sudoedit
+ deb-systemd-helper                   mariadb-check                      sudoreplay
+ deb-systemd-invoke                   mariadb-conv                       sum
+ debconf                              mariadb-convert-table-format       sync
+ debconf-apt-progress                 mariadb-dump                       systemctl
+ debconf-communicate                  mariadb-dumpslow                   systemd
+ debconf-copydb                       mariadb-find-rows                  systemd-analyze
+ debconf-escape                       mariadb-fix-extensions             systemd-ask-password
+ debconf-set-selections               mariadb-hotcopy                    systemd-cat
+ debconf-show                         mariadb-import                     systemd-cgls
+ defncopy                             mariadb-optimize                   systemd-cgtop
+ delpart                              mariadb-plugin                     systemd-creds
+ df                                   mariadb-repair                     systemd-cryptenroll
+ diff                                 mariadb-report                     systemd-delta
+ diff3                                mariadb-secure-installation        systemd-detect-virt
+ dir                                  mariadb-setpermission              systemd-escape
+ dircolors                            mariadb-show                       systemd-firstboot
+ dirmngr                              mariadb-slap                       systemd-id128
+ dirmngr-client                       mariadb-tzinfo-to-sql              systemd-inhibit
+ dirname                              mariadb-waitpid                    systemd-machine-id-setup
+ dmesg                                mariadbcheck                       systemd-mount
+ dnsdomainname                        mawk                               systemd-notify
+ docker                               mcookie                            systemd-path
+ domainname                           md5sum                             systemd-repart
+ dpkg                                 md5sum.textutils                   systemd-run
+ dpkg-deb                             mesg                               systemd-socket-activate
+ dpkg-divert                          migrate-pubring-from-classic-gpg   systemd-stdio-bridge
+ dpkg-maintscript-helper              mkdir                              systemd-sysext
+ dpkg-query                           mkfifo                             systemd-sysusers
+ dpkg-realpath                        mknod                              systemd-tmpfiles
+ dpkg-split                           mktemp                             systemd-tty-ask-password-agent
+ dpkg-statoverride                    more                               systemd-umount
+ dpkg-trigger                         mount                              tabs
+ dropdb                               mountpoint                         tac
+ droplang                             msql2mysql                         tail
+ dropuser                             mv                                 tar
+ du                                   my_print_defaults                  taskset
+ dumb-init                            mysql                              tdspool
+ echo                                 mysql_find_rows                    tee
+ editres                              mysql_fix_extensions               tempfile
+ egrep                                mysql_waitpid                      test
+ enc2xs                               mysqlaccess                        tic
+ encguess                             mysqladmin                         timedatectl
+ env                                  mysqlanalyze                       timeout
+ expand                               mysqlcheck                         tload
+ expiry                               mysqldump                          toe
+ expr                                 mysqldumpslow                      top
+ factor                               mysqlimport                        touch
+ faillog                              mysqloptimize                      tput
+ fallocate                            mysqlrepair                        tr
+ false                                mysqlreport                        true
+ fc-cache                             mysqlshow                          truncate
+ fc-cat                               mysqlslap                          tset
+ fc-conflist                          mytop                              tsort
+ fc-list                              namei                              tsql
+ fc-match                             nawk                               tty
+ fc-pattern                           nc                                 tzselect
+ fc-query                             nc.openbsd                         uclampset
+ fc-scan                              netcat                             umount
+ fc-validate                          networkctl                         uname
+ fgrep                                newgrp                             uncompress
+ fincore                              nice                               unexpand
+ find                                 nisdomainname                      uniq
+ findmnt                              nl                                 unlink
+ fisql                                nohup                              unshare
+ flock                                nproc                              update-alternatives
+ fmt                                  nsenter                            update-mime-database
+ fold                                 numfmt                             uptime
+ free                                 od                                 users
+ freebcp                              odbcinst                           utmpdump
+ fuser                                openssl                            vacuumdb
+ gdk-pixbuf-csource                   osql                               vacuumlo
+ gdk-pixbuf-pixdata                   pager                              vdir
+ gdk-pixbuf-thumbnailer               partx                              viewres
+ gen-auth                             passwd                             vmstat
+ geos-config                          paste                              w
+ getconf                              pathchk                            wall
+ getent                               pdb3                               watch
+ getopt                               pdb3.11                            watchgnupg
+ gpasswd                              peekfd                             wc
+ gpg                                  perl                               wdctl
+ gpg-agent                            perl5.36-x86_64-linux-gnu          whereis
+ gpg-connect-agent                    perl5.36.0                         which
+ gpg-wks-server                       perlbug                            which.debianutils
+ gpg-zip                              perldoc                            who
+ gpg2                                 perlivp                            whoami
+ gpgcompose                           perlthanks                         x86_64
+ gpgconf                              perror                             xargs
+ gpgparsemail                         pg_basebackup                      xdg-user-dir
+ gpgsm                                pg_dump                            xdg-user-dirs-update
+ gpgsplit                             pg_dumpall                         xdpyinfo
+ gpgtar                               pg_isready                         xdriinfo
+ gpgv                                 pg_receivewal                      xev
+ grep                                 pg_receivexlog                     xfd
+ groups                               pg_recvlogical                     xfontsel
+ gtk-update-icon-cache                pg_restore                         xkill
+ gunzip                               pgbench                            xlsatoms
+ gzexe                                pgrep                              xlsclients
+ gzip                                 piconv                             xlsfonts
+ h2ph                                 pidof                              xmessage
+ h2xs                                 pidwait                            xprop
+ hardlink                             pinentry                           xsubpp
+ head                                 pinentry-curses                    xvinfo
+ hostid                               pinky                              xwininfo
+ hostname                             pkill                              yes
+ hostnamectl                          pl2pm                              ypdomainname
+ i386                                 pldd                               zcat
+ iconv                                pmap                               zcmp
+ id                                   pod2html                           zdiff
+ infocmp                              pod2man                            zdump
+ infotocap                            pod2text                           zegrep
+ innotop                              pod2usage                          zfgrep
+ install                              podchecker                         zforce
+ instmodsh                            pr                                 zgrep
+ ionice                               printenv                           zipdetails
+ ipcmk                                printf                             zless
+ ipcrm                                prlimit                            zmore
+ ipcs                                 prove                              znew
+```
+
+* command printenv prints the following
+```
+PYTHON_SHA256=8fb5f9fbc7609fa822cb31549884575db7fd9657cbffb89510b5d7975963a83a
+DUMB_INIT_SETSID=1
+HOSTNAME=58b02296185b
+PYTHON_VERSION=3.11.13
+LANGUAGE=C.UTF-8
+JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/
+AIRFLOW_USER_HOME_DIR=/home/airflow
+ADDITIONAL_RUNTIME_APT_DEPS=
+PWD=/usr/bin
+AIRFLOW__CORE__AUTH_MANAGER=airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+AIRFLOW__CORE__EXECUTION_API_SERVER_URL=http://airflow-apiserver:8080/execution/
+AIRFLOW_VERSION=3.0.2
+AIRFLOW__CORE__LOAD_EXAMPLES=true
+INSTALL_MSSQL_CLIENT=true
+INSTALL_MYSQL_CLIENT_TYPE=mariadb
+GUNICORN_CMD_ARGS=--worker-tmp-dir /dev/shm
+HOME=/home/airflow
+VIRTUAL_ENV=/home/airflow/.local
+AIRFLOW_HOME=/opt/airflow
+AIRFLOW_SETUPTOOLS_VERSION=80.8.0
+GPG_KEY=A035C8C19219BA821ECEA86B64E628F8D684696D
+AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+AIRFLOW_USE_UV=false
+AIRFLOW__CORE__EXECUTOR=LocalExecutor
+PIP_CACHE_DIR=/tmp/.cache/pip
+AIRFLOW_PIP_VERSION=25.1.1
+AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=true
+_PIP_ADDITIONAL_REQUIREMENTS=
+AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK=true
+AIRFLOW_IMAGE_TYPE=prod
+AIRFLOW_INSTALLATION_METHOD=apache-airflow
+AIRFLOW_CONFIG=/opt/airflow/config/airflow.cfg
+PATH=/root/bin:/home/airflow/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+PYTHON_BASE_IMAGE=python:3.11-slim-bookworm
+AIRFLOW_UID=50000
+AIRFLOW__CORE__FERNET_KEY=
+```
+
+* our PATH user environment variable has the following values 
+/root/bin
+/home/airflow/.local/bin
+/usr/local/bin
+/usr/local/sbin
+/usr/local/bin
+/usr/sbin
+/usr/bin
+/sbin
+/bin
+
 # Questions:
 * how to fill in missing values?
 * how to drop undesired values based on a filter?

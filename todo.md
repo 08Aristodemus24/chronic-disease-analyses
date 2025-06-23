@@ -337,6 +337,8 @@ https://github.com/apache/airflow/discussions/36074
 * maybe we don't need to use spark
 once we have installed spark via downloading the tar.gz file and the extracting its components and setting the SPARK_HOME env variable
 
+* 
+
 # to address in the future:
 * there may be potential for error in creating buckets from extraction scripts like `extract_cdi.py`, `extract_us_population_per_state_by_sex_age_race_ho.py` and `extract_us_population_per_state.py`, because if we try to run these simultaneously or concurrently like in airflow it might result in conflicts, so separate creation of `cdi-data-raw`, `population-data-raw`, `population-data-transformed`, and `cdi-data-transformed` folders
 * use selenium, docker, and airflow to automate extraction process and then use pyspark and databricks to transform extracted data and load the final data into a warehouse like databricks. All of this is orchestrated using airflow. 
