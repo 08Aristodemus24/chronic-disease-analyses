@@ -43,8 +43,8 @@ def extract_populations(
 
     # 
     for link, xpath in links_xpaths:
-        print("link: {link}")
-        print("xpath: {xpath}\n")
+        print(f"link: {link}")
+        print(f"xpath: {xpath}\n")
 
         # sleep for couple seconds to let page load
         driver.get(link)
@@ -86,7 +86,11 @@ def extract_populations(
     relocated_file_paths = []
     for i, OLD_FILE_PATH in enumerate(old_file_paths):
         # rename downloaded files
+        
         NEW_FILE_NAME = new_file_names[i]
+        """airflow error occurs here FileNotFoundError: [Errno 2] No such file or directory: 
+        './data/population-data-raw/sc-est2010-alldata6.csv' -> 
+        './data/population-data-raw/us_populations_per_state_by_sex_age_race_ho_2000-2010.csv'"""
         NEW_FILE_PATH = os.path.join(downloads_dir, NEW_FILE_NAME)
         os.rename(OLD_FILE_PATH, NEW_FILE_PATH)
 
@@ -107,7 +111,8 @@ if __name__ == "__main__":
     # env_dir = Path('./').resolve()
     # load_dotenv(os.path.join(env_dir, '.env'))
     
-    ABS_DATA_DIR_PATH = "\\opt\\airflow\\dags\\operators\\data\\population-data-raw"
+    # ABS_DATA_DIR_PATH = "/opt/airflow/dags/operators/data/population-data-raw/"
+    ABS_DATA_DIR_PATH = "/home/seluser/downloads"
     # ABS_DATA_DIR_PATH = "C:\\Users\\LARRY\\Documents\\Scripts\\data-engineering-path\\chronic-disease-analyses\\dags\\data\\population-data-raw\\"
     DATA_DIR = "./data/population-data-raw"
     os.makedirs(DATA_DIR, exist_ok=True)
@@ -117,8 +122,13 @@ if __name__ == "__main__":
     # disables development shared memory usage
     chrome_options = ChromeOptions()
     prefs = {
-        "download.default_directory": ABS_DATA_DIR_PATH,    
+        "download.default_directory": ABS_DATA_DIR_PATH,
+        "savefile.default_directory": ABS_DATA_DIR_PATH,
+        "download_restrictions": 0,
+        "safebrowsing.enabled": False,
+        "safebrowsing.disable_download_protection": True
     }
+
     chrome_options.add_experimental_option("prefs", prefs)
     chrome_options.add_experimental_option('detach', True)
 
@@ -153,7 +163,8 @@ if __name__ == "__main__":
     links_xpaths = zip(links, xpaths)
 
     # extract populations given the year ranges
-    relocated_file_paths = extract_populations(links_xpaths, service, chrome_options, downloads_dir=DATA_DIR)
+    relocated_file_paths = extract_populations(links_xpaths, service, chrome_options, downloads_dir=ABS_DATA_DIR_PATH)
+    print(relocated_file_paths)
 
     # create s3 client and pass credentials to create bucket
     credentials = {

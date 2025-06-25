@@ -18,10 +18,13 @@ RUN apt update && \
     rm google-chrome-stable_current_amd64.deb && \
     apt-get clean;
 
+RUN mkdir -p /home/seluser/ /home/seluser/downloads/
+
 # Set JAVA_HOME
 # if in macos use 
 # ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-arm64/
 ENV JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64/"
+
 
 # switch to airflow user right after setting env variables
 USER airflow

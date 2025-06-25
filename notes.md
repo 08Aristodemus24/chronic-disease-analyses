@@ -2065,6 +2065,10 @@ note that when using this selenium script this will by default be located in the
 
 * however switching to the root user is not enough as we need to work with the airflow user itself which does not have access to the /root/Downloads/ directory
 
+* `rm -r /path/to/dir/*` to remove all files in a directory but not the directory itself
+* `mkdir: cannot create directory ‘seluser’: Permission denied` and maybe this implies that downloads using regular usre (airflow) are restricuted
+* need to figure out a way to grant permissions to airflow user as root user during the building of dockerfile
+
 
 # Questions:
 * how to fill in missing values?
@@ -2093,8 +2097,9 @@ note that when using this selenium script this will by default be located in the
 
 # Problems to solve:
 1. I can't save year as 4 byte int for 200000+ rows since that would be a waste of space
-2. implement headless browsing of selenium to scrape population data transform the excel sheets and automatically in a data warehouse for data analysis 
+2. <s>implement headless browsing of selenium to scrape population data transform the excel sheets and automatically in a data warehouse for data analysis</s>
 3. joining tables in dax powerbi with multiple conditions
+4. automatically extract the spreadsheets using selenium using airflow
 
 
 
