@@ -339,6 +339,9 @@ once we have installed spark via downloading the tar.gz file and the extracting 
 
 * figure out a way to RUN curl commands after pulling spark image, to install necessary jar packages, then after these are removed we need to remove the guava-14.0 package built in spark 3.5.5 
 
+* recall that spark and airflow run on different containers but on the same network so you won't be able to run spark commands on the airflow container and vice versa
+
+
 # to address in the future:
 * there may be potential for error in creating buckets from extraction scripts like `extract_cdi.py`, `extract_us_population_per_state_by_sex_age_race_ho.py` and `extract_us_population_per_state.py`, because if we try to run these simultaneously or concurrently like in airflow it might result in conflicts, so separate creation of `cdi-data-raw`, `population-data-raw`, `population-data-transformed`, and `cdi-data-transformed` folders
 * use selenium, docker, and airflow to automate extraction process and then use pyspark and databricks to transform extracted data and load the final data into a warehouse like databricks. All of this is orchestrated using airflow. 
