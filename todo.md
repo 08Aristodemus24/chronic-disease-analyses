@@ -209,7 +209,7 @@ preqrequisites:
     |- hadoop.dll to avoid `java.lang.UnsatisfiedLinkError: 'boolean org.apache.hadoop.io.nativeio.NativeIO$Windows.access0(java.lang.String, int)`
     |- winutils.exe to avoid `java.lang.UnsatisfiedLinkError`
 - python 3.11.x (locally not docker I used 3.11.8) to avoid `EOF exception` in creating spark dataframes
-- once spark is downloaded I will have to replace the guava-14.0 maven package that comes with it with guava-27.0-jre
+- once spark is downloaded I will have to replace the guava-14.0 maven package that comes with it with guava-27.0-jre   
 - include hadoop-aws 3.3.4, aws-java-sdk-bundle 1.11.563, and httpcore 4.4.16 to avoid `java.lang.NoSuchMethodError: org.apache.hadoop.util.SemaphoredDelegatingExecutor.<init>` and `Class org.apache.hadoop.fs.s3a.auth.IAMInstanceCredentialsProvider not found`
 - need the python version to be 3.11.x as part of the specs of this orchestration
 - change `AIRFLOW__CORE__EXECUTOR` from `CeleryExecutor` to `LocalExecutor`
@@ -337,7 +337,7 @@ https://github.com/apache/airflow/discussions/36074
 * maybe we don't need to use spark
 once we have installed spark via downloading the tar.gz file and the extracting its components and setting the SPARK_HOME env variable
 
-* 
+* figure out a way to RUN curl commands after pulling spark image, to install necessary jar packages, then after these are removed we need to remove the guava-14.0 package built in spark 3.5.5 
 
 # to address in the future:
 * there may be potential for error in creating buckets from extraction scripts like `extract_cdi.py`, `extract_us_population_per_state_by_sex_age_race_ho.py` and `extract_us_population_per_state.py`, because if we try to run these simultaneously or concurrently like in airflow it might result in conflicts, so separate creation of `cdi-data-raw`, `population-data-raw`, `population-data-transformed`, and `cdi-data-transformed` folders

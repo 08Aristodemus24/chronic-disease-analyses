@@ -89,8 +89,8 @@ x-airflow-common:
     # create (mount) neccessary directories/volumes as root user so we don't have
     # to create the directories with no permissions for non-root user to read write
     # and execute within these directories
-    - ${AIRFLOW_PROJ_DIR:-.}/include/data/cdi-data-raw:/opt/include/data/cdi-data-raw
-    - ${AIRFLOW_PROJ_DIR:-.}/include/data/population-data-raw:/opt/include/data/population-data-raw
+    - ${AIRFLOW_PROJ_DIR:-.}/include/data/cdi-data-raw:/opt/airflow/include/data/cdi-data-raw
+    - ${AIRFLOW_PROJ_DIR:-.}/include/data/population-data-raw:/opt/airflow/include/data/population-data-raw
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
