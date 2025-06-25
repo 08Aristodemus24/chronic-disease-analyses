@@ -85,11 +85,28 @@ x-airflow-common:
 
     # /opt/airflow/include/data/
     - ${AIRFLOW_PROJ_DIR:-.}/include:/opt/airflow/include
+
+    # create (mount) neccessary directories/volumes as root user so we don't have
+    # to create the directories with no permissions for non-root user to read write
+    # and execute within these directories
+    - ${AIRFLOW_PROJ_DIR:-.}/include/data/cdi-data-raw:/opt/include/data/cdi-data-raw
+    - ${AIRFLOW_PROJ_DIR:-.}/include/data/population-data-raw:/opt/include/data/population-data-raw
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
     postgres:
       condition: service_healthy
+  networks:
+    - michael
+
+x-spark-common: 
+  &spark-common
+  # we need to use 3.5.5 so it is compatible with
+  image: bitnami/spark:3.5.5
+  volumes:
+    - ${AIRFLOW_PROJ_DIR:-.}/include:/opt/airflow/include
+  networks:
+    - michael
 
 services:
   postgres:
@@ -106,6 +123,8 @@ services:
       retries: 5
       start_period: 5s
     restart: always
+    networks:
+      - michael
 
   airflow-apiserver:
     <<: *airflow-common
@@ -276,5 +295,38 @@ services:
     depends_on:
       <<: *airflow-common-depends-on
 
+  # spark services are then run once image is pulled
+  spark-master:
+    <<: *spark-common
+    command: bin/spark-class org.apache.spark.deploy.master.Master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_MASTER_WEBUI_PORT=8081
+    ports:
+      - "8081:8081"
+      - "7077:7077"
+
+  spark-worker:
+    <<: *spark-common
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      # - SPARK_WORKER_MEMORY=2G
+      # - SPARK_WORKER_CORES=2
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    depends_on:
+      - spark-master
+
 volumes:
   postgres-db-volume:
+
+networks:
+  michael:

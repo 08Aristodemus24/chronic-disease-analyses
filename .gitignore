@@ -9,4 +9,5 @@
 # airflow
 /logs/
 /config/
+/include/data/
 /dags/data/

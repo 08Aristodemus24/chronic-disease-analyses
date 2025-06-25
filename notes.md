@@ -1003,7 +1003,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 * `f`, `--fail` - If the server returns an error, curl fails silently and returns error 22. e.g. `curl --fail https://example.com`
 * `-o`, `--output` <file> - Store output in a file. The output is not shown in stdout. E.g. `curl -o file https://example.com -o file2 https://example.net`
 * `-O`, `--remote-name`	- Specify that the local file should have the name of the remote file that was downloaded. E.g. `curl -O https://example.com/filename` otherwise we can provide our own file name using the `-o` argument
-* we can combine multiple arguments in one, using only a hyphen and the letters upper or lowercase that represent a specific argument e.g. `curl -LfO 'https://airflow.apache.org/docs/apache-airflow/3.0.0/docker-compose.yaml'` means we will download a file in this location and that the local file should have this same remote files name and if it returns an error it will do so silently and return only `22`
+* we can combine multiple arguments in one, using only a hyphen and the letters upper or lowercase that represent a specific argument e.g. `curl -LfO 'https://airflow.apache.org/docs/apache-airflow/3.0.0/docker-compose.yaml'` means we will download a file in this location and that the local file should have this same remote files name and if it returns an error it will do so silently and return only `22``
 
 * with the `chmod` command you can use either numeric or symbols to change permissions of a file or directory in linux
 * `ls` command with argument `-l` indicates that we want to list the files in a directory with meta data such as the permission level of each user for a file or files
@@ -2068,6 +2068,50 @@ note that when using this selenium script this will by default be located in the
 * `rm -r /path/to/dir/*` to remove all files in a directory but not the directory itself
 * `mkdir: cannot create directory ‘seluser’: Permission denied` and maybe this implies that downloads using regular usre (airflow) are restricuted
 * need to figure out a way to grant permissions to airflow user as root user during the building of dockerfile
+
+
+* shows us the user id (uid) of current user
+```
+airflow@848360f97c04:/opt/airflow$ id
+uid=50000(airflow) gid=0(root) groups=0(root)
+```
+
+```
+root@848360f97c04:/opt/airflow# id
+uid=0(root) gid=0(root) groups=0(root)
+```
+
+the reason why we can't seem to download files with the airflow user (which is a non root user) is because unlike the root user it doesn't have the permission to go into some files, create directories, or edit files
+
+the way we can elevate a non root users permissions is to add it to the group fo the root user. But do note that this can only be done as the root user. What we basically do is have the root user grant root permissions to the non root user through `usermod -aG root airflow`. While `sudo <any command that can be done by a root user>`. Tried this didn't work. My test case was to add the non root user to a group then once done I logged in as non root user again and navigated to hte directory where the data would be downloaded supposedly or written to, so I simulated it with touch test.txt, and sure enough it gave a `permission denied` error again. Another workaround could be to mount a volume 
+
+* `cat /etc/passwd` lists the users
+```
+root@848360f97c04:/opt/airflow# cat /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:x:39:39:ircd:/run/ircd:/usr/sbin/nologin
+_apt:x:42:65534::/nonexistent:/usr/sbin/nologin
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+airflow:x:50000:0:First Last,RoomNumber,WorkPhone,HomePhone:/home/airflow:/bin/bash
+systemd-network:x:998:998:systemd Network Management:/:/usr/sbin/nologin
+systemd-timesync:x:997:997:systemd Time Synchronization:/:/usr/sbin/nologin
+messagebus:x:100:102::/nonexistent:/usr/sbin/nologin
+```
+
 
 
 # Questions:

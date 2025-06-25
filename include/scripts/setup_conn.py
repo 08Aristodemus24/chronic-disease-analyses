@@ -41,9 +41,9 @@ if __name__ == "__main__":
             "conn_id": "my_s3_conn", 
             "conn_type": "aws", 
             "conn_extra": {
-                "aws_access_key_id": conf.get("secrets", "aws_access_key_id"), 
-                "aws_secret_access_key": conf.get("secrets", "aws_secret_access_key"),
-                "region_name": conf.get("secrets", "aws_region_name")
+                "aws_access_key_id": os.environ["AWS_ACCESS_KEY_ID"],
+                "aws_secret_access_key": os.environ["AWS_SECRET_ACCESS_KEY"],
+                "region_name": os.environ["AWS_REGION_NAME"],
             }
         }
     }

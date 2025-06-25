@@ -25,7 +25,7 @@ if __name__ == "__main__":
     response = requests.get(link, stream=True)
 
     # download zip and extract locally
-    file_path = download_locally(response)
+    file_path = download_locally(response, DATA_DIR="../include/data/cdi-data-raw")
     print(file_path)
 
     # create s3 client and pass credentials to create bucket

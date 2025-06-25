@@ -57,6 +57,8 @@ def extract_populations(
         # get element and download 
         resrc_element = driver.find_element(by=By.XPATH, value=xpath)
         href = resrc_element.get_attribute("href")
+
+        # sc-est2010.csv will sometimes be sc-est2010.csv.crdownload
         OLD_FILE_NAME = href.split('/')[-1]
         OLD_FILE_PATH = os.path.join(downloads_dir, OLD_FILE_NAME)
 
@@ -94,28 +96,35 @@ def extract_populations(
         NEW_FILE_PATH = os.path.join(downloads_dir, NEW_FILE_NAME)
         os.rename(OLD_FILE_PATH, NEW_FILE_PATH)
 
-        # move downloaded files to local data dir
-        RELOCATED_FILE_PATH = os.path.join(DATA_DIR, NEW_FILE_NAME)
-        shutil.move(NEW_FILE_PATH, RELOCATED_FILE_PATH)
+        # # move downloaded files to local data dir
+        # RELOCATED_FILE_PATH = os.path.join(DATA_DIR, NEW_FILE_NAME)
+        # shutil.move(NEW_FILE_PATH, RELOCATED_FILE_PATH)
 
         # collect relocated paths and relocated file names
-        relocated_file_paths.append((RELOCATED_FILE_PATH, NEW_FILE_NAME))
+        # relocated_file_paths.append((RELOCATED_FILE_PATH, NEW_FILE_NAME))
+
+        relocated_file_paths.append((NEW_FILE_PATH, NEW_FILE_NAME))
+
+    # do checks to see whether new file paths isolated file name
+    # matches new file name otherwise, the new file paths isolated
+    # file name will still be its old name and would not match the new
+    # file name
+    
 
     return relocated_file_paths
 
 
 # python ./crawlers/extract_us_population_per_state_by_sex_age_race_ho.py
+# python ./operators/extract_us_population_per_state_by_sex_age_race_ho.py
 if __name__ == "__main__":
     # # Build paths inside the project like this: BASE_DIR / 'subdir'.
     # # use this only in development
     # env_dir = Path('./').resolve()
     # load_dotenv(os.path.join(env_dir, '.env'))
     
-    # ABS_DATA_DIR_PATH = "/opt/airflow/dags/operators/data/population-data-raw/"
-    ABS_DATA_DIR_PATH = "/home/seluser/downloads"
+    ABS_DATA_DIR_PATH = "/opt/airflow/include/data/population-data-raw/"
     # ABS_DATA_DIR_PATH = "C:\\Users\\LARRY\\Documents\\Scripts\\data-engineering-path\\chronic-disease-analyses\\dags\\data\\population-data-raw\\"
-    DATA_DIR = "./data/population-data-raw"
-    os.makedirs(DATA_DIR, exist_ok=True)
+    DATA_DIR = "../include/data/population-data-raw/"
 
     # setting these options will not open a browser explicitly
     # and runs the scraping job in the background, 
@@ -164,7 +173,7 @@ if __name__ == "__main__":
 
     # extract populations given the year ranges
     relocated_file_paths = extract_populations(links_xpaths, service, chrome_options, downloads_dir=ABS_DATA_DIR_PATH)
-    print(relocated_file_paths)
+    print(relocated_file_paths) 
 
     # create s3 client and pass credentials to create bucket
     credentials = {
@@ -175,12 +184,6 @@ if __name__ == "__main__":
 
     # define s3 client
     s3 = boto3.client("s3", **credentials)
-
-    # relocated_file_paths = [
-    #     ("./data/population-data-raw/us_populations_per_state_by_sex_age_race_ho_2000-2010.csv", "us_populations_per_state_by_sex_age_race_ho_2000-2010.csv"),
-    #     ("./data/population-data-raw/us_populations_per_state_by_sex_age_race_ho_2010-2019.csv", "us_populations_per_state_by_sex_age_race_ho_2010-2019.csv"),
-    #     ("./data/population-data-raw/us_populations_per_state_by_sex_age_race_ho_2020-2023.csv", "us_populations_per_state_by_sex_age_race_ho_2020-2023.csv")
-    # ]
 
     # create bucket and then bucket folder
     BUCKET_NAME = "chronic-disease-analyses-bucket"
