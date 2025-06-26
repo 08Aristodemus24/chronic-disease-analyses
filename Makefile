@@ -15,8 +15,7 @@ do-sleep:
 setup-conn:
 	docker exec chronic-disease-analyses-airflow-apiserver-1 python /opt/airflow/include/scripts/setup_conn.py
 
-up: start-containers do-sleep 
-# setup-conn
+up: start-containers do-sleep setup-conn
 
 down:
 	docker compose down

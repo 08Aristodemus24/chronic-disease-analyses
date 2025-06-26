@@ -11,7 +11,7 @@ USER root
 # * unzip
 # * chrome binary for linux docker container
 RUN apt update && \
-    apt-get install -y openjdk-17-jdk wget unzip curl && \
+    apt-get install -y openjdk-17-jdk wget unzip && \
     apt-get install -y ant && \
     wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
     apt install -y ./google-chrome-stable_current_amd64.deb && \

@@ -2112,7 +2112,143 @@ systemd-timesync:x:997:997:systemd Time Synchronization:/:/usr/sbin/nologin
 messagebus:x:100:102::/nonexistent:/usr/sbin/nologin
 ```
 
+* there comes another error even if we already added the spark packages in the SparkSubmitOperator in airflow we still get a `com.amazonaws.services.s3.AmazonS3EncryptionClientV2Builder` not found in our spark task. According to other articles it may be because of the `aws-java-sdk-bundle` package we are using which is `com.amazonaws:aws-java-sdk-bundle:1.11.563`
 
+but according to [this](https://github.com/aws/aws-sdk-java/issues/420) it may be solved with `com.amazonaws:aws-java-sdk-core:1.11.563` isntead
+
+* `java.lang.NoSuchFieldError: SIGNING_NAME` error according to [this](https://stackoverflow.com/questions/79214524/spark-scala-java-lang-nosuchfielderror-java-9-at-org-apache-spark-storage-sto) is caused by mixed versions of the same library. According to [this](https://stackoverflow.com/questions/57099076/amazon-s3-nosuchfielderror-requires-length-for-putobject-in-java) which is nearer to my error since it uses s3 also. Remember that from the time you were building the transformation script java sdk was not yet migrated to v2 that's why in earlier errors you were facing `com.amazonaws.services.s3.AmazonS3EncryptionClientV2Builder` since you were using a `com.amazonaws:aws-java-sdk-bundle:1.11.563`/`com.amazonaws:aws-java-sdk-core:1.11.563` which when visited now at https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-bundle has been migrated to https://mvnrepository.com/artifact/software.amazon.awssdk/bundle. 
+
+Ah ok now I see most packages even the one I used (`com.amazonaws:aws-java-sdk-bundle:1.11.563`) all had leading 1's in the version number and in the migrated repository all versions now had leading 2's indicating the 2nd version of the aws java sdk
+
+luckily there are docs helping you to migrate from version 1 which you used to version 2 to help you find which version 2 of aws java sdk you need to indicate
+
+`https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/migration-steps.html`
+
+solved by adding instead 
+com.amazonaws:aws-java-sdk-core:1.12.768
+com.amazonaws:aws-java-sdk-kms:1.12.768
+com.amazonaws:jmespath-java:1.12.768
+com.amazonaws:aws-java-sdk-s3:1.12.768
+
+closes error to yours is [here](https://stackoverflow.com/questions/49375877/aws-java-sdk-for-ssm-gives-java-lang-nosuchfielderror-signing-region) except his `SIGNING_REGION`
+
+* another error `java.lang.ClassNotFoundException: com.amazonaws.auth.AWSCredentialsProvider` 
+
+When using the AWS SDK v2 the com.amazonaws.auth.AWSCredentials class is not present and a java.lang.NoClassDefFoundError is thrown according to [this](https://github.com/testcontainers/testcontainers-java/issues/4279).
+
+In 2023, this may be caused because of TestContainers "bug" where it exposes the classes from AWS SDK 1.x Core through it's own API, while you use AWS SDK 2.x according to [this](https://stackoverflow.com/questions/29024520/classnotfoundexception-com-amazonaws-auth-awscredentials-java)
+
+* another error `java.lang.ClassNotFoundException: com.amazonaws.services.s3.model.MultiObjectDeleteException`
+
+* the ff. package configurations causes `ClassNotFoundException: com.amazonaws.auth.AWSCredentials`
+```
+"org.apache.hadoop:hadoop-aws:3.3.4",
+"com.google.guava:guava:27.0-jre",
+
+# v2
+"software.amazon.awssdk:bom:2.31.69",
+"software.amazon.awssdk:aws-core:2.31.69",
+"software.amazon.awssdk:kms:2.31.69",
+
+# v1
+"com.amazonaws:aws-java-sdk-s3:1.12.768",
+"com.amazonaws:jmespath-java:1.12.768",
+
+"com.amazonaws:aws-java-sdk-bundle:1.12.768"
+```
+
+* the ff. package configurations causes `ClassNotFoundException: com.amazonaws.auth.AWSCredentials`
+```
+"org.apache.hadoop:hadoop-aws:3.3.4",
+"com.google.guava:guava:27.0-jre",
+
+# v1
+"com.amazonaws:aws-java-sdk-core:1.12.768",
+"com.amazonaws:aws-java-sdk-kms:1.12.768",
+"com.amazonaws:aws-java-sdk-s3:1.12.768",
+"com.amazonaws:jmespath-java:1.12.768",
+```
+
+* the ff. package configurations causes `ClassNotFoundException: com.amazonaws.auth.AWSCredentials`
+```
+"org.apache.hadoop:hadoop-aws:3.3.4",
+"com.google.guava:guava:27.0-jre",
+"org.apache.httpcomponents:httpcore:4.4.16",
+
+# v2
+"software.amazon.awssdk:bom:2.31.69",
+"software.amazon.awssdk:aws-core:2.31.69",
+"software.amazon.awssdk:kms:2.31.69",
+
+# v1
+"com.amazonaws:aws-java-sdk-s3:1.12.768",
+"com.amazonaws:jmespath-java:1.12.768",
+
+"com.amazonaws:aws-java-sdk-core:1.11.563"
+```
+
+* even with original packages I used locally with additions of s3, kms, jmespath, core of the same version as I used locally the `ClassNotFoundException: com.amazonaws.auth.AWSCredentials` still occurs. I added these because it seemed to resolve the other `java.lang.NoSuchFieldError: SIGNING_NAME` error. An article detailed this error is highligted [here](https://aravind-deva.medium.com/spark-operator-on-aws-eks-systematic-troubleshooting-120bad35de74)
+```
+"org.apache.hadoop:hadoop-aws:3.3.4",
+"com.google.guava:guava:27.0-jre",
+"org.apache.httpcomponents:httpcore:4.4.16",
+
+"com.amazonaws:aws-java-sdk-bundle:1.11.563",
+
+"com.amazonaws:aws-java-sdk-core:1.11.563",
+"com.amazonaws:aws-java-sdk-kms:1.11.563",
+"com.amazonaws:aws-java-sdk-s3:1.11.563",
+"com.amazonaws:jmespath-java:1.11.563"
+```
+
+```
+"org.apache.hadoop:hadoop-aws:3.3.4",
+"com.google.guava:guava:27.0-jre",
+
+# v2
+"com.amazonaws:aws-java-sdk-bundle:1.12.353",
+```
+
+```
+
+```
+
+*
+ [('spark.executor.memory', '2g'),
+  ('spark.driver.extraJavaOptions', '-Djava.net.preferIPv6Addresses=false -XX:+IgnoreUnrecognizedVMOptions --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.util.concurrent=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens=java.base/jdk.internal.ref=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/sun.nio.cs=ALL-UNNAMED --add-opens=java.base/sun.security.action=ALL-UNNAMED --add-opens=java.base/sun.util.calendar=ALL-UNNAMED --add-opens=java.security.jgss/sun.security.krb5=ALL-UNNAMED -Djdk.reflect.useDirectMethodHandle=false'),
+  ('spark.app.name', 'test'),
+  ('spark.sql.execution.arrow.maxRecordsPerBatch', '100'),
+  ('spark.driver.host', 'e06fc815556c'),
+  ('spark.executor.id', 'driver'),
+  ('spark.jars', 'file:///home/airflow/.ivy2/jars/org.apache.hadoop_hadoop-aws-3.3.4.jar,file:///home/airflow/.ivy2/jars/com.google.guava_guava-27.0-jre.jar,file:///home/airflow/.ivy2/jars/com.amazonaws_aws-java-sdk-bundle-1.12.353.jar,file:///home/airflow/.ivy2/jars/org.wildfly.openssl_wildfly-openssl-1.0.7.Final.jar,file:///home/airflow/.ivy2/jars/com.google.guava_failureaccess-1.0.jar,file:///home/airflow/.ivy2/jars/com.google.guava_listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar,file:///home/airflow/.ivy2/jars/com.google.code.findbugs_jsr305-3.0.2.jar,file:///home/airflow/.ivy2/jars/org.checkerframework_checker-qual-2.5.2.jar,file:///home/airflow/.ivy2/jars/com.google.errorprone_error_prone_annotations-2.2.0.jar,file:///home/airflow/.ivy2/jars/com.google.j2objc_j2objc-annotations-1.1.jar,file:///home/airflow/.ivy2/jars/org.codehaus.mojo_animal-sniffer-annotations-1.17.jar'),
+  ('spark.app.startTime', '1750922679617'),
+  ('spark.app.submitTime', '1750922676521'),
+  ('spark.app.initial.file.urls', 'spark://e06fc815556c:44985/files/com.google.guava_guava-27.0-jre.jar,spark://e06fc815556c:44985/files/com.google.guava_failureaccess-1.0.jar,spark://e06fc815556c:44985/files/com.google.errorprone_error_prone_annotations-2.2.0.jar,spark://e06fc815556c:44985/files/org.codehaus.mojo_animal-sniffer-annotations-1.17.jar,spark://e06fc815556c:44985/files/com.google.guava_listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar,spark://e06fc815556c:44985/files/com.amazonaws_aws-java-sdk-bundle-1.12.353.jar,spark://e06fc815556c:44985/files/com.google.code.findbugs_jsr305-3.0.2.jar,spark://e06fc815556c:44985/files/com.google.j2objc_j2objc-annotations-1.1.jar,spark://e06fc815556c:44985/files/org.apache.hadoop_hadoop-aws-3.3.4.jar,spark://e06fc815556c:44985/files/org.checkerframework_checker-qual-2.5.2.jar,spark://e06fc815556c:44985/files/org.wildfly.openssl_wildfly-openssl-1.0.7.Final.jar'),
+  ('spark.submit.pyFiles', '/home/airflow/.ivy2/jars/org.apache.hadoop_hadoop-aws-3.3.4.jar,/home/airflow/.ivy2/jars/com.google.guava_guava-27.0-jre.jar,/home/airflow/.ivy2/jars/com.amazonaws_aws-java-sdk-bundle-1.12.353.jar,/home/airflow/.ivy2/jars/org.wildfly.openssl_wildfly-openssl-1.0.7.Final.jar,/home/airflow/.ivy2/jars/com.google.guava_failureaccess-1.0.jar,/home/airflow/.ivy2/jars/com.google.guava_listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar,/home/airflow/.ivy2/jars/com.google.code.findbugs_jsr305-3.0.2.jar,/home/airflow/.ivy2/jars/org.checkerframework_checker-qual-2.5.2.jar,/home/airflow/.ivy2/jars/com.google.errorprone_error_prone_annotations-2.2.0.jar,/home/airflow/.ivy2/jars/com.google.j2objc_j2objc-annotations-1.1.jar,/home/airflow/.ivy2/jars/org.codehaus.mojo_animal-sniffer-annotations-1.17.jar'),
+  ('spark.files', 'file:///home/airflow/.ivy2/jars/org.apache.hadoop_hadoop-aws-3.3.4.jar,file:///home/airflow/.ivy2/jars/com.google.guava_guava-27.0-jre.jar,file:///home/airflow/.ivy2/jars/com.amazonaws_aws-java-sdk-bundle-1.12.353.jar,file:///home/airflow/.ivy2/jars/org.wildfly.openssl_wildfly-openssl-1.0.7.Final.jar,file:///home/airflow/.ivy2/jars/com.google.guava_failureaccess-1.0.jar,file:///home/airflow/.ivy2/jars/com.google.guava_listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar,file:///home/airflow/.ivy2/jars/com.google.code.findbugs_jsr305-3.0.2.jar,file:///home/airflow/.ivy2/jars/org.checkerframework_checker-qual-2.5.2.jar,file:///home/airflow/.ivy2/jars/com.google.errorprone_error_prone_annotations-2.2.0.jar,file:///home/airflow/.ivy2/jars/com.google.j2objc_j2objc-annotations-1.1.jar,file:///home/airflow/.ivy2/jars/org.codehaus.mojo_animal-sniffer-annotations-1.17.jar'),
+  ('spark.app.id', 'app-20250626072440-0069'),
+  ('spark.executor.cores', '6'),
+  ('spark.repl.local.jars', 'file:///home/airflow/.ivy2/jars/org.apache.hadoop_hadoop-aws-3.3.4.jar,file:///home/airflow/.ivy2/jars/com.google.guava_guava-27.0-jre.jar,file:///home/airflow/.ivy2/jars/com.amazonaws_aws-java-sdk-bundle-1.12.353.jar,file:///home/airflow/.ivy2/jars/org.wildfly.openssl_wildfly-openssl-1.0.7.Final.jar,file:///home/airflow/.ivy2/jars/com.google.guava_failureaccess-1.0.jar,file:///home/airflow/.ivy2/jars/com.google.guava_listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar,file:///home/airflow/.ivy2/jars/com.google.code.findbugs_jsr305-3.0.2.jar,file:///home/airflow/.ivy2/jars/org.checkerframework_checker-qual-2.5.2.jar,file:///home/airflow/.ivy2/jars/com.google.errorprone_error_prone_annotations-2.2.0.jar,file:///home/airflow/.ivy2/jars/com.google.j2objc_j2objc-annotations-1.1.jar,file:///home/airflow/.ivy2/jars/org.codehaus.mojo_animal-sniffer-annotations-1.17.jar'),
+  ('spark.driver.port', '44985'),
+  ('spark.rdd.compress', 'True'),
+  ('spark.master', 'spark://spark-master:7077'),
+  ('spark.executor.extraJavaOptions', '-Djava.net.preferIPv6Addresses=false -XX:+IgnoreUnrecognizedVMOptions --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.util.concurrent=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens=java.base/jdk.internal.ref=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/sun.nio.cs=ALL-UNNAMED --add-opens=java.base/sun.security.action=ALL-UNNAMED --add-opens=java.base/sun.util.calendar=ALL-UNNAMED --add-opens=java.security.jgss/sun.security.krb5=ALL-UNNAMED -Djdk.reflect.useDirectMethodHandle=false'),
+  ('spark.serializer.objectStreamReset', '100'),
+  ('spark.app.initial.jar.urls', 'spark://e06fc815556c:44985/jars/com.google.guava_failureaccess-1.0.jar,spark://e06fc815556c:44985/jars/org.wildfly.openssl_wildfly-openssl-1.0.7.Final.jar,spark://e06fc815556c:44985/jars/com.google.j2objc_j2objc-annotations-1.1.jar,spark://e06fc815556c:44985/jars/com.google.errorprone_error_prone_annotations-2.2.0.jar,spark://e06fc815556c:44985/jars/com.google.guava_guava-27.0-jre.jar,spark://e06fc815556c:44985/jars/com.google.guava_listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar,spark://e06fc815556c:44985/jars/org.apache.hadoop_hadoop-aws-3.3.4.jar,spark://e06fc815556c:44985/jars/com.amazonaws_aws-java-sdk-bundle-1.12.353.jar,spark://e06fc815556c:44985/jars/org.codehaus.mojo_animal-sniffer-annotations-1.17.jar,spark://e06fc815556c:44985/jars/org.checkerframework_checker-qual-2.5.2.jar,spark://e06fc815556c:44985/jars/com.google.code.findbugs_jsr305-3.0.2.jar'),
+  ('spark.submit.deployMode', 'client'),
+  ('spark.driver.memory', '14g')]: source="airflow.task.hooks.airflow.providers.apache.spark.hooks.spark_submit.SparkSubmitHook"
+
+
+* I need to test it somehow in the spark container the script I'm trying to submit to see if it works locally there without airflow submitting a spark job `spark-submit --packages org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.11.563,org.apache.httpcomponents:httpcore:4.4.16 transform_us_population_per_state_by_sex_age_race_ho.py --year-range-list 2000-2009`
+
+*
+ava.io.IOException: Failed to rename DeprecatedRawLocalFileStatus{path=file:
+/opt/airflow/include/data/population-data-transformed/State.parquet/_temporary/0/task_202506260926427438048172184000156_0019_m_000000/part-00000-776a2f97-2680-4bbc-881d-0f394c01ce21-c000.snappy.parquet
+; isDirectory=false; length=1476; replication=1; blocksize=33554432; modification_time=1750930003491; access_time=1750930003491; owner=; group=; permission=rw-rw-rw-; isSymlink=false; hasAcl=false; isEncrypted=false; isErasureCoded=false} to 
+
+/opt/airflow/include/data/population-data-transformed/State.parquet/part-00000-776a2f97-2680-4bbc-881d-0f394c01ce21-c000.snappy.parquet:
+
+again this may be due to permission errors again which is one of the downsides of saving locally which you shouldn't have to do. You should be able to save the files in the cloud like s3 but you can't because of the `AWSCredential` error
 
 # Questions:
 * how to fill in missing values?
@@ -2144,6 +2280,7 @@ messagebus:x:100:102::/nonexistent:/usr/sbin/nologin
 2. <s>implement headless browsing of selenium to scrape population data transform the excel sheets and automatically in a data warehouse for data analysis</s>
 3. joining tables in dax powerbi with multiple conditions
 4. automatically extract the spreadsheets using selenium using airflow
+
 
 
 

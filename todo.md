@@ -339,7 +339,9 @@ once we have installed spark via downloading the tar.gz file and the extracting 
 
 * figure out a way to RUN curl commands after pulling spark image, to install necessary jar packages, then after these are removed we need to remove the guava-14.0 package built in spark 3.5.5 
 
-* recall that spark and airflow run on different containers but on the same network so you won't be able to run spark commands on the airflow container and vice versa
+* recall that spark and airflow run on different containers but on the same network so you won't be able to run spark commands on the airflow container and vice versa, so maybe try to do thhe necessary adding of jar packages in an external docker file for the x-spark-common container
+
+so if we wanted to be inside the airflow container we could use `docker exec -it chronic-disease-analyses-airflow-apiserver-1 bash`, and if the spark container we could use `docker exec -it chronic-disease-analyses-spark-master-1 bash`
 
 
 # to address in the future:

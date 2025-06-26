@@ -173,7 +173,7 @@ if __name__ == "__main__":
 
     # extract populations given the year ranges
     relocated_file_paths = extract_populations(links_xpaths, service, chrome_options, downloads_dir=ABS_DATA_DIR_PATH)
-    print(relocated_file_paths) 
+    print(relocated_file_paths)
 
     # create s3 client and pass credentials to create bucket
     credentials = {
