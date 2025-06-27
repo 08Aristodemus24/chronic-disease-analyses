@@ -3,15 +3,14 @@
 ## Technologies
 ### Data Lake:
 * S3
-* apache iceberg
+* Apache Iceberg
 * Google cloud storage
 * Azure data lake storage
 
 ### DWH:
 * MotherDuck/DuckDB
-
 * Clickhouse
-Apache druid
+* Apache druid
 * Snowflake
 * AWS redshift 
 * GCP big query
@@ -19,12 +18,26 @@ Apache druid
 * Databricks
 
 ### Data lake house:
+basically allows the flexibility to still access raw data formats like a data like e.g. s3 and mold them into a structured format like a table. That's why it's called lake house, because from a lake you can find the raw materials around it and build a house.
 * Apache iceberg
 * Delta lake
+
+### NoSQL DBs for Big Data:
+* Apache Cassandra
+* MongoDB
+* Apache HBase
+
+### Vector Databases (for storing coefs of machine/deep learning models, or vector representations of words/images/videos)
+* Pinecone
+
+### Graph databases (for knowledge graphs)
+* neo4j
 
 ### Data processing (not pandas that's for kids):
 #### Batch processing:
 * Apache spark
+* Data Build Tool
+
 #### Stream processing: 
 * Apache kafka
 
@@ -2274,6 +2287,8 @@ again this may be due to permission errors again which is one of the downsides o
 * for exporting the downloaded geojson map from https://simplemaps.com/gis/country/us to topojson so that it can be used in powerbi: https://mapshaper.org/
 * Joining tables in DAX powerbi with multiple conditions: https://stackoverflow.com/questions/41846571/how-to-joint-two-tables-in-dax-using-custom-condition 
 * being able to use selected value in slicer to make a dynamic table: https://community.fabric.microsoft.com/t5/Desktop/Create-Dynamic-Tables-based-on-slicer-from-the-same-data-set-and/td-p/2003909
+* free tier cloud service providers for your data or ml engineering projects: https://free-for.dev/?fbclid=IwY2xjawLLEVVleHRuA2FlbQIxMABicmlkETFaZVIxRjlCVVZWem5XZ2ZrAR6AlHQ0QaDbp_7C71UuAfgErOu0j6DhDG3LnPavSBHPR_uFfc4bPKW3oFMdWA_aem_wL1EIUITDtqE7tVIzoSccg#/?id=major-cloud-providers
+* DEP x DataCamp scholarship: https://dataengineering.ph/datacamp-donates.html
 
 # Problems to solve:
 1. I can't save year as 4 byte int for 200000+ rows since that would be a waste of space
@@ -2282,10 +2297,185 @@ again this may be due to permission errors again which is one of the downsides o
 4. automatically extract the spreadsheets using selenium using airflow
 
 
+# What I hope to accomplish in my next project:
+1. knowing Data sources, Data destinations, Data store (databases, data warehouse, or data lake), Data ingestion process (CDC, Kafka, or airbyte/fivetran, etc.), Staging vs production zones, Critical logics in your pipelines, Automation workflow, Environment/Infrastructure (AWS, Kubernetes, Spark Clusters, etc.), Analytics output if possible (BI dashboards)
 
+2. Data Engineering Project Idea: Tracking Creative & Humanities Trends Is it possible? Absolutely. This is a fascinating use case for data engineering. You could build a pipeline to: 
+* Extract data from: Online course platforms (Coursera, Udemy, Skillshare) for enrollment trends in arts, crafts, philosophy, creative writing. 
+* Artist marketplaces (Etsy, Bandcamp, local craft fair listings) for growth in sales/listings of handmade goods. 
+* Event ticketing platforms (Eventbrite, local theater/music venue sites) for attendance at live, unmediated performances. 
+* Social media trends and forums where people discuss "digital fatigue," "AI art," or express desires for authenticity. 
+* Government labor statistics for traditional trades, or emerging "human-centric" job categories. Transform and Load: Clean, categorize, and load this data into a system like DuckDB, allowing for time-series analysis and segmentation. Analyze and Visualize: Use Power BI (or a similar tool) to create dashboards showing: Growth in creative skill acquisition. Trends in demand for authentic, human-made products/experiences. Correlation between AI saturation in certain sectors and interest in human-led alternatives.
 
+3. Extracting insights and popular topics from real-time articles from news outlets and social media, particularly focused on specific communities like creatives and humanities, is definitely possible and aligns perfectly with your overall vision.
 
+This would be a robust real-time data engineering project in itself, feeding into your broader goal of understanding shifts towards human-centric endeavors.
 
+Here's how you might approach it and what insights you could extract:
 
+Technical Approach for Real-time Extraction:
+News Outlets:
 
+APIs: Many major news organizations offer APIs (Application Programming Interfaces) for accessing their articles. This is the most reliable and structured way to get data. Examples include NewsAPI, New York Times API, etc.
 
+RSS Feeds: Most news sites still maintain RSS feeds, which are simple XML files that update whenever new content is published. You can programmatically poll these feeds.
+
+Web Scraping (Selenium/Requests): For sites without APIs or RSS, you would use tools like Requests for static pages or Selenium for dynamic, JavaScript-heavy sites. This requires careful handling of website structure changes and rate limits.
+
+Social Media Outlets:
+
+APIs: This is the primary method. Platforms like X (formerly Twitter), Reddit, YouTube, TikTok, etc., offer APIs (though access can vary in terms of cost and complexity) to stream or pull public posts. You'd look for keywords, hashtags, or specific communities/subreddits.
+
+Specialized Tools/Services: For platforms with very restrictive APIs or complex scraping, you might consider third-party social listening tools or data providers, though this often comes with a cost.
+
+Real-time Processing & Storage:
+
+Streaming Data: For true "real-time," you might consider a streaming architecture (e.g., Apache Kafka or AWS Kinesis) to ingest the data as it's generated.
+
+Temporary Storage: Store raw data in a data lake (like S3) for historical archiving and reprocessing.
+
+Processing for Insights: Use tools like Apache Spark (as you've already implemented) or even serverless functions (AWS Lambda, Azure Functions) to process the incoming data streams.
+
+Database for Analysis: Load processed data into a fast analytical database like DuckDB (or a managed service for scale if needed) for querying and dashboarding.
+
+Extracting Insights and Popular Topics:
+This is where your Python skills, combined with NLP (Natural Language Processing), become crucial.
+
+Topic Modeling:
+
+Algorithms: Use techniques like Latent Dirichlet Allocation (LDA) or Non-negative Matrix Factorization (NMF) to identify recurring themes and subjects within the text data (e.g., discussions around "AI and painting," "ethics in AI art," "revival of traditional crafts," "live music events," "philosophical implications of automation").
+
+Keywords: Extract frequently co-occurring keywords or phrases to represent these topics.
+
+Sentiment Analysis:
+
+Tools: Apply NLP models (e.g., using libraries like NLTK, spaCy, or Hugging Face Transformers) to determine the emotional tone (positive, negative, neutral) associated with discussions around specific topics or entities (e.g., "How do creatives feel about generative AI?").
+
+Entity Recognition:
+
+Identify Key Entities: Extract names of organizations, influential individuals, specific art forms, events, or technologies mentioned. This helps you track who is being talked about and what specific aspects of creativity/humanities are in focus.
+
+Trend Analysis:
+
+Time Series Data: Track the volume of discussion around specific topics or keywords over time to identify emerging trends, spikes in interest, or declining attention.
+
+Emerging vs. Established: Differentiate between new, rapidly growing topics and consistently popular ones.
+
+Community-Specific Insights:
+
+Audience Segmentation: If you can segment the data by source (e.g., specific subreddits for artists vs. academic forums for humanities), you can compare what different segments of the "creative community" are discussing.
+
+Influencer Identification: Identify key voices or accounts that are driving conversations within these communities.
+
+Potential Insights You Could Gain:
+Emerging creative niches that reject AI: Are people talking about "handmade only" marketplaces, or "analog revival" movements?
+
+Ethical discussions surrounding AI in arts: What are the major concerns, and are there solutions being proposed?
+
+Growth in specific non-digital creative skills: Are courses or discussions about pottery, weaving, or traditional music surging?
+
+Sentiment towards "human-verified" content: Do people express a preference for content explicitly made by humans?
+
+New forms of in-person community building: Are there popular discussions about local events, skill-share groups, or community-driven projects?
+
+Philosophical debates: What are the humanities scholars debating regarding consciousness, authenticity, and human identity in an AI age?
+
+This project would be a powerful way to put your data engineering and analytical skills to use for your broader societal predictions, potentially revealing actionable trends for the "human-centric" businesses you envision. It's ambitious but very much within the realm of possibility given your existing tech stack.
+
+4. That's an excellent approach! You've already built a robust foundation with your current tech stack. To expand your knowledge and upskill, especially for a real-time, NLP-heavy project involving news and social media, here are some new tools and technologies you could explore:
+
+I. Data Ingestion & Streaming (Moving beyond batch Requests/Selenium polling)
+Streaming Platforms/Message Queues:
+
+Apache Kafka: The industry standard for building real-time data pipelines and streaming applications. Learning Kafka (producers, consumers, topics, brokers) is a massive upskill for any data engineer dealing with high-velocity data.
+
+Cloud Equivalents:
+
+AWS Kinesis (Data Streams/Firehose): Amazon's managed streaming service, very powerful for ingesting and processing real-time data.
+
+Google Cloud Pub/Sub: Google's simple, scalable, and reliable messaging service.
+
+Azure Event Hubs: Microsoft's highly scalable data streaming platform.
+
+Why learn: Essential for handling continuous streams of news articles and social media posts, enabling true real-time analysis rather than just scheduled batch pulls.
+
+Advanced Scraping/API Management:
+
+Scrapy (Python Framework): While you use Requests and Selenium, Scrapy is a more powerful, structured, and asynchronous web crawling framework specifically designed for large-scale scraping. It handles concurrency, retries, and data extraction pipelines.
+
+Managed Proxy Services (e.g., Bright Data, Oxylabs): For sustained and large-scale scraping, avoiding IP blocks is crucial. These services provide rotating proxies, which is a key operational skill.
+
+Why learn: For more robust, efficient, and resilient web data acquisition, especially for ongoing, real-time news and social media monitoring.
+
+II. Real-time Data Processing & Transformation (Beyond batch Spark)
+Stream Processing Frameworks:
+
+Apache Flink: Often considered a stronger contender than Spark Streaming for truly low-latency, stateful stream processing. It excels at windowing operations and complex event processing on continuous data.
+
+Cloud Equivalents (Managed Stream Processing):
+
+AWS Kinesis Data Analytics: Runs Apache Flink or SQL code on streaming data.
+
+Google Cloud Dataflow (Apache Beam): A unified programming model for batch and stream processing, allowing you to write code once and run it on different execution engines.
+
+Azure Stream Analytics: A managed service for real-time analytics on fast-moving streams.
+
+Why learn: To perform transformations (e.g., filtering, aggregation, basic NLP) as data arrives rather than waiting for a batch to accumulate, crucial for real-time insights.
+
+Advanced NLP & AI Services (Critical for extracting insights):
+
+Hugging Face Transformers (Python Library): The go-to library for state-of-the-art NLP models (BERT, GPT variants). You can use it for:
+
+Sentiment Analysis: More nuanced emotion detection.
+
+Named Entity Recognition (NER): Identifying people, organizations, locations.
+
+Zero-shot Classification: Categorizing text into custom categories without explicit training data.
+
+Text Summarization: Condensing articles/posts.
+
+SpaCy (Python Library): Excellent for production-ready NLP. Faster than NLTK for many tasks, great for tokenization, dependency parsing, and NER.
+
+Gensim (Python Library): Powerful for topic modeling (LDA, Word2Vec) on larger text corpora.
+
+Cloud NLP Services:
+
+AWS Comprehend: Managed NLP service for sentiment, entity recognition, keyphrase extraction.
+
+Google Cloud Natural Language API: Similar capabilities to Comprehend, highly powerful.
+
+Azure Text Analytics: Part of Azure AI services, offering various text analysis features.
+
+Why learn: To go beyond simple keyword matching and truly understand the meaning, sentiment, and topics within the vast amounts of unstructured text data from news and social media.
+
+Vector Databases / Vector Search:
+
+Tools: Pinecone, Weaviate, Milvus, Qdrant (or even PostgreSQL with pgvector).
+
+Why learn: After using NLP models (like Transformers) to convert text into numerical "embeddings" (vectors), you need a place to store and efficiently search these vectors. This is crucial for:
+
+Semantic Search: Finding articles/posts that are conceptually similar even if they don't share exact keywords.
+
+Topic Clustering: Grouping semantically similar content to identify emerging themes without pre-defined topics.
+
+Content Recommendation: Suggesting related content to users.
+
+III. Data Storage & Warehousing (Complementing your existing knowledge)
+Real-time Analytics Databases:
+
+Apache Druid: A distributed, real-time analytics database designed for high-speed ingest and fast queries on massive datasets, often used for dashboards that need immediate updates.
+
+ClickHouse: (You mentioned it, but worth highlighting its real-time capabilities). A column-oriented database management system for online analytical processing (OLAP).
+
+Why learn: For specific use cases where dashboards need to reflect data changes with sub-second latency, beyond what traditional DWHs might provide for streaming data.
+
+IV. Orchestration & Workflow (Alternative/Complement to Airflow)
+Orchestration Alternatives (Python-Native):
+
+Prefect: A modern data workflow orchestration system that emphasizes robust error handling, retries, and dynamic workflow generation. Often seen as more "Pythonic" and flexible than Airflow for certain use cases.
+
+Dagster: Another strong contender focused on data assets and software-defined assets, making it great for managing complex data transformations and dependencies.
+
+Why learn: To explore different paradigms in workflow management and understand diverse approaches to building reliable data pipelines.
+
+By exploring these tools, you'll significantly broaden your toolkit, gain experience in real-time data processing and advanced text analytics, and become an even more versatile and valuable data engineer capable of tackling complex, unstructured data challenges.
