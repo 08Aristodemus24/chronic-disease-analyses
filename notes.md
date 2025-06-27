@@ -2,7 +2,7 @@
 
 ## Technologies
 ### Data Lake:
-* S3
+* AWS S3
 * Apache Iceberg
 * Google cloud storage
 * Azure data lake storage
@@ -37,9 +37,19 @@ basically allows the flexibility to still access raw data formats like a data li
 #### Batch processing:
 * Apache spark
 * Data Build Tool
+* Azure databricks
+* AWS EMR (elastic map reduce)
+* Google data proc
 
 #### Stream processing: 
 * Apache kafka
+* APache Flink
+
+### Orchestration/Automating pipelines
+* Apache airflow
+* Mage
+* Dagster
+* Azure Data Factory
 
 ## credit card data
 * meta data for `fraudTest.csv` and `fraudTrain.csv`
@@ -2479,3 +2489,19 @@ Dagster: Another strong contender focused on data assets and software-defined as
 Why learn: To explore different paradigms in workflow management and understand diverse approaches to building reliable data pipelines.
 
 By exploring these tools, you'll significantly broaden your toolkit, gain experience in real-time data processing and advanced text analytics, and become an even more versatile and valuable data engineer capable of tackling complex, unstructured data challenges.
+
+# Future project plan about what people gravitate to today in terms of skills to use in their job:
+1. scrape data from coursera, udemy, skillshare, 
+2. scrape marketplaces like etsy, bandcamp, 
+3. scrape event brite
+4. scrape reddit, X, facebook, tiktok (extract audio file since it is in video format and translate what they say into text) for posts relating to saturation of AI, probably need a sentiment analyzing model for this.
+5. APIs of Many major news organizations offer APIs (Application Programming Interfaces) for accessing their articles e.g. NewsAPI, New York Times API, etc.
+
+RSS Feeds: Most news sites still maintain RSS feeds, which are simple XML files that update whenever new content is published. You can programmatically poll these feeds.
+
+Web Scraping (Selenium/Requests): For sites without APIs or RSS, you would use tools like Requests for static pages or Selenium for dynamic, JavaScript-heavy sites. This requires careful handling of website structure changes and rate limits.
+
+1. Analyze and visualize using Power BI to create dashboards showing:
+- Growth in creative skill acquisition.
+- Trends in demand for authentic, human-made products/experiences.
+- Correlation between AI saturation in certain sectors and interest in human-led alternatives.
