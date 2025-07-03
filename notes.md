@@ -50,6 +50,7 @@ basically allows the flexibility to still access raw data formats like a data li
 * Mage
 * Dagster
 * Azure Data Factory
+* AWS Glue
 
 ## credit card data
 * meta data for `fraudTest.csv` and `fraudTrain.csv`
