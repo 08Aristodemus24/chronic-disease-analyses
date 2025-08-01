@@ -166,8 +166,8 @@ if __name__ == "__main__":
     xpaths = [
         "/html/body/div[3]/div/div/div[8]/div/div[18]/div/ul/li[4]/a",
         "/html/body/div[3]/div/div/div[8]/div/div[16]/div/ul/li/a",
-        "/html/body/div[3]/div/div/div[8]/div/div[19]/div/div/div/div/ul/li/a"
         # "/html/body/div[3]/div/div/div[8]/div/div[19]/div/div/div/div/ul/li/a"
+        "/html/body/div[3]/div/div/div[8]/div/div[13]/div/div/div/div/ul/li/a"
     ]
     links_xpaths = zip(links, xpaths)
 
@@ -186,7 +186,7 @@ if __name__ == "__main__":
     s3 = boto3.client("s3", **credentials)
 
     # create bucket and then bucket folder
-    BUCKET_NAME = "chronic-disease-analyses-bucket"
+    BUCKET_NAME = "cdi-analyses-bucket"
     FOLDER_NAME = "population-data-raw/"
     create_bucket(s3, region_name=credentials.get("region_name"), bucket_name=BUCKET_NAME)
     create_bucket_folder(s3, bucket_name=BUCKET_NAME, folder_name=FOLDER_NAME)

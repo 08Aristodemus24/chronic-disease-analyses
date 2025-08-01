@@ -17,6 +17,8 @@ if __name__ == "__main__":
     # load_dotenv(os.path.join(env_dir, '.env'))
     # print("env variables loaded.\n")
 
+    BUCKET_NAME = "cdi-analyses-bucket"
+
     # jdbc:duckdb:md:chronic_disease_analyses_db
     # duckdb:///md:chronic_disease_analyses_db
     print("connecting to duckdb...")
@@ -46,7 +48,7 @@ if __name__ == "__main__":
 
 
     # loading CDI fact table
-    cdi_url = "s3://chronic-disease-analyses-bucket/cdi-data-transformed/CDI.parquet/*.parquet"
+    cdi_url = f"s3://{BUCKET_NAME}/cdi-data-transformed/CDI.parquet/*.parquet"
     query = f"""
         CREATE OR REPLACE TABLE CDI AS
         SELECT *
@@ -60,9 +62,9 @@ if __name__ == "__main__":
 
     # loading Population fact table
     us_population_file_names = [
-        "s3://chronic-disease-analyses-bucket/population-data-transformed/Population_2000_2009.parquet/*.parquet",
-        "s3://chronic-disease-analyses-bucket/population-data-transformed/Population_2010_2019.parquet/*.parquet",
-        "s3://chronic-disease-analyses-bucket/population-data-transformed/Population_2020_2023.parquet/*.parquet",
+        f"s3://{BUCKET_NAME}/population-data-transformed/Population_2000_2009.parquet/*.parquet",
+        f"s3://{BUCKET_NAME}/population-data-transformed/Population_2010_2019.parquet/*.parquet",
+        f"s3://{BUCKET_NAME}/population-data-transformed/Population_2020_2023.parquet/*.parquet",
     ]
     query = f"""
         CREATE OR REPLACE TABLE Population AS
@@ -78,7 +80,7 @@ if __name__ == "__main__":
 
     # Loading CDI dimension tables
     #### location table
-    cdi_location_url = "s3://chronic-disease-analyses-bucket/cdi-data-transformed/Location.parquet/*.parquet"
+    cdi_location_url = f"s3://{BUCKET_NAME}/cdi-data-transformed/Location.parquet/*.parquet"
     cdi_location_url
 
     # note that if we only specify a string instead of a list in read_parquet it must be enclosed in a quote or double quotes
@@ -97,7 +99,7 @@ if __name__ == "__main__":
 
 
     #### Stratification table
-    cdi_stratification_url = "s3://chronic-disease-analyses-bucket/cdi-data-transformed/Stratification.parquet/*.parquet"
+    cdi_stratification_url = f"s3://{BUCKET_NAME}/cdi-data-transformed/Stratification.parquet/*.parquet"
     query = f"""
         CREATE OR REPLACE TABLE CDIStratification AS
         SELECT *
@@ -111,7 +113,7 @@ if __name__ == "__main__":
     """)
 
     #### Question table
-    question_url = "s3://chronic-disease-analyses-bucket/cdi-data-transformed/Question.parquet/*.parquet"
+    question_url = f"s3://{BUCKET_NAME}/cdi-data-transformed/Question.parquet/*.parquet"
     query = f"""
         CREATE OR REPLACE TABLE Question AS
         SELECT *
@@ -120,7 +122,7 @@ if __name__ == "__main__":
     conn.sql(query)
 
     #### Topic table
-    topic_url = "s3://chronic-disease-analyses-bucket/cdi-data-transformed/Topic.parquet/*.parquet"
+    topic_url = f"s3://{BUCKET_NAME}/cdi-data-transformed/Topic.parquet/*.parquet"
     query = f"""
         CREATE OR REPLACE TABLE Topic AS
         SELECT *
@@ -129,7 +131,7 @@ if __name__ == "__main__":
     conn.sql(query)
 
     #### DataValueType table
-    data_value_type_url = "s3://chronic-disease-analyses-bucket/cdi-data-transformed/DataValueType.parquet/*.parquet"
+    data_value_type_url = f"s3://{BUCKET_NAME}/cdi-data-transformed/DataValueType.parquet/*.parquet"
     query = f"""
         CREATE OR REPLACE TABLE DataValueType AS
         SELECT *
@@ -145,7 +147,7 @@ if __name__ == "__main__":
 
     # Loading Population dimension tables
     #### State table 
-    population_state_url = "s3://chronic-disease-analyses-bucket/population-data-transformed/State.parquet/*.parquet"
+    population_state_url = f"s3://{BUCKET_NAME}/population-data-transformed/State.parquet/*.parquet"
     query = f"""
         CREATE OR REPLACE TABLE PopulationState AS
         SELECT *
@@ -160,7 +162,7 @@ if __name__ == "__main__":
 
 
     #### Stratification table
-    population_stratification_url = "s3://chronic-disease-analyses-bucket/population-data-transformed/Stratification.parquet/*.parquet"
+    population_stratification_url = f"s3://{BUCKET_NAME}/population-data-transformed/Stratification.parquet/*.parquet"
     query = f"""
         CREATE OR REPLACE TABLE PopulationStratification AS
         SELECT *

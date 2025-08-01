@@ -480,7 +480,7 @@ if __name__ == "__main__":
     spark = SparkSession(spark_ctxt).builder\
         .getOrCreate()
     
-    BUCKET_NAME = "chronic-disease-analyses-bucket"
+    BUCKET_NAME = "cdi-analyses-bucket"
     INPUT_FOLDER_NAME = "cdi-data-raw/"
     INPUT_DATA_DIR = f"s3a://{BUCKET_NAME}/{INPUT_FOLDER_NAME}"
     # INPUT_DATA_DIR = "/opt/airflow/include/cdi-data-raw/"

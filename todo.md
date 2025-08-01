@@ -418,3 +418,4 @@ letter color if on bright bg:
 * So dashboard mo, pinakamalaki yung line graph. Bakit sya yung pinaka malaki? kasi syan yung pinakaimportante? kasi sya yung nagssabi na dapat ko itong tignan kasi it concerns me?
 * and rule of thumb ko dyan is, dapat ko muna mapakita yung mga important insight, then secondary yung aesthetics
 
+* try to use terraform next time to setup the aws s3 bucket itself so that you don't have to create it manually and ahve the next stage in the pipeline break because it doesn't have proper access control listings

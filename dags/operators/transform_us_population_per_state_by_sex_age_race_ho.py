@@ -448,7 +448,7 @@ if __name__ == "__main__":
     print(year_range_list)
 
     # 
-    BUCKET_NAME = "chronic-disease-analyses-bucket"
+    BUCKET_NAME = "cdi-analyses-bucket"
     INPUT_FOLDER_NAME = "population-data-raw/"
     INPUT_DATA_DIR = f"s3a://{BUCKET_NAME}/{INPUT_FOLDER_NAME}"
     # INPUT_DATA_DIR = "/opt/airflow/include/data/population-data-raw/"
