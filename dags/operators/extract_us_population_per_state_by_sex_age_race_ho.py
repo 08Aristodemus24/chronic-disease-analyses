@@ -34,7 +34,8 @@ def extract_populations(
     year_ranges_lookup = {
         2010: "2000-2010",
         2019: "2010-2019",
-        2023: "2020-2023"
+        2023: "2020-2023",
+        2024: "2020-2024"
     }
 
     # to be populated from href of tags

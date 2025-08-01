@@ -118,7 +118,7 @@ with DAG(
 
         # pass argument vector to spark submit job operator since
         # it is a file that runs like a script
-        application_args=["--year-range-list", "2000-2009", "2010-2019", "2020-2023"],
+        application_args=["--year-range-list", "2000-2009", "2010-2019", "2020-2024"],
         verbose=True
     )
 

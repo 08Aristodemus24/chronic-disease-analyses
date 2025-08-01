@@ -498,7 +498,7 @@ if __name__ == "__main__":
                  ],
                 "populations": list(filter(lambda file: "2010-2019" in file and "by_sex_age_race_ho" in file, files))  
             },
-            "2020-2023": {
+            "2020-2024": {
                 "cols_to_remove": [
                     "SUMLEV",
                     "REGION",
@@ -506,7 +506,7 @@ if __name__ == "__main__":
                     "STATE",
                     "ESTIMATESBASE2020"
                  ],
-                "populations": list(filter(lambda file: "2020-2023" in file and "by_sex_age_race_ho" in file, files))  
+                "populations": list(filter(lambda file: "2020-2024" in file and "by_sex_age_race_ho" in file, files))  
             }
         }    
     

@@ -64,7 +64,7 @@ if __name__ == "__main__":
     us_population_file_names = [
         f"s3://{BUCKET_NAME}/population-data-transformed/Population_2000_2009.parquet/*.parquet",
         f"s3://{BUCKET_NAME}/population-data-transformed/Population_2010_2019.parquet/*.parquet",
-        f"s3://{BUCKET_NAME}/population-data-transformed/Population_2020_2023.parquet/*.parquet",
+        f"s3://{BUCKET_NAME}/population-data-transformed/Population_2020_2024.parquet/*.parquet",
     ]
     query = f"""
         CREATE OR REPLACE TABLE Population AS
