@@ -11,3 +11,9 @@
 /config/
 /include/data/
 /dags/data/
+
+# terraform
+/infra/*.lock.hcl
+/infra/*.tfstate
+/infra/*.backup
+/infra/.terraform/
