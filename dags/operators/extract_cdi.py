@@ -39,7 +39,6 @@ if __name__ == "__main__":
     s3 = boto3.client("s3", **credentials)
 
     BUCKET_NAME = "cdi-analyses-bucket"
-    create_bucket(s3, bucket_name=BUCKET_NAME, region_name=credentials.get("region_name"))
     create_bucket_folder(s3, bucket_name=BUCKET_NAME)
     upload_files_to_s3(s3, local_file_paths=[file_path], callback_fn=upload_file_to_s3, s3_bucket_name=BUCKET_NAME)
 

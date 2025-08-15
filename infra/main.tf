@@ -2,17 +2,19 @@ provider "aws" {
   region = "ap-southeast-2"
 }
 
-resource "aws_s3_bucket" "dsc_bucket" {
+resource "aws_s3_bucket" "cdi_analyses_bucket" {
   bucket = "${var.project_name}-bucket"
 
   tags = {
     Name        = "${var.project_name}-bucket"
     Environment = "Dev"
   }
+
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_public_access_block" "example" {
-  bucket = aws_s3_bucket.dsc_bucket.id
+  bucket = aws_s3_bucket.cdi_analyses_bucket.id
 
   # Block public access to buckets and objects granted through new access control lists (ACLs)
   # When set to true causes the following behavior:
@@ -32,15 +34,15 @@ resource "aws_s3_bucket_public_access_block" "example" {
   restrict_public_buckets = true
 }
 
-resource "aws_s3_bucket_policy" "dsc_bucket_access_policy" {
-  bucket = aws_s3_bucket.dsc_bucket.id
+resource "aws_s3_bucket_policy" "cdi_analyses_bucket_access_policy" {
+  bucket = aws_s3_bucket.cdi_analyses_bucket.id
 
   # we need to have this access policy be jsonified otherwise
   # it will throw a ` Inappropriate value for attribute "policy": string required.`
-  policy = data.aws_iam_policy_document.dsc_bucket_access_policy.json
+  policy = data.aws_iam_policy_document.cdi_analyses_bucket_access_policy.json
 }
 
-data "aws_iam_policy_document" "dsc_bucket_access_policy" {
+data "aws_iam_policy_document" "cdi_analyses_bucket_access_policy" {
   statement {
     effect = "Allow"
 
@@ -55,8 +57,8 @@ data "aws_iam_policy_document" "dsc_bucket_access_policy" {
     ]
 
     resources = [
-      aws_s3_bucket.dsc_bucket.arn,
-      "${aws_s3_bucket.dsc_bucket.arn}/*",
+      aws_s3_bucket.cdi_analyses_bucket.arn,
+      "${aws_s3_bucket.cdi_analyses_bucket.arn}/*",
     ]
   }
 }

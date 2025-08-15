@@ -189,7 +189,6 @@ if __name__ == "__main__":
     # create bucket and then bucket folder
     BUCKET_NAME = "cdi-analyses-bucket"
     FOLDER_NAME = "population-data-raw/"
-    create_bucket(s3, region_name=credentials.get("region_name"), bucket_name=BUCKET_NAME)
     create_bucket_folder(s3, bucket_name=BUCKET_NAME, folder_name=FOLDER_NAME)
     upload_files_to_s3(
         s3,  
