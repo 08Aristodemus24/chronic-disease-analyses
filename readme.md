@@ -1,5 +1,5 @@
 # Final Pipeline Architecture:
-![final-cdi-pipeline]('./figures%20&%20images/final-cdi-pipeline.jpg')
+![final-cdi-pipeline]('./figures%20%26%20images/final-cdi-pipeline.jpg')
 
 # Business Use Case:
 The business use case here was to solve the following problems of:
