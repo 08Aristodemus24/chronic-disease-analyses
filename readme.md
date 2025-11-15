@@ -1,3 +1,6 @@
+# Final Pipeline Architecture:
+![final-cdi-pipeline]('./figures%20&%20images/final-cdi-pipeline.jpg')
+
 # Business Use Case:
 The business use case here was to solve the following problems of:
 1. allocating healthcare resources inefficiently and not being able to design effective interventions because of the lack of insight what populations to target and what key drivers/risk factors of chronic disease are the most and least common.
